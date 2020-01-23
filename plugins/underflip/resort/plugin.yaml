@@ -1,0 +1,25 @@
+plugin:
+    name: 'underflip.resort::lang.plugin.name'
+    description: 'underflip.resort::lang.plugin.description'
+    author: UnderFlip
+    icon: oc-icon-arrow-circle-up
+    homepage: ''
+navigation:
+    resorts:
+        label: Resorts
+        url: underflip/resort/resort
+        icon: icon-sort-amount-asc
+        sideMenu:
+            statistic:
+                label: Statistic
+                url: underflip/resort/statistic
+                icon: icon-sort-numeric-asc
+    res:
+        label: res
+        url: underflip/resort/resort
+        icon: icon-align-left
+        sideMenu:
+            staz:
+                label: stats
+                url: underflip/resort/statistic
+                icon: icon-stack-exchange

@@ -1,0 +1,62 @@
+1.0.1:
+    - 'Initialize plugin.'
+1.0.2:
+    - 'Created table underflip_resort_resorts'
+    - builder_table_create_underflip_resort_resorts.php
+1.0.3:
+    - 'Updated table underflip_resort_resorts'
+    - builder_table_update_underflip_resort_resorts.php
+1.0.4:
+    - 'Created table underflip_resort_statistics'
+    - builder_table_create_underflip_resort_statistics.php
+1.0.5:
+    - 'Created table underflip_resort_stat_pvt'
+    - builder_table_create_underflip_resort_stat_pvt.php
+1.0.6:
+    - 'Updated table underflip_resort_stat_pvt'
+    - builder_table_update_underflip_resort_stat_pvt.php
+1.0.7:
+    - 'Updated table underflip_resort_stat_pvt'
+    - builder_table_update_underflip_resort_stat_pvt_2.php
+1.0.8:
+    - 'Updated table underflip_resort_resorts'
+    - builder_table_update_underflip_resort_resort.php
+1.0.9:
+    - 'Updated table underflip_resort_resort'
+    - builder_table_update_underflip_resort_resorts_2.php
+1.0.10:
+    - 'Updated table underflip_resort_stat_pvt'
+    - builder_table_update_underflip_resort_stat_pvt_3.php
+1.0.11:
+    - 'Created table underflip_resort_statistic_name'
+    - builder_table_create_underflip_resort_statistic_name.php
+1.0.12:
+    - 'Updated table underflip_resort_statistic_name'
+    - builder_table_update_underflip_resort_statistic_name.php
+1.0.13:
+    - 'Drop table underflip_resort_stat_pvt'
+    - builder_table_delete_underflip_resort_stat_pvt.php
+1.0.14:
+    - 'Updated table underflip_resort_statistic_name'
+    - builder_table_update_underflip_resort_statistic_name_2.php
+1.0.15:
+    - 'Updated table underflip_resort_statistics'
+    - builder_table_update_underflip_resort_statistics.php
+1.0.16:
+    - 'Updated table underflip_resort_statistics'
+    - builder_table_update_underflip_resort_statistic.php
+1.0.17:
+    - 'Updated table underflip_resort_resorts'
+    - builder_table_update_underflip_resort_resort_2.php
+1.0.18:
+    - 'Updated table underflip_resort_statistic'
+    - builder_table_update_underflip_resort_statistic_2.php
+1.0.19:
+    - 'Updated table underflip_resort_statistic_name'
+    - builder_table_update_underflip_resort_statistic_name_3.php
+1.0.20:
+    - 'Updated table underflip_resort_statistic'
+    - builder_table_update_underflip_resort_statistic_3.php
+1.0.21:
+    - 'Updated table underflip_resort_statistic_name'
+    - builder_table_update_underflip_resort_statistic_schema.php

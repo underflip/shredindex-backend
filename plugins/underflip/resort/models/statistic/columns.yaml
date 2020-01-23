@@ -1,0 +1,57 @@
+columns:
+    id:
+        label: id
+        type: number
+    resort_id:
+        label: resort_id
+        type: number
+    average_annual_snowfall:
+        label: average_annual_snowfall
+        type: number
+    total_terrain:
+        label: total_terrain
+        type: number
+    elevation:
+        label: elevation
+        type: number
+    vertical_drop:
+        label: vertical_drop
+        type: number
+    number_of_runs:
+        label: number_of_runs
+        type: number
+    terrain_expert:
+        label: terrain_expert
+        type: number
+    terrain_intermediate:
+        label: terrain_intermediate
+        type: number
+    terrain_beginner:
+        label: terrain_beginner
+        type: number
+    backcountry_access:
+        label: backcountry_access
+        type: number
+    park:
+        label: park
+        type: number
+    snow_making:
+        label: snow_making
+        type: number
+    has_terrain_park:
+        label: has_terrain_park
+        type: text
+    has_night_skiing:
+        label: has_night_skiing
+        type: text
+    has_cross_country:
+        label: has_cross_country
+        type: text
+    has_helicopter_skiing:
+        label: has_helicopter_skiing
+        type: text
+    resort_title:
+        label: title
+        type: text
+        select: title
+        relation: resort
