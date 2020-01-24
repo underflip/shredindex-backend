@@ -30,6 +30,7 @@ infrastructure
 !/plugins
 /plugins/*
 !/plugins/underflip
+plugins/nocio
 
 # for netbeans
 nbproject
