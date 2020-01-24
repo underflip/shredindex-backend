@@ -14,12 +14,3 @@ navigation:
                 label: Statistic
                 url: underflip/resort/statistic
                 icon: icon-sort-numeric-asc
-    res:
-        label: res
-        url: underflip/resort/resort
-        icon: icon-align-left
-        sideMenu:
-            staz:
-                label: stats
-                url: underflip/resort/statistic
-                icon: icon-stack-exchange

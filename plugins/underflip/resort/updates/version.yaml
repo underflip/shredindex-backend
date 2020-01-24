@@ -60,3 +60,18 @@
 1.0.21:
     - 'Updated table underflip_resort_statistic_name'
     - builder_table_update_underflip_resort_statistic_schema.php
+1.0.22:
+    - 'Updated table underflip_resort_resort'
+    - builder_table_update_underflip_resort_resort_3.php
+1.0.23:
+    - 'Updated table underflip_resort_resort'
+    - builder_table_update_underflip_resort_resort_4.php
+1.0.24:
+    - 'Updated table underflip_resort_resort'
+    - builder_table_update_underflip_resort_resort_5.php
+1.0.25:
+    - 'Updated table underflip_resort_statistic'
+    - builder_table_update_underflip_resort_statistic_4.php
+1.0.26:
+    - 'Updated table underflip_resort_statistic_schema'
+    - builder_table_update_underflip_resort_statistic_schema_2.php

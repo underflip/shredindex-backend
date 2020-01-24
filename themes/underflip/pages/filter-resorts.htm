@@ -1,20 +1,17 @@
-title = "filter-resorts"
-url = "/filter-resorts"
+title = "Home"
+url = "/"
 layout = "default"
 is_hidden = 0
 ==
 <?php
-
 use Underflip\Resort\Models\Resort;
 use Underflip\Resort\Models\Statistic;
 
 function onStart() {
     $this['resorts'] = Resort::listFrontEnd();
 }
-
 ?>
 ==
-
 <div class="container">
 {% for resort in resorts %}
     <li>
@@ -26,4 +23,3 @@ function onStart() {
     </li>
 {% endfor %}
 </div>
-
