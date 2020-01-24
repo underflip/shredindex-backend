@@ -26,6 +26,8 @@ package-lock.json
 /node_modules
 _ide_helper.php
 themes/demo
+infrastructure
+.env
 
 # for netbeans
 nbproject

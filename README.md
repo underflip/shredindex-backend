@@ -11,5 +11,5 @@ To be added
 
 # Contributors
 
-(Thomas Hansen)[https://github.com/krank3n]
-(Jackson Darlow)[https://github.com/jakxnz]
+[Thomas Hansen](https://github.com/krank3n)
+[Jackson Darlow](https://github.com/jakxnz)
