@@ -1,0 +1,12 @@
+title = "Health Check"
+description = "A health check query, useful for front-end tests"
+==
+<?php
+function resolveHealthCheck() {
+    return true;
+}
+?>
+==
+type Query {
+   healthCheck: String
+}
