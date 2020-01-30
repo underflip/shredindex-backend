@@ -27,6 +27,9 @@ _ide_helper.php
 themes/demo
 infrastructure
 .env
+!/plugins
+/plugins/*
+!/plugins/underflip
 
 # for netbeans
 nbproject
