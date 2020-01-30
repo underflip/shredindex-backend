@@ -1,0 +1,10 @@
+name: resort
+modelClass: UnderFlip\Resort\Models\Resort
+form: $/underflip/resort/models/resort/fields.yaml
+defaultRedirect: underflip/resort/resort
+create:
+    redirect: 'underflip/resort/resort/update/:id'
+    redirectClose: underflip/resort/resort
+update:
+    redirect: underflip/resort/resort
+    redirectClose: underflip/resort/resort

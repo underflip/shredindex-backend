@@ -2,7 +2,6 @@
 /config
 /.github
 /modules
-/plugins
 /storage
 /tests
 /vendor
@@ -28,6 +27,9 @@ _ide_helper.php
 themes/demo
 infrastructure
 .env
+!/plugins
+/plugins/*
+!/plugins/underflip
 
 # for netbeans
 nbproject

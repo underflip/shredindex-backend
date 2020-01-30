@@ -1,0 +1,5 @@
+fields:
+    total_terrain:
+        label: 'Terrain Size Acres'
+        span: auto
+        type: text
