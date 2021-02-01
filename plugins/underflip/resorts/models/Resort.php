@@ -1,0 +1,36 @@
+<?php namespace Underflip\Resorts\Models;
+
+use Model;
+use October\Rain\Database\Traits\Validation;
+
+/**
+ * Model
+ */
+class Resort extends Model
+{
+    use Validation;
+
+    /*
+     * Disable timestamps by default.
+     * Remove this line if timestamps are defined in the database table.
+     */
+    public $timestamps = false;
+
+    /**
+     * @var string The database table used by the model.
+     */
+    public $table = 'underflip_resorts_resorts';
+
+    /**
+     * @var array Validation rules
+     */
+    public $rules = [];
+
+    /**
+     * @var array
+     */
+    public $hasMany = [
+        'scores' => Score::class,
+        'stats' => Stat::class,
+    ];
+}

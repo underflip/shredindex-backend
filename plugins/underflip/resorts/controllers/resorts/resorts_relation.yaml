@@ -1,0 +1,16 @@
+scores:
+    label: Scores
+    view:
+        list: $/underflip/resorts/models/score/columns.yaml
+        toolbarButtons: create|delete
+    manage:
+        form: $/underflip/resorts/models/score/fields.yaml
+        list: $/underflip/resorts/models/score/columns.yaml
+stats:
+    label: Stats
+    view:
+        list: $/underflip/resorts/models/stat/columns.yaml
+        toolbarButtons: create|delete
+    manage:
+        form: $/underflip/resorts/models/stat/fields.yaml
+        list: $/underflip/resorts/models/stat/columns.yaml

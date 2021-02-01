@@ -1,0 +1,12 @@
+title = "Resorts"
+==
+extend type Query {
+    resort(id: ID!): Resort @find(model: "Underflip\\Resorts\\Models\\Resort"),
+    resorts: [Resort] @all(model: "Underflip\\Resorts\\Models\\Resort")
+}
+
+type Resort {
+    id: ID!
+    title: String
+    url_segment: String
+}

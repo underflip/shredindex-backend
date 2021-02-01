@@ -1,0 +1,19 @@
+fields:
+    title:
+        label: Title
+        span: auto
+        required: 1
+        type: text
+    url_segment:
+        label: 'URL Segment'
+        span: auto
+        required: 1
+        type: text
+    scores:
+        label: Scores
+        type: partial
+        path: field_scores
+    stats:
+        label: Stats
+        type: partial
+        path: field_stats

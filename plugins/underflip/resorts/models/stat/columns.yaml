@@ -1,0 +1,13 @@
+columns:
+    type:
+        label: Type
+        relation: type
+        select: title
+    value:
+        label: Value
+        type: text
+        searchable: true
+    unit:
+        lable: Unit
+        type: partial
+        path: $/underflip/resorts/models/stat/_column_unit.htm

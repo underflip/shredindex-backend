@@ -1,0 +1,10 @@
+columns:
+    type:
+        label: Type
+        relation: type
+        select: title
+        sortable: true
+    score:
+        label: Score
+        type: text
+        sortable: true
