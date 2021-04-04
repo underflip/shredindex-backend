@@ -1,0 +1,36 @@
+title = "Resorts"
+==
+input Filter {
+    type_name: String!
+    operator: String!
+    value: String!
+}
+
+input OrderBy {
+    type_name: String!
+    direction: String = "asc"
+}
+
+extend type Query {
+    resort(id: ID! @eq): Resort @find(model: "Underflip\\Resorts\\Models\\Resort"),
+    resorts(
+        filter: [Filter!]
+        orderBy: OrderBy
+    ): [Resort!]! @filterResorts
+}
+
+type Resort {
+    id: ID
+    title: String
+    url_segment: String
+    ratings: [ResortAttribute!]! @hasMany
+    numerics: [ResortAttribute!]! @hasMany
+    generics: [ResortAttribute!]! @hasMany
+}
+
+type ResortAttribute {
+    id: ID
+    name: String
+    title: String
+    value: String
+}
