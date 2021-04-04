@@ -2,20 +2,13 @@
 
 use Schema;
 use October\Rain\Database\Updates\Migration;
+use Underflip\Resorts\Models\TypeValue;
 
 class CreateTypeValuesTable extends Migration
 {
-
-    /**
-     * @var string
-     */
-    private static $table_name = 'underflip_resorts_type_values';
-
-
     public function up()
     {
-        Schema::create(self::$table_name, function($table)
-        {
+        Schema::create(app(TypeValue::class)->getTable(), function ($table) {
             $table->increments('id');
             $table->string('name');
             $table->string('title');
@@ -24,6 +17,6 @@ class CreateTypeValuesTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists(self::$table_name);
+        Schema::dropIfExists(app(TypeValue::class)->getTable());
     }
 }

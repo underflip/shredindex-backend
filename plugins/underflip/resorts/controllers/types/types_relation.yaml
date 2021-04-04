@@ -4,5 +4,5 @@ values:
         list: $/underflip/resorts/models/type_value/columns.yaml
         toolbarButtons: create|delete
     manage:
-        form: $/underflip/resorts/models/score/fields.yaml
-        list: $/underflip/resorts/models/score/columns.yaml
+        form: $/underflip/resorts/models/type_value/fields.yaml
+        list: $/underflip/resorts/models/type_value/columns.yaml

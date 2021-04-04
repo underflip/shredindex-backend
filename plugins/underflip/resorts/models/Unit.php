@@ -1,10 +1,18 @@
 <?php namespace Underflip\Resorts\Models;
 
 use Model;
+use October\Rain\Database\Builder;
 use October\Rain\Database\Traits\Validation;
 
 /**
- * Model
+ * @property int $id
+ * @property string $name The unique name of the type
+ * @property string $title
+ * @property string $singular_title
+ * @property string $plural_title
+ * @property string $format The symbolic representation of the unit e.g 'm' for meters
+ * @property string $plural_format
+ * @method Builder types()
  */
 class Unit extends Model
 {

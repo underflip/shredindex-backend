@@ -1,18 +1,26 @@
-<?php namespace Underflip\Resorts\Models;
+<?php
 
+namespace Underflip\Resorts\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Model;
 use October\Rain\Database\Traits\Validation;
 
 /**
- * Model
+ * Resort model
+ *
+ * @property int $id
+ * @property string $title
+ * @property string $url_segment
+ * @method Collection ratings()
+ * @method Collection stats()
  */
 class Resort extends Model
 {
-    use Validation;
-
     /*
-     * Disable timestamps by default.
-     * Remove this line if timestamps are defined in the database table.
+     * Disable timestamps by default, to remove the need for updated_at and
+     * created_at columns.
      */
     public $timestamps = false;
 
@@ -22,15 +30,11 @@ class Resort extends Model
     public $table = 'underflip_resorts_resorts';
 
     /**
-     * @var array Validation rules
-     */
-    public $rules = [];
-
-    /**
      * @var array
      */
     public $hasMany = [
-        'scores' => Score::class,
-        'stats' => Stat::class,
+        'ratings' => Rating::class,
+        'numerics' => Numeric::class,
+        'generics' => Generic::class,
     ];
 }

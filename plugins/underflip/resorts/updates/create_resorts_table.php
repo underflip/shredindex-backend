@@ -2,27 +2,21 @@
 
 use Schema;
 use October\Rain\Database\Updates\Migration;
+use Underflip\Resorts\Models\Resort;
 
 class CreateResortsTable extends Migration
 {
-
-    /**
-     * @var string
-     */
-    private static $table_name = 'underflip_resorts_resorts';
-    
     public function up()
     {
-        Schema::create(self::$table_name, function($table)
-        {
+        Schema::create(app(Resort::class)->getTable(), function ($table) {
             $table->increments('id');
             $table->string('title');
-            $table->string('url_segment')->unique();        
+            $table->string('url_segment')->unique();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists(self::$table_name);
+        Schema::dropIfExists(app(Resort::class)->getTable());
     }
 }

@@ -1,10 +1,16 @@
 <?php namespace Underflip\Resorts\Models;
 
 use Model;
+use October\Rain\Database\Builder;
 use October\Rain\Database\Traits\Validation;
 
 /**
  * Used to hold records for a set of values that make up an enum-like structure (e.g Yes, No, or Maybe)
+ *
+ * @property int $id
+ * @property string $name The unique name of the value
+ * @property string $title
+ * @method Builder types()
  */
 class TypeValue extends Model
 {

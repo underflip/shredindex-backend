@@ -9,11 +9,15 @@ fields:
         span: auto
         required: 1
         type: text
-    scores:
-        label: Scores
+    ratings:
+        label: Ratings
         type: partial
-        path: field_scores
-    stats:
-        label: Stats
+        path: field_ratings
+    numerics:
+        label: Numerics
         type: partial
-        path: field_stats
+        path: field_numerics
+    generics:
+        label: Generics
+        type: partial
+        path: field_generics

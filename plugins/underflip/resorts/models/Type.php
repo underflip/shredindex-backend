@@ -1,10 +1,21 @@
 <?php namespace Underflip\Resorts\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Model;
 use October\Rain\Database\Traits\Validation;
+use ReflectionClass;
 
 /**
- * Model
+ * The descriptor of an attribute that applies to a resort, usually via
+ * something like a {@see Score} or a {@see Stat}
+ *
+ * @property int $id
+ * @property string $name The unique name of the type
+ * @property string $title
+ * @property string $category A broad "belongs to" value of the type of class that can be related
+ * @property string $default The default value
+ * @method Unit unit() The unit of measurement or denomination
+ * @method Collection values()
  */
 class Type extends Model
 {
@@ -37,8 +48,8 @@ class Type extends Model
      * @var array
      */
     public $hasMany = [
-        'scores' => Score::class,
-        'stats' => Stat::class,
+        'ratings' => Rating::class,
+        'numerics' => Numeric::class,
     ];
 
     /**
@@ -52,15 +63,36 @@ class Type extends Model
     ];
 
     /**
-     * Prescribes the set of category options
+     * Express each resort attribute as a category for types, so that
+     * we can reference types categorically
+     *
+     * @return array ['Underflip/Resorts/Models/ClassName' => 'ClassName']
+     * @throws \ReflectionException
      */
-    public function getCategoryOptions()
+    public static function getCategories(): array
     {
-        return [
-            Cost::class => 'Cost',
-            Insight::class => 'Insight',
-            Score::class => 'Score',
-            Stat::class => 'Statistic',
+        $catagoricalAttributeClasses = [
+            Rating::class,
+            Numeric::class,
+            Generic::class,
         ];
+
+        $categories = [];
+
+        foreach ($catagoricalAttributeClasses as $class) {
+            $categories[$class] = (new ReflectionClass($class))->getShortName();
+        }
+
+        return $categories;
+    }
+
+    /**
+     * See plugins/underflip/resorts/models/type/fields.yml
+     *
+     * @return array
+     */
+    public function getCategoryOptions(): array
+    {
+        return static::getCategories();
     }
 }

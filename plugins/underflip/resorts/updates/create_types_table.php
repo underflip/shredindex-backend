@@ -2,21 +2,16 @@
 
 use Schema;
 use October\Rain\Database\Updates\Migration;
+use Underflip\Resorts\Models\Type;
 
 class CreateTypesTable extends Migration
 {
-    /**
-     * @var string
-     */
-    private static $table_name = 'underflip_resorts_types';
-
     /**
      * @return void
      */
     public function up()
     {
-        Schema::create(self::$table_name, function($table)
-        {
+        Schema::create(app(Type::class)->getTable(), function ($table) {
             $table->increments('id');
             $table->string('name')->unique();
             $table->string('title');
@@ -31,6 +26,6 @@ class CreateTypesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists(self::$table_name);
+        Schema::dropIfExists(app(Type::class)->getTable());
     }
 }

@@ -7,7 +7,6 @@ use October\Rain\Database\Updates\Seeder;
 
 class SeedUnitsTable extends Seeder
 {
-
     public function run()
     {
         Unit::create([

@@ -5,7 +5,6 @@ use October\Rain\Database\Updates\Migration;
 
 class CreateTypeTypeValueRelationTable extends Migration
 {
-
     /**
      * @var string
      */
@@ -13,8 +12,7 @@ class CreateTypeTypeValueRelationTable extends Migration
 
     public function up()
     {
-        Schema::create(self::$table_name, function($table)
-        {
+        Schema::create(self::$table_name, function ($table) {
             $table->integer('type_id')->unsigned();
             $table->integer('type_value_id')->unsigned();
             $table->primary(['type_id', 'type_value_id']);

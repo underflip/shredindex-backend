@@ -4,7 +4,12 @@ use Model;
 use October\Rain\Database\Traits\Validation;
 
 /**
- * Model
+ * A statistical value
+ *
+ * @property int $id
+ * @property string $value
+ * @method Resort resort()
+ * @method Type type()
  */
 class Stat extends Model
 {

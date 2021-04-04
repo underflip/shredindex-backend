@@ -9,6 +9,21 @@ use System\Classes\PluginBase;
 class Plugin extends PluginBase
 {
     /**
+     * @var array
+     */
+    public $require = [
+        'Nocio.Headstart',
+    ];
+
+    /**
+     * @return void
+     */
+    public function boot()
+    {
+        config(['lighthouse.namespaces.directives' => 'Underflip\\Resorts\\GraphQL\\Directives']);
+    }
+
+    /**
      * @return array
      */
     public function pluginDetails()
@@ -19,20 +34,6 @@ class Plugin extends PluginBase
             'author' => 'Underflip',
             'icon' => 'icon-icon-snowflake-o'
         ];
-    }
-
-    /**
-     * @return array|void
-     */
-    public function registerComponents()
-    {
-    }
-
-    /**
-     * @return array|void
-     */
-    public function registerSettings()
-    {
     }
 
     /**

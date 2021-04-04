@@ -2,18 +2,13 @@
 
 use Schema;
 use October\Rain\Database\Updates\Migration;
+use Underflip\Resorts\Models\Unit;
 
 class CreateUnitsTable extends Migration
 {
-    /**
-     * @var string
-     */
-    private static $table_name = 'underflip_resorts_units';
-
     public function up()
     {
-        Schema::create(self::$table_name, function($table)
-        {
+        Schema::create(app(Unit::class)->getTable(), function ($table) {
             $table->increments('id');
             $table->string('name')->unique();
             $table->string('title');
@@ -26,6 +21,6 @@ class CreateUnitsTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists(self::$table_name);
+        Schema::dropIfExists(app(Unit::class)->getTable());
     }
 }

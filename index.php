@@ -37,12 +37,7 @@ $app = require_once __DIR__.'/bootstrap/app.php';
 |
 */
 
-// Send an empty response for OPTIONS requests
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    exit(0);
-}
-
-$kernel = $app->make('Illuminate\Contracts\Http\Kernel');
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
 $response = $kernel->handle(
     $request = Illuminate\Http\Request::capture()
