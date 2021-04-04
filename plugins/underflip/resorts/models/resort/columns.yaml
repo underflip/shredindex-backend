@@ -1,0 +1,15 @@
+columns:
+    id:
+        label: ID
+        type: number
+        sortable: true
+        width: 10%
+        align: left
+    title:
+        label: Title
+        type: text
+        searchable: true
+    url_segment:
+        label: 'URL Segment'
+        type: text
+        searchable: true

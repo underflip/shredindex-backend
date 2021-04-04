@@ -1,0 +1,12 @@
+1.0.1:
+    - First version of Resorts for ShredIndex
+    - create_resorts_table.php
+    - create_ratings_table.php
+    - create_numerics_table.php
+    - create_generics_table.php
+    - create_type_values_table.php
+    - create_types_table.php
+    - create_type_type_value_relation_table.php
+    - create_units_table.php
+    - seed_units_table.php
+    - seed_types_table.php

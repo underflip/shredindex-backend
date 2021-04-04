@@ -1,0 +1,7 @@
+name: Resort
+modelClass: Underflip\Resorts\Models\Resort
+form: $/underflip/resorts/models/resort/fields.yaml
+create:
+    title: Add a Resort
+update:
+    title: Edit a Resort

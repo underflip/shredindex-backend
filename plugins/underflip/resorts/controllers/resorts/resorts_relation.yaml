@@ -1,0 +1,24 @@
+ratings:
+    label: Ratings
+    view:
+        list: $/underflip/resorts/models/rating/columns.yaml
+        toolbarButtons: create|delete
+    manage:
+        form: $/underflip/resorts/models/rating/fields.yaml
+        list: $/underflip/resorts/models/rating/columns.yaml
+numerics:
+    label: Numerics
+    view:
+        list: $/underflip/resorts/models/numeric/columns.yaml
+        toolbarButtons: create|delete
+    manage:
+        form: $/underflip/resorts/models/numeric/fields.yaml
+        list: $/underflip/resorts/models/numeric/columns.yaml
+generics:
+    label: Generics
+    view:
+        list: $/underflip/resorts/models/generic/columns.yaml
+        toolbarButtons: create|delete
+    manage:
+        form: $/underflip/resorts/models/generic/fields.yaml
+        list: $/underflip/resorts/models/generic/columns.yaml
