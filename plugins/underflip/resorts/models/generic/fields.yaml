@@ -1,0 +1,11 @@
+fields:
+    type_id:
+        label: Type
+        type: dropdown
+        span: auto
+        required: 1
+    value:
+        label: Value
+        type: text
+        span: auto
+        required: 1

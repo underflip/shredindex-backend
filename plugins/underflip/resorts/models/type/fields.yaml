@@ -1,0 +1,22 @@
+fields:
+    name:
+        label: Name
+        required: 1
+        type: text
+    title:
+        label: Title
+        required: 1
+        type: text
+        span: auto
+    unit:
+        label: Unit
+        type: relation
+        nameFrom: title
+        span: auto
+    category:
+        label: Category
+        type: dropdown
+    type_values:
+        label: Type Values
+        type: partial
+        path: field_type_values

@@ -1,0 +1,7 @@
+name: Type
+modelClass: Underflip\Resorts\Models\Type
+form: $/underflip/resorts/models/type/fields.yaml
+create:
+    title: Add a Type
+update:
+    title: Edit a Type

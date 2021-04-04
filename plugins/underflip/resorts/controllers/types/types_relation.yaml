@@ -1,0 +1,8 @@
+values:
+    label: Value for predefined set
+    view:
+        list: $/underflip/resorts/models/type_value/columns.yaml
+        toolbarButtons: create|delete
+    manage:
+        form: $/underflip/resorts/models/type_value/fields.yaml
+        list: $/underflip/resorts/models/type_value/columns.yaml
