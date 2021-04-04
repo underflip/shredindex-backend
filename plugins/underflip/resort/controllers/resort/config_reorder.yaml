@@ -1,4 +1,0 @@
-title: resort
-modelClass: UnderFlip\Resort\Models\Resort
-toolbar:
-    buttons: reorder_toolbar

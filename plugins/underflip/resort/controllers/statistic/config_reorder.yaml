@@ -1,4 +1,0 @@
-title: statistic
-modelClass: UnderFlip\Resort\Models\statistic
-toolbar:
-    buttons: reorder_toolbar
