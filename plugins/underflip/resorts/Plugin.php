@@ -1,4 +1,6 @@
-<?php namespace Underflip\Resorts;
+<?php
+
+namespace Underflip\Resorts;
 
 use Backend;
 use System\Classes\PluginBase;
@@ -8,6 +10,13 @@ use System\Classes\PluginBase;
  */
 class Plugin extends PluginBase
 {
+    /**
+     * @var array
+     */
+    public $require = [
+        'Nocio.Headstart',
+    ];
+
     /**
      * @return array
      */
@@ -19,6 +28,14 @@ class Plugin extends PluginBase
             'author' => 'Underflip',
             'icon' => 'icon-icon-snowflake-o'
         ];
+    }
+
+    /**
+     * @return void
+     */
+    public function boot()
+    {
+        config(['lighthouse.namespaces.directives' => 'Underflip\\Resorts\\GraphQL\\Directives']);
     }
 
     /**
