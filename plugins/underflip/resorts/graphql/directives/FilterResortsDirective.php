@@ -183,6 +183,18 @@ SDL;
                     continue;
                 }
 
+                // We can assume that only types of the current scope's class reach this point
+                $validOperators = app($scope['class'])->getValidOperators();
+                if (!in_array($filter['operator'], $validOperators)) {
+                    // Throw a helpful message
+                    throw new \Exception(sprintf(
+                        '"%s" is not a valid operator for "%s", available operators: "%s"',
+                        $filter['operator'],
+                        $filter['type_name'],
+                        join(', ', $validOperators)
+                    ));
+                }
+
                 $query->whereHas($scope['relation'], function (Builder $query) use ($filter, $scope) {
                     // Filter score's type name vs value
                     $query
