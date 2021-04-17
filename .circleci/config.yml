@@ -9,11 +9,31 @@ jobs:
         working_directory: ~/project
         steps:
             - checkout
-            - run: mv .circleci/.env.circleci .env
-            - run: cd .infrastructure/ && docker-compose up -d
-            - run: docker exec shredindex-backend-php composer install -n --prefer-source
-            - run: docker exec shredindex-backend-php php artisan october:up
-            - run: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ./coverage/clover.xml"
+            - run:
+                name: Preparing environment variables from repository
+                command: mv .circleci/.env.circleci .env && mv .infrastructure/.env.dist .infrastructure/.env
+            - restore_cache:
+                keys:
+                    - v2-composer-{{ checksum "composer.lock" }}
+            - run:
+                name: docker-compose
+                command: cd .infrastructure/ && docker-compose up -d
+            - run:
+                name: composer install
+                command: docker exec shredindex-backend-php composer install -n --prefer-dist
+            - save_cache:
+                key: v2-composer-{{ checksum "composer.lock" }}
+                paths:
+                    - vendor
+            - run:
+                name: Waiting for MySQL to warm up
+                command: sleep 10
+            - run:
+                name: Spin up October CMS
+                command: docker exec shredindex-backend-php php artisan october:up
+            - run:
+                name: Running PHPUnit tests
+                command: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
             - codecov/upload:
                 file: ./coverage/clover.xml
 
