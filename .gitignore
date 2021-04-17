@@ -1,7 +1,6 @@
 # Composer ignores
 /vendor
 composer.phar
-composer.lock
 
 # Framework ignores
 .env
@@ -39,3 +38,6 @@ infrastructure/
 !/themes
 /themes/*
 !/themes/underflip
+
+#CI
+coverage/
