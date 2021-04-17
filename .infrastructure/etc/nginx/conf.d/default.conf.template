@@ -1,0 +1,98 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name ${VIRTUAL_HOST};
+
+    index index.php index.html index.htm;
+
+    error_log  /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+
+    root /var/www/html;
+    try_files $uri $uri/ /index.php;
+
+    location / {
+        # Let OctoberCMS handle everything by default.
+        # The path not resolved by OctoberCMS router will return OctoberCMS's 404 page.
+        # Everything that does not match with the whitelist below will fall into this.
+        rewrite ^/.*$ /index.php last;
+
+        # Add CORS support
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+
+            # Tell client that this pre-flight info is valid for 20 days
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+
+        if ($request_method = 'POST') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+            add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range';
+        }
+
+        if ($request_method = 'GET') {
+            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+            add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range';
+        }
+    }
+
+    # Pass the PHP scripts to FastCGI server
+    location ~ ^/index.php {
+        try_files $uri =404;
+
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass php:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_read_timeout 600s;
+    }
+
+    # Whitelist
+    ## Let October handle if static file not exists
+    location ~ ^/favicon\.ico { try_files $uri /index.php; }
+    location ~ ^/sitemap\.xml { try_files $uri /index.php; }
+    location ~ ^/robots\.txt { try_files $uri /index.php; }
+    location ~ ^/humans\.txt { try_files $uri /index.php; }
+
+    ## Let nginx return 404 if static file not exists
+    location ~ ^/storage/app/uploads/public { try_files $uri 404; }
+    location ~ ^/storage/app/media { try_files $uri 404; }
+    location ~ ^/storage/temp/public { try_files $uri 404; }
+
+    location ~ ^/modules/.*/assets { try_files $uri 404; }
+    location ~ ^/modules/.*/resources { try_files $uri 404; }
+    location ~ ^/modules/.*/behaviors/.*/assets { try_files $uri 404; }
+    location ~ ^/modules/.*/behaviors/.*/resources { try_files $uri 404; }
+    location ~ ^/modules/.*/widgets/.*/assets { try_files $uri 404; }
+    location ~ ^/modules/.*/widgets/.*/resources { try_files $uri 404; }
+    location ~ ^/modules/.*/formwidgets/.*/assets { try_files $uri 404; }
+    location ~ ^/modules/.*/formwidgets/.*/resources { try_files $uri 404; }
+    location ~ ^/modules/.*/reportwidgets/.*/assets { try_files $uri 404; }
+    location ~ ^/modules/.*/reportwidgets/.*/resources { try_files $uri 404; }
+
+    location ~ ^/plugins/.*/.*/assets { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/resources { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/behaviors/.*/assets { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/behaviors/.*/resources { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/reportwidgets/.*/assets { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/reportwidgets/.*/resources { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/formwidgets/.*/assets { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/formwidgets/.*/resources { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/widgets/.*/assets { try_files $uri 404; }
+    location ~ ^/plugins/.*/.*/widgets/.*/resources { try_files $uri 404; }
+
+    location ~ ^/themes/.*/assets { try_files $uri 404; }
+    location ~ ^/themes/.*/resources { try_files $uri 404; }
+}

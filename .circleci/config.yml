@@ -1,0 +1,23 @@
+version: 2.1
+
+orbs:
+    codecov: codecov/codecov@1.1.0
+
+jobs:
+    build-and-test:
+        machine: true
+        working_directory: ~/project
+        steps:
+            - checkout
+            - run: mv .circleci/.env.circleci .env
+            - run: cd .infrastructure/ && docker-compose up -d
+            - run: docker exec shredindex-backend-php composer install -n --prefer-source
+            - run: docker exec shredindex-backend-php php artisan october:up
+            - run: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ./coverage/clover.xml"
+            - codecov/upload:
+                file: ./coverage/clover.xml
+
+workflows:
+    build-and-test:
+        jobs:
+            - build-and-test
