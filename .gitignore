@@ -31,7 +31,6 @@ package-lock.json
 /node_modules
 
 # Underflip
-infrastructure/
 !/plugins
 /plugins/*
 !/plugins/underflip
@@ -39,5 +38,8 @@ infrastructure/
 /themes/*
 !/themes/underflip
 
-#CI
+# Infrastructure
+.infrastructure/etc/nginx/conf.d/default.conf
+
+# CI
 coverage/
