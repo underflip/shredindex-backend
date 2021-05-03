@@ -17,6 +17,11 @@ server {
         # The path not resolved by OctoberCMS router will return OctoberCMS's 404 page.
         # Everything that does not match with the whitelist below will fall into this.
         rewrite ^/.*$ /index.php last;
+    }
+
+    # Pass the PHP scripts to FastCGI server
+    location ~ ^/index.php {
+        try_files $uri =404;
 
         # Add CORS support
         if ($request_method = 'OPTIONS') {
@@ -44,11 +49,6 @@ server {
             add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
             add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range';
         }
-    }
-
-    # Pass the PHP scripts to FastCGI server
-    location ~ ^/index.php {
-        try_files $uri =404;
 
         fastcgi_split_path_info ^(.+\.php)(/.+)$;
         fastcgi_pass php:9000;

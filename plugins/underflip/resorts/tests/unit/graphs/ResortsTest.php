@@ -1,6 +1,6 @@
 <?php
 
-namespace Underflip\Resorts\Tests\GraphQL\Directives;
+namespace Underflip\Resorts\Tests\Graphs;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Model;

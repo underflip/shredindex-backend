@@ -47,6 +47,9 @@
         ],
         "sniff": [
             "phpcs --colors -nq --report=\"full\" --extensions=\"php\""
+        ],
+        "plugin-refresh": [
+            "docker exec shredindex-backend-php php artisan plugin:refresh UnderFlip.Resorts"
         ]
     },
     "config": {

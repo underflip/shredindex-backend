@@ -2,8 +2,11 @@
 
 namespace Underflip\Resorts;
 
+use App;
 use Backend;
 use System\Classes\PluginBase;
+use System\Classes\SettingsManager;
+use Underflip\Resorts\models\Settings;
 
 /**
  * Resorts plugin
@@ -61,6 +64,24 @@ class Plugin extends PluginBase
                     ],
                 ],
             ],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function registerSettings()
+    {
+        return [
+            'settings' => [
+                'label'       => 'underflip.resorts::lang.settings.label',
+                'description' => 'underflip.resorts::lang.settings.description',
+                'category'    => 'system::lang.system.categories.cms',
+                'icon'        => 'icon-cogs',
+                'class'       => Settings::class,
+                'order'       => 1,
+                'keywords'    => 'shredindex settings',
+            ]
         ];
     }
 
