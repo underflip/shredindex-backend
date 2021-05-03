@@ -1,0 +1,8 @@
+# ===================================
+#  Supporters Form
+# ===================================
+
+name: underflip.resorts::lang.team_member.singular
+form: $/underflip/resorts/models/teammember/fields.yaml
+modelClass: Underflip\Resorts\Models\TeamMember
+defaultRedirect: system/settings/update/underflip/resorts/settings#primarytab-underflipresortslangteam-memberplural

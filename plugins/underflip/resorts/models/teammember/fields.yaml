@@ -1,0 +1,14 @@
+fields:
+    name:
+        label: Team Member Name
+        required: 1
+        type: text
+    url:
+        label: URL
+        required: 1
+        type: text
+    image:
+        label: Image
+        mode: image
+        type: fileupload
+
