@@ -43,8 +43,7 @@ class Types extends Controller
     public function __construct()
     {
         parent::__construct();
+
         BackendMenu::setContext('Underflip.Resorts', 'resorts', 'types');
     }
-
-
 }

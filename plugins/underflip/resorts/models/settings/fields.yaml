@@ -1,0 +1,14 @@
+tabs:
+    fields:
+        copyright_message:
+            label: Copyright message
+            type: markdown
+            tab: 'underflip.resorts::lang.settings.general'
+        supporters:
+            type: partial
+            path: $/underflip/resorts/partials/_supporters.htm
+            tab: 'underflip.resorts::lang.supporter.plural'
+        team_members:
+            type: partial
+            path: $/underflip/resorts/partials/_team_members.htm
+            tab: 'underflip.resorts::lang.team_member.plural'

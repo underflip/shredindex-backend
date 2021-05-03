@@ -1,0 +1,8 @@
+# ===================================
+#  Supporters Form
+# ===================================
+
+name: underflip.resorts::lang.supporter.singular
+form: $/underflip/resorts/models/supporter/fields.yaml
+modelClass: Underflip\Resorts\Models\Supporter
+defaultRedirect: system/settings/update/underflip/resorts/settings#primarytab-underflipresortslangsupporterplural
