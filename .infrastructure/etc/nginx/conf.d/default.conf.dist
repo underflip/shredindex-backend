@@ -1,8 +1,5 @@
 server {
     listen 80 default_server;
-    listen [::]:80 default_server;
-
-    server_name ${VIRTUAL_HOST};
 
     index index.php index.html index.htm;
 
@@ -13,6 +10,8 @@ server {
     try_files $uri $uri/ /index.php;
 
     location / {
+        proxy_pass http://localhost:8080;
+
         # Let OctoberCMS handle everything by default.
         # The path not resolved by OctoberCMS router will return OctoberCMS's 404 page.
         # Everything that does not match with the whitelist below will fall into this.
