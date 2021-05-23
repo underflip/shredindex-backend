@@ -9,6 +9,16 @@ fields:
         span: auto
         required: 1
         type: text
+    description:
+        label: 'Description'
+        span: full
+        required: 0
+        type: markdown
+        size: huge
+    location:
+        label: Location
+        type: partial
+        path: field_location
     ratings:
         label: Ratings
         type: partial

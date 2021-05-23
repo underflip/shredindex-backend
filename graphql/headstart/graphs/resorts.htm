@@ -23,6 +23,8 @@ type Resort {
     id: ID
     title: String
     url_segment: String
+    description: String
+    location: LocationType! @hasOne
     ratings: [ResortAttribute!]! @hasMany
     numerics: [ResortAttribute!]! @hasMany
     generics: [ResortAttribute!]! @hasMany
@@ -33,4 +35,16 @@ type ResortAttribute {
     name: String
     title: String
     value: String
+}
+
+type LocationType {
+    id: ID
+    country: LocationItem! @hasOne
+    state: LocationItem! @hasOne
+}
+
+type LocationItem {
+    id: ID
+    code: String
+    name: String
 }
