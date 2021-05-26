@@ -5,6 +5,7 @@ namespace Underflip\Resorts\Tests\Graphs;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
+use System\Behaviors\SettingsModel;
 use Underflip\Resorts\Models\Settings;
 use Underflip\Resorts\Models\Supporter;
 use Underflip\Resorts\models\TeamMember;
@@ -22,14 +23,14 @@ class SettingsTest extends BaseTestCase
     {
         parent::setUp();
 
+        Settings::clearInternalCache();
+
         Supporter::truncate();
         TeamMember::truncate();
     }
 
     public function testSettings()
     {
-        $this->markTestSkipped('Unable to reference Settings until answer comes from Core Maintainers');
-
         $copyrightMessage = '[Foo](https://foo.com} bar *baz*';
 
         Settings::set(
