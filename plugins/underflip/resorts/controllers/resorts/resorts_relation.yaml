@@ -25,9 +25,8 @@ generics:
 location:
     label: Location
     view:
-        list: $/underflip/resorts/models/location/columns.yaml
-        toolbarButtons: create|delete
         form: $/underflip/resorts/models/location/fields.yaml
+        toolbarButtons: update
     manage:
         form: $/underflip/resorts/models/location/fields.yaml
         list: $/underflip/resorts/models/location/columns.yaml

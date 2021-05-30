@@ -38,4 +38,5 @@ class Resort extends Model
         'numerics' => Numeric::class,
         'generics' => Generic::class,
     ];
+
 }
