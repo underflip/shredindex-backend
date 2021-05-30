@@ -21,5 +21,5 @@ class Location extends Model
     public $table = 'underflip_resorts_location';
 
 
-}
 
+}

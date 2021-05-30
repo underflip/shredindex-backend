@@ -13,8 +13,14 @@ class CreateLocationTable extends Migration
         Schema::create(app(Location::class)->getTable(), function ($table) {
                     $table->increments('id');
                     $table->integer('resort_id')->nullable();
-                    $table->integer('country_id')->nullable();;
-                    $table->integer('state_id')->unique()->nullable();;
+                    $table->string('address')->nullable();
+                    $table->string('city')->nullable();
+                    $table->string('zip')->nullable();
+                    $table->integer('country_id')->nullable();
+                    $table->integer('state_id')->nullable();
+                    $table->decimal('latitude')->nullable();
+                    $table->decimal('longitude')->nullable();
+                    $table->string('vicinity')->nullable();
         });
     }
 
