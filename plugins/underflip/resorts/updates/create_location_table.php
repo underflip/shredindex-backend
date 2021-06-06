@@ -11,16 +11,16 @@ class CreateLocationTable extends Migration
     public function up()
     {
         Schema::create(app(Location::class)->getTable(), function ($table) {
-                    $table->increments('id');
-                    $table->integer('resort_id')->nullable();
-                    $table->string('address')->nullable();
-                    $table->string('city')->nullable();
-                    $table->string('zip')->nullable();
-                    $table->integer('country_id')->nullable();
-                    $table->integer('state_id')->nullable();
-                    $table->decimal('latitude')->nullable();
-                    $table->decimal('longitude')->nullable();
-                    $table->string('vicinity')->nullable();
+            $table->increments('id');
+            $table->integer('resort_id')->nullable();
+            $table->string('address');
+            $table->string('city');
+            $table->string('zip')->nullable();
+            $table->integer('country_id');
+            $table->integer('state_id')->nullable();
+            $table->decimal('latitude');
+            $table->decimal('longitude');
+            $table->string('vicinity');
         });
     }
 

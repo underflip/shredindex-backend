@@ -10,7 +10,6 @@ fields:
             country: country_code
             state: state_code
             vicinity: vicinity
-
     city:
         label: City
     zip:
