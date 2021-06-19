@@ -1,0 +1,17 @@
+# ===================================
+#  Reorder Supporters Config
+# ===================================
+
+# Reorder Title
+title: Reorder Supporters
+
+# Attribute name
+nameFrom: name
+
+# Model Class name
+modelClass: Underflip\Resorts\Models\Supporter
+
+# Toolbar widget configuration
+toolbar:
+    # Partial for toolbar buttons
+    buttons: reorder_toolbar

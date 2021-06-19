@@ -1,0 +1,11 @@
+title: underflip.resorts::lang.team_member.plural
+modelClass: Underflip\Resorts\Models\TeamMember
+list: $/underflip/resorts/models/teammember/columns.yaml
+recordUrl: 'underflip/resorts/teammembers/update/:id'
+noRecordsMessage: 'backend::lang.list.no_records'
+recordsPerPage: 20
+showSetup: true
+toolbar:
+    buttons: list_toolbar
+    search:
+        prompt: 'backend::lang.list.search_prompt'
