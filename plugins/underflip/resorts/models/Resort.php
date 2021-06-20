@@ -29,10 +29,16 @@ class Resort extends Model
      */
     public $table = 'underflip_resorts_resorts';
 
+    /**
+     * @var array
+     */
     public $hasOne = [
         'location' => Location::class,
     ];
 
+    /**
+     * @var array
+     */
     public $hasMany = [
         'ratings' => Rating::class,
         'numerics' => Numeric::class,
