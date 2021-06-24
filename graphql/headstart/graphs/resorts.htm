@@ -13,6 +13,7 @@ input OrderBy {
 
 extend type Query {
     resort(id: ID! @eq): Resort @find(model: "Underflip\\Resorts\\Models\\Resort"),
+    resortByUrlSegment(url_segment: String! @eq): Resort @find(model: "Underflip\\Resorts\\Models\\Resort"),
     resorts(
         filter: [Filter!]
         orderBy: OrderBy
