@@ -3163,13 +3163,10 @@ $item.addClass('animate-enter').prependTo($otherContainer).one('webkitAnimationE
 if(!this.scopeValues[this.activeScopeName])
 return
 var
-itemId=$item.data('item-id'),active=this.scopeValues[this.activeScopeName],available=this.scopeAvailable[this.activeScopeName],fromItems=isDeselect?active:available,toItems=isDeselect?available:active,testFunc=function(active){return active.id==itemId},item=$.grep(fromItems,testFunc).pop(),filtered=$.grep(fromItems,testFunc,true)
-if(isDeselect)
-this.scopeValues[this.activeScopeName]=filtered
-else
-this.scopeAvailable[this.activeScopeName]=filtered
-if(item)
-toItems.push(item)
+itemId=$item.data('item-id'),active=this.scopeValues[this.activeScopeName],available=this.scopeAvailable[this.activeScopeName],fromItems=isDeselect?active:available,testFunc=function(active){return active.id==itemId},item=$.grep(fromItems,testFunc).pop()??{'id':itemId,'name':$item.text()},filtered=$.grep(fromItems,testFunc,true)
+if(isDeselect){this.scopeValues[this.activeScopeName]=filtered
+this.scopeAvailable[this.activeScopeName].push(item)}else{this.scopeAvailable[this.activeScopeName]=filtered
+this.scopeValues[this.activeScopeName].push(item)}
 this.toggleFilterButtons(active)
 this.updateScopeSetting(this.$activeScope,isDeselect?filtered.length:active.length)
 this.isActiveScopeDirty=true
@@ -3273,7 +3270,7 @@ $.fn.filterWidget.Constructor=FilterWidget
 $.fn.filterWidget.noConflict=function(){$.fn.filterWidget=old
 return this}
 $(document).render(function(){$('[data-control="filterwidget"]').filterWidget();})}(window.jQuery);+function($){"use strict";var FilterWidget=$.fn.filterWidget.Constructor;var overloaded_init=FilterWidget.prototype.init;FilterWidget.prototype.init=function(){overloaded_init.apply(this)
-this.ignoreTimezone=this.$el.children().get(0).hasAttribute('data-ignore-timezone');this.initRegion()
+var self=this;this.$el.children().each(function(key,$filter){if($filter.hasAttribute('data-ignore-timezone')){self.ignoreTimezone=true;return false;}});this.initRegion()
 this.initFilterDate()}
 FilterWidget.prototype.initFilterDate=function(){var self=this
 this.$el.on('show.oc.popover','a.filter-scope-date',function(event){self.initDatePickers($(this).hasClass('range'))
@@ -3815,6 +3812,7 @@ this.$modal.on('hide.bs.modal',function(){self.triggerEvent('hide.oc.popup')
 self.isOpen=false
 self.setBackdrop(false)})
 this.$modal.on('hidden.bs.modal',function(){self.triggerEvent('hidden.oc.popup')
+$.oc.foundation.controlUtils.disposeControls(self.$container.get(0))
 self.$container.remove()
 $(document.body).removeClass('modal-open')
 self.dispose()})
