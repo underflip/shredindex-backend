@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libzip-dev \
     && docker-php-ext-install zip pdo_mysql \
-    && docker-php-ext-install gd \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd \
     && pecl install xdebug
 
 RUN { \
