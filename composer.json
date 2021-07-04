@@ -49,7 +49,7 @@
             "phpcs --colors -nq --report=\"full\" --extensions=\"php\""
         ],
         "plugin-refresh": [
-            "docker exec shredindex-backend-php php artisan plugin:refresh UnderFlip.Resorts"
+            "docker exec shredindex-backend-php php artisan plugin:refresh Underflip.Resorts"
         ]
     },
     "config": {

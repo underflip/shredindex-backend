@@ -13,8 +13,10 @@ use October\Rain\Database\Traits\Validation;
  * @property int $id
  * @property string $title
  * @property string $url_segment
+ * @property Location location
  * @method Collection ratings()
- * @method Collection stats()
+ * @method Collection numerics()
+ * @method Collection generics()
  */
 class Resort extends Model
 {

@@ -14,8 +14,8 @@ use Model;
 * @property string zip
 * @property int country_id
 * @property int state_id
-* @property decimal latitude
-* @property decimal longitude
+* @property float latitude
+* @property float longitude
 * @property string vicinity
 */
 
@@ -36,4 +36,11 @@ class Location extends Model
      * @var string
      */
     public $table = 'underflip_resorts_location';
+
+    /**
+     * @var array
+     */
+    public $belongsTo = [
+      'resort' => Resort::class,
+    ];
 }
