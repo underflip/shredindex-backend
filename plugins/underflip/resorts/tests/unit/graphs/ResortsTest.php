@@ -37,7 +37,8 @@ class ResortsTest extends BaseTestCase
         // Create resort: Foo
         $fooResort = Resort::create([
             'title' => 'Foo Resort',
-            'url_segment' => 'foo-resort'
+            'url_segment' => 'foo-resort',
+            'description' => 'Foo Description',
         ]);
 
         Rating::create([
@@ -61,7 +62,8 @@ class ResortsTest extends BaseTestCase
         // Create resort: Bar
         $barResort = Resort::create([
             'title' => 'Bar Resort',
-            'url_segment' => 'bar-resort'
+            'url_segment' => 'bar-resort',
+            'description' => 'Bar Description',
         ]);
 
         Rating::create([
@@ -79,7 +81,8 @@ class ResortsTest extends BaseTestCase
         // Create resort: Bin
         $binResort = Resort::create([
             'title' => 'Bin Resort',
-            'url_segment' => 'bin-resort'
+            'url_segment' => 'bin-resort',
+            'description' => 'Bin Description',
         ]);
 
         Rating::create([
@@ -108,6 +111,7 @@ class ResortsTest extends BaseTestCase
                     id
                     title
                     url_segment
+                    description
                     ratings {
                         id
                         name
@@ -134,6 +138,12 @@ class ResortsTest extends BaseTestCase
             'Foo Resort',
             $response->json('data.resort.title'),
             'Should graph resort'
+        );
+
+        $this->assertSame(
+            'Foo Description',
+            $response->json('data.resort.description'),
+            'Should graph description'
         );
 
         $this->assertCount(

@@ -22,3 +22,11 @@ generics:
     manage:
         form: $/underflip/resorts/models/generic/fields.yaml
         list: $/underflip/resorts/models/generic/columns.yaml
+location:
+    label: Location
+    view:
+        form: $/underflip/resorts/models/location/fields.yaml
+        toolbarButtons: update
+    manage:
+        form: $/underflip/resorts/models/location/fields.yaml
+        list: $/underflip/resorts/models/location/columns.yaml

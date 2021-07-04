@@ -1,0 +1,33 @@
+columns:
+    address:
+        label: Address
+        type: text
+        sortable: true
+    city:
+        label: City
+        type: text
+        sortable: true
+    zip:
+        label: Zip
+        type: text
+        sortable: true
+    country_code:
+        label: Country
+        type: text
+        sortable: true
+    state_code:
+        label: State
+        type: text
+        sortable: true
+    latitude:
+        label: Latitude
+        type: number
+        sortable: true
+    longitude:
+        label: Longitude
+        type: number
+        sortable: true
+    vicinity:
+        label: Vicinity
+        type: text
+        sortable: true

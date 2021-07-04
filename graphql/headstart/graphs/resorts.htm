@@ -13,6 +13,7 @@ input OrderBy {
 
 extend type Query {
     resort(id: ID! @eq): Resort @find(model: "Underflip\\Resorts\\Models\\Resort"),
+    resortByUrlSegment(url_segment: String! @eq): Resort @find(model: "Underflip\\Resorts\\Models\\Resort"),
     resorts(
         filter: [Filter!]
         orderBy: OrderBy
@@ -20,17 +21,56 @@ extend type Query {
 }
 
 type Resort {
-    id: ID
-    title: String
-    url_segment: String
-    ratings: [ResortAttribute!]! @hasMany
-    numerics: [ResortAttribute!]! @hasMany
-    generics: [ResortAttribute!]! @hasMany
+    id: ID!
+    title: String!
+    url_segment: String!
+    description: String!
+    location: Location! @hasOne
+    ratings: [Rating!]! @hasMany
+    numerics: [Numeric!]! @hasMany
+    generics: [Generic!]! @hasMany
 }
 
-type ResortAttribute {
+type Rating {
+    id: ID
+    name: String
+    title: String
+    value: Int
+}
+
+type Numeric {
+    id: ID
+    name: String
+    title: String
+    value: Int
+}
+
+type Generic {
     id: ID
     name: String
     title: String
     value: String
+}
+
+type Location {
+    id: ID!
+    address: String!
+    city: String!
+    zip: String
+    latitude: String!
+    longitude: String!
+    country: Country! @hasOne
+    state: State @hasOne
+}
+
+type Country {
+    id: ID!
+    code: String!
+    name: String!
+}
+
+type State {
+    id: ID!
+    code: String!
+    name: String!
 }

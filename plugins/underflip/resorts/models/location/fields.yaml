@@ -1,0 +1,26 @@
+fields:
+    address:
+        label: Address
+        type: addressfinder
+        fieldMap:
+            latitude: latitude
+            longitude: longitude
+            city: city
+            zip: zip
+            country: country_code
+            state: state_code
+            vicinity: vicinity
+    city:
+        label: City
+    zip:
+        label: Zip
+    country_code:
+        label: Country
+    state_code:
+        label: State
+    latitude:
+        label: Latitude
+    longitude:
+        label: Longitude
+    vicinity:
+        label: Vicinity
