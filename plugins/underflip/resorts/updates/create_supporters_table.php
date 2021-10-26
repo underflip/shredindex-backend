@@ -4,7 +4,6 @@ namespace Underflip\Resorts\Updates;
 
 use October\Rain\Database\Updates\Migration;
 use Schema;
-use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Supporter;
 
 class CreateSupportersTable extends Migration

@@ -1,0 +1,15 @@
+columns:
+    id:
+        label: ID
+        type: number
+        sortable: true
+        width: 10%
+        align: left
+    comment:
+        label: Comment
+        type: text
+        sortable: true
+    author:
+        label: Author
+        type: text
+        sortable: true

@@ -4,9 +4,12 @@ namespace Underflip\Resorts\Updates;
 
 use Underflip\Resorts\Models\Unit;
 use October\Rain\Database\Updates\Seeder;
+use Underflip\Resorts\Plugin;
 
 class SeedUnitsTable extends Seeder
 {
+
+
     public function run()
     {
         Unit::create([
@@ -34,7 +37,7 @@ class SeedUnitsTable extends Seeder
         ]);
 
         Unit::create([
-            'name' => 'score',
+            'name' => Plugin::UNIT_NAME_SCORE,
             'title' => 'Score',
             'singular_title' => 'Score',
             'plural_title' => 'Scores',

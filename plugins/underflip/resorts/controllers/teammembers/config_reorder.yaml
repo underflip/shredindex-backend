@@ -13,5 +13,6 @@ modelClass: Underflip\Resorts\Models\TeamMember
 
 # Toolbar widget configuration
 toolbar:
-    # Partial for toolbar buttons
-    buttons: reorder_toolbar
+
+# Partial for toolbar buttons
+buttons: reorder_toolbar

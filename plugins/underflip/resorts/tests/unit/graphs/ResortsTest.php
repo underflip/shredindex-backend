@@ -5,11 +5,11 @@ namespace Underflip\Resorts\Tests\Graphs;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
+use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Numeric;
 use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
-use Underflip\Resorts\Models\Stat;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
 
@@ -28,7 +28,7 @@ class ResortsTest extends BaseTestCase
     {
         parent::setUp();
 
-        $totalShredScoreId = Type::where('name', 'total_shred_score')->first()->id;
+        $totalShredScoreId = Type::where('name', 'digital_nomad_score')->first()->id;
         $avgAnnualSnowfallId = Type::where('name', 'average_annual_snowfall')->first()->id;
         $snowMakingId = Type::where('name', 'snow_making')->first()->id;
 
@@ -154,7 +154,7 @@ class ResortsTest extends BaseTestCase
 
         $this->assertSame(
             [
-                'total_shred_score'
+                'digital_nomad_score'
             ],
             $response->json('data.resort.ratings.*.name'),
             'Should graph ratings with expected output'
@@ -294,7 +294,7 @@ class ResortsTest extends BaseTestCase
                  resorts(
                     first: 10
                     filter: [{
-                        type_name: "total_shred_score"
+                        type_name: "digital_nomad_score"
                         operator: ">",
                         value: "75"
                     }]
@@ -341,7 +341,7 @@ class ResortsTest extends BaseTestCase
                     first: 10
                     filter: [
                         {
-                            type_name: "total_shred_score"
+                            type_name: "digital_nomad_score"
                             operator: ">",
                             value: "25"
                         },
@@ -440,7 +440,7 @@ class ResortsTest extends BaseTestCase
                  resorts(
                     first: 10
                     orderBy: {
-                        type_name: "total_shred_score",
+                        type_name: "digital_nomad_score",
                         direction: "asc"
                     }
                  ) {

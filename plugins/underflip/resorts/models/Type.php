@@ -14,6 +14,7 @@ use ReflectionClass;
  * @property string $title
  * @property string $category A broad "belongs to" value of the type of class that can be related
  * @property string $default The default value
+ * @property int $unit_id
  * @method Unit unit() The unit of measurement or denomination
  * @method Collection values()
  */
@@ -75,6 +76,7 @@ class Type extends Model
             Rating::class,
             Numeric::class,
             Generic::class,
+            TotalScore::class,
         ];
 
         $categories = [];

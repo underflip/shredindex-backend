@@ -2,10 +2,9 @@
 
 namespace Underflip\Resorts;
 
-use App;
 use Backend;
 use System\Classes\PluginBase;
-use System\Classes\SettingsManager;
+use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\Console\SeedTestData;
 use Underflip\Resorts\models\Settings;
 
@@ -14,6 +13,8 @@ use Underflip\Resorts\models\Settings;
  */
 class Plugin extends PluginBase
 {
+    public const UNIT_NAME_SCORE = 'score';
+
     /**
      * @var array
      */
@@ -48,6 +49,7 @@ class Plugin extends PluginBase
     public function register()
     {
         $this->registerConsoleCommand('resorts:seed_test_data', SeedTestData::class);
+        $this->registerConsoleCommand('resorts:refresh_total_score', RefreshTotalScore::class);
     }
 
     /**
@@ -111,5 +113,13 @@ class Plugin extends PluginBase
                 return (new \ReflectionClass($value))->getShortName();
             }
         ];
+    }
+
+    /**
+     * @return void
+     */
+    public function registerSchedule($schedule)
+    {
+        $schedule->command('resorts:refresh_total_score')->hourly();
     }
 }

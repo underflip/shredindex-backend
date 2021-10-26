@@ -95,6 +95,30 @@ class MySeeder extents Seeder implements Downable
 
 Each `Downable` Seeder uses a `public function down()` method to control the tear down behaviour when the `resorts:seed_test_data` command's `--fresh` option is used.
 
+### Plugin refresh
+
+When you make any changes to our Resort plugin's migrations or seeders, you can refresh the plugin to re-run the current version using the `plugin:refresh Underflip.Resorts` artisan command.
+
+There's also a handy composer script to run this from your host machine:
+
+```
+composer plugin-refresh
+```
+
+### Total scores ("Total Shred Score")
+
+Total scores are calculated for each Resort every hour. This is configured under `Underflip\Resorts\Plugin::registerSchedule()`
+
+#### Manually refresh total scores
+
+Manually refresh Resort total scores with the `resorts:refresh_total_score` artisan command.
+
+There's also a handy composer script to run this from your host machine:
+
+```
+composer resorts-refresh-total-shred-score
+```
+
 # Contributors
 
 [Thomas Hansen](https://github.com/krank3n)
