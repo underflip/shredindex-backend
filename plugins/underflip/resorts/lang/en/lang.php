@@ -17,5 +17,9 @@
     'team_member' => [
         'singular' => 'Team Member',
         'plural' => 'Team Members',
+    ],
+    'resort_image' => [
+        'singular' => 'Resort Image',
+        'plural' => 'Resort Images',
     ]
 ];

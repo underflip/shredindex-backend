@@ -2,17 +2,17 @@
 
 use October\Rain\Database\Updates\Migration;
 use Schema;
-use Underflip\Resorts\Models\Rating;
+use Underflip\Resorts\Models\Comment;
 
-class CreateRatingsTable extends Migration
+class CreateCommentsTable extends Migration
 {
     public function up()
     {
-        Schema::create(app(Rating::class)->getTable(), function ($table) {
+        Schema::create(app(Comment::class)->getTable(), function ($table) {
             $table->increments('id');
-            $table->smallInteger('value');
             $table->integer('resort_id')->nullable();
-            $table->integer('type_id')->nullable();
+            $table->text('comment');
+            $table->string('author');
         });
     }
 
@@ -21,6 +21,6 @@ class CreateRatingsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists(app(Rating::class)->getTable());
+        Schema::dropIfExists(app(Comment::class)->getTable());
     }
 }

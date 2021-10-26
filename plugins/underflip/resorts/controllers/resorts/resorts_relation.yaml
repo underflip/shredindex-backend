@@ -30,3 +30,21 @@ location:
     manage:
         form: $/underflip/resorts/models/location/fields.yaml
         list: $/underflip/resorts/models/location/columns.yaml
+resort_images:
+    label: Images
+    view:
+        list: $/underflip/resorts/models/resortimage/columns.yaml
+        form: $/underflip/resorts/models/resortimage/fields.yaml
+        toolbarButtons: create|delete
+    manage:
+        form: $/underflip/resorts/models/resortimage/fields.yaml
+        list: $/underflip/resorts/models/resortimage/columns.yaml
+comments:
+    label: Comments
+    view:
+        list: $/underflip/resorts/models/comment/columns.yaml
+        form: $/underflip/resorts/models/comment/fields.yaml
+        toolbarButtons: create|delete
+    manage:
+        form: $/underflip/resorts/models/comment/fields.yaml
+        list: $/underflip/resorts/models/comment/columns.yaml

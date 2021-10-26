@@ -24,6 +24,9 @@ class CreateLocationTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         Schema::dropIfExists(app(Location::class)->getTable());

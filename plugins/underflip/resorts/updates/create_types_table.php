@@ -22,7 +22,7 @@ class CreateTypesTable extends Migration
     }
 
     /**
-     * @return void
+     * @codeCoverageIgnore
      */
     public function down()
     {

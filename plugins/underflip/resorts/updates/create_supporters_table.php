@@ -4,7 +4,6 @@ namespace Underflip\Resorts\Updates;
 
 use October\Rain\Database\Updates\Migration;
 use Schema;
-use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Supporter;
 
 class CreateSupportersTable extends Migration
@@ -19,6 +18,9 @@ class CreateSupportersTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         foreach (Supporter::all() as $supporter) {

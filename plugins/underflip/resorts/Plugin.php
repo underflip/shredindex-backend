@@ -2,11 +2,12 @@
 
 namespace Underflip\Resorts;
 
-use App;
 use Backend;
+use Event;
 use System\Classes\PluginBase;
-use System\Classes\SettingsManager;
+use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\Console\SeedTestData;
+use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\models\Settings;
 
 /**
@@ -14,6 +15,8 @@ use Underflip\Resorts\models\Settings;
  */
 class Plugin extends PluginBase
 {
+    public const UNIT_NAME_SCORE = 'score';
+
     /**
      * @var array
      */
@@ -40,6 +43,15 @@ class Plugin extends PluginBase
     public function boot()
     {
         config(['lighthouse.namespaces.directives' => 'Underflip\\Resorts\\GraphQL\\Directives']);
+
+        Event::listen(['rating.save', 'rating.delete'], function (Rating $rating) {
+            $resort = $rating->resort;
+
+            if ($resort) {
+                // Refresh total scores
+                $resort->updateTotalScore();
+            }
+        });
     }
 
     /**
@@ -48,6 +60,7 @@ class Plugin extends PluginBase
     public function register()
     {
         $this->registerConsoleCommand('resorts:seed_test_data', SeedTestData::class);
+        $this->registerConsoleCommand('resorts:refresh_total_score', RefreshTotalScore::class);
     }
 
     /**
