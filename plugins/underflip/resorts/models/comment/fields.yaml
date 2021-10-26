@@ -1,0 +1,12 @@
+fields:
+    comment:
+        label: Comment
+        span: full
+        required: 1
+        type: markdown
+        size: huge
+    author:
+        label: Author
+        type: text
+        sortable: true
+        required: 1

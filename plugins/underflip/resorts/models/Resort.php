@@ -17,6 +17,7 @@ use October\Rain\Database\Traits\Validation;
  * @method Collection ratings()
  * @method Collection numerics()
  * @method Collection generics()
+ * @method Collection resort_images()
  */
 class Resort extends Model
 {
@@ -45,6 +46,7 @@ class Resort extends Model
         'ratings' => Rating::class,
         'numerics' => Numeric::class,
         'generics' => Generic::class,
+        'resort_images' => ResortImage::class,
+        'comments' => Comment::class,
     ];
-
 }

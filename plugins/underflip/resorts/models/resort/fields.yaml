@@ -31,3 +31,11 @@ fields:
         label: Generics
         type: partial
         path: field_generics
+    images:
+        label: Images
+        type: partial
+        path: field_resort_images
+    comments:
+        label: Comments
+        type: partial
+        path: field_comments
