@@ -2,15 +2,15 @@
 
 namespace Underflip\Resorts\Updates;
 
+use October\Rain\Database\Updates\Seeder;
 use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Numeric;
 use Underflip\Resorts\Models\Rating;
-use Underflip\Resorts\Models\Score;
-use Underflip\Resorts\Models\Stat;
+use Underflip\Resorts\Models\TotalScore;
 use Underflip\Resorts\Models\Type;
-use Underflip\Resorts\Models\Unit;
 use Underflip\Resorts\Models\TypeValue;
-use October\Rain\Database\Updates\Seeder;
+use Underflip\Resorts\Models\Unit;
+use Underflip\Resorts\Plugin;
 
 class SeedTypesTable extends Seeder
 {
@@ -76,6 +76,7 @@ class SeedTypesTable extends Seeder
         $this->seedRatingTypes();
         $this->seedNumericTypes();
         $this->seedGenericTypes();
+        app(TotalScore::class)->findOrCreateType();
     }
 
     /**
@@ -86,12 +87,6 @@ class SeedTypesTable extends Seeder
     {
         $score = $this->getUnitByName('score');
 
-        Type::create([
-            'name' => 'total_shred_score',
-            'title' => 'Total Shred Score',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
         Type::create([
             'name' => 'digital_nomad_score',
             'title' => 'Digital Nomad Score',

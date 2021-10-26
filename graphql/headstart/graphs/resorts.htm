@@ -24,30 +24,43 @@ type Resort {
     id: ID!
     title: String!
     url_segment: String!
+    url: String!
+    total_score: TotalScore
     description: String!
     location: Location! @hasOne
     ratings: [Rating!]! @hasMany
+    highlights: [Rating!]!
+    lowlights: [Rating!]!
     numerics: [Numeric!]! @hasMany
     generics: [Generic!]! @hasMany
+    resort_images: [Images!]! @hasMany
+    comments: [Comment!]! @hasMany
+}
+
+type TotalScore {
+    id: ID
+    name: String!
+    title: String
+    value: Float
 }
 
 type Rating {
     id: ID
-    name: String
+    name: String!
     title: String
     value: Int
 }
 
 type Numeric {
     id: ID
-    name: String
+    name: String!
     title: String
     value: Int
 }
 
 type Generic {
     id: ID
-    name: String
+    name: String!
     title: String
     value: String
 }
@@ -73,4 +86,28 @@ type State {
     id: ID!
     code: String!
     name: String!
+}
+
+type Images {
+    id: ID!
+    name: String
+    alt: String
+    image: Image
+    sort_order: Int
+}
+
+type Image {
+    disk_name: String
+    file_size: Int
+    content_type: String
+    title: String
+    description: String
+    sort_order: Int
+    path: String
+}
+
+type Comment {
+    id: ID!
+    comment: String
+    author: String
 }

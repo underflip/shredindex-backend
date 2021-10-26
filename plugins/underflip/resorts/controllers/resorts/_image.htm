@@ -1,0 +1,5 @@
+<?php if ($value): ?>
+    <img src="<?= $value->getThumb(75, 0)?>" alt="<?= $value->title ?>">
+<?php else: ?>
+    <p>No image</p>
+<?php endif ?>

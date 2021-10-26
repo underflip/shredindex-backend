@@ -103,7 +103,9 @@ SDL;
     {
         $scopes = [];
 
-        foreach (app(Resort::class)->hasMany as $name => $class) {
+        $relations = app(Resort::class)->hasMany + app(Resort::class)->hasOne;
+
+        foreach ($relations as $name => $class) {
             if (!in_array(Filterable::class, class_uses_recursive($class))) {
                 // Relation isn't filterable
                 continue;
@@ -238,8 +240,20 @@ SDL;
 
         if (!$column) {
             throw new \Exception(
-                'Cannot order by a type with a category that has no column definition in $scopes'
+                'Cannot order by a type with a category that has no column definition in getFilterableScopes()'
             );
+        }
+
+        // Sanity check that the type is in the expected category
+        if (!app($type->category)->where('type_id', $type->id)->count()) {
+            throw new \Exception(sprintf(
+                'Unable to order by "%s": No "%s" was found with a type named "%s". ' .
+                'Type "%s" probably has the wrong category.',
+                $typeName,
+                $type->category,
+                $typeName,
+                $typeName
+            ));
         }
 
         // Order by values of that metric
