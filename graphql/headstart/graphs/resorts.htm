@@ -78,9 +78,9 @@ type State {
 }
 
 type Images {
-    id: ID
+    id: ID!
     name: String
-    url: String
+    alt: String
     image: Image
     sort_order: Int
 }
@@ -96,7 +96,7 @@ type Image {
 }
 
 type Comment {
-    id: ID
+    id: ID!
     comment: String
     author: String
 }

@@ -10,8 +10,8 @@ columns:
         type: text
         sortable: true
         searchable: true
-    url:
-        label: URL
+    alt:
+        label: Alt Tag
         type: text
     image:
         label: Image

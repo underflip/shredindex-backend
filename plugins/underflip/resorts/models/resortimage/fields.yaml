@@ -3,9 +3,9 @@ fields:
         label: Name
         required: 1
         type: text
-    url:
-        label: URL
-        required: 1
+    alt:
+        label: Alt Tag
+        required: 0
         type: text
     image:
         label: Image

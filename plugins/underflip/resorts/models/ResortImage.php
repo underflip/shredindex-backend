@@ -10,7 +10,7 @@ use System\Models\File;
  * An image of a Resort
  *
  * @property string name
- * @property string url
+ * @property string alt tag
  * @property File image
  * @method File image()
  */

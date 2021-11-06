@@ -15,7 +15,7 @@ class CreateResortImagesTable extends Migration
             $table->increments('id');
             $table->integer('resort_id')->nullable();
             $table->string('name');
-            $table->string('url');
+            $table->string('alt')->nullable();
             $table->integer('sort_order')->nullable();
         });
     }
