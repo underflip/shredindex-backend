@@ -49,4 +49,30 @@ class Resort extends Model
         'resort_images' => ResortImage::class,
         'comments' => Comment::class,
     ];
+
+    /**
+     * The best ratings
+     *
+     * @return \October\Rain\Database\Relations\HasMany
+     */
+    public function getHighlightsAttribute()
+    {
+        return $this->ratings()
+        ->orderBy('value', 'desc')
+        ->limit(3)
+        ->get();
+    }
+
+    /**
+     * The best ratings
+     *
+     * @return \October\Rain\Database\Relations\HasMany
+     */
+    public function getLowlightsAttribute()
+    {
+        return $this->ratings()
+        ->orderBy('value', 'asc')
+        ->limit(3)
+        ->get();
+    }
 }

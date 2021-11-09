@@ -27,6 +27,8 @@ type Resort {
     description: String!
     location: Location! @hasOne
     ratings: [Rating!]! @hasMany
+    highlights: [Rating!]!
+    lowlights: [Rating!]!
     numerics: [Numeric!]! @hasMany
     generics: [Generic!]! @hasMany
     resort_images: [Images!]! @hasMany
