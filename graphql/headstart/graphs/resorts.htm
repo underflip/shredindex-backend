@@ -24,6 +24,7 @@ type Resort {
     id: ID!
     title: String!
     url_segment: String!
+    url: String!
     description: String!
     location: Location! @hasOne
     ratings: [Rating!]! @hasMany

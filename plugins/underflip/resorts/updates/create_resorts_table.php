@@ -12,6 +12,7 @@ class CreateResortsTable extends Migration
             $table->increments('id');
             $table->string('title');
             $table->string('url_segment')->unique();
+            $table->string('url')->unique();
             $table->string('description');
         });
     }

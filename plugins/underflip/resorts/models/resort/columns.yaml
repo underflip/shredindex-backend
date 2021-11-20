@@ -13,3 +13,7 @@ columns:
         label: 'URL Segment'
         type: text
         searchable: true
+    url:
+        label: 'Resort URL'
+        type: text
+        searchable: true
