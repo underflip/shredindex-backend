@@ -52,8 +52,9 @@ class Resort extends Model
 
     /**
      * The resort URL.
+     * Uses beforeSave function to eliminate duplicate error on save.
      */
-     public function getURLAttribute()
+     public function beforeSave()
      {
          return $this->url = sprintf('resort/%s', $this->url_segment);
      }
