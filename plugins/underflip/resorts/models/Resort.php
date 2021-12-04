@@ -51,6 +51,14 @@ class Resort extends Model
     ];
 
     /**
+     * The resort URL.
+     */
+     public function getURLAttribute()
+     {
+         return $this->url = sprintf('resort/%s', $this->url_segment);
+     }
+
+    /**
      * The best ratings
      *
      * @return \October\Rain\Database\Relations\HasMany
