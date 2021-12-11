@@ -13,6 +13,7 @@ class CreateResortsTable extends Migration
             $table->string('title');
             $table->string('url_segment')->unique();
             $table->string('url')->unique();
+            $table->decimal('total_score');
             $table->string('description');
         });
     }

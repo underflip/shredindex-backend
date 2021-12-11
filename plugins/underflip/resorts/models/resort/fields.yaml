@@ -24,6 +24,10 @@ fields:
         label: Location
         type: partial
         path: field_location
+    total_score:
+        label: Total Score
+        span: auto
+        type: text
     ratings:
         label: Ratings
         type: partial

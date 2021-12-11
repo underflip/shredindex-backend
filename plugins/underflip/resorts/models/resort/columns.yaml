@@ -17,3 +17,7 @@ columns:
         label: 'Resort URL'
         type: text
         searchable: true
+    total_score:
+        label: 'Total Score'
+        type: text
+        searchable: true

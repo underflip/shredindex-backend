@@ -59,6 +59,30 @@ class Resort extends Model
          return $this->url = sprintf('resort/%s', $this->url_segment);
      }
 
+     /**
+      * The total score
+      *
+      * @return \October\Rain\Database\Relations\HasOne
+      */
+     public function getTotalScoreAttribute()
+     {
+         $ratingsWithScore = $this->ratings()
+         ->where('value', '>=', 0)
+         ->orderBy('value', 'desc')
+         ->get();
+
+         $totalValue = 0;
+
+          if (count($ratingsWithScore)){
+              foreach ($ratingsWithScore as $rating) {
+                  $totalValue = $totalValue + $rating->value;
+              }
+              return round($totalValue/count($ratingsWithScore),1);
+          } else {
+              return $totalValue;
+          }
+     }
+
     /**
      * The best ratings
      *
