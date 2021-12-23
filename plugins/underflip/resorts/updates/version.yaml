@@ -16,6 +16,5 @@
     - seed_types_table.php
     - seed_supporters_table.php
     - seed_team_members_table.php
-1.0.2:
     - create_resort_images_table.php
     - create_comments_table.php

@@ -60,27 +60,20 @@ class Resort extends Model
      }
 
      /**
-      * The total score
+      * The "total score" that represents all ratings of this resort
       *
-      * @return \October\Rain\Database\Relations\HasOne
+      * @return Rating
       */
      public function getTotalScoreAttribute()
      {
-         $ratingsWithScore = $this->ratings()
-         ->where('value', '>=', 0)
-         ->orderBy('value', 'desc')
-         ->get();
+         $values = $this->ratings()->pluck('value');
 
-         $totalValue = 0;
+         $rating = new Rating();
+         $rating->name = Rating::RATING_NAME_TOTAL_SCORE;
+         $rating->title = __('Total score');
+         $rating->value = round(array_sum($values)/count($values), 1);
 
-          if (count($ratingsWithScore)){
-              foreach ($ratingsWithScore as $rating) {
-                  $totalValue = $totalValue + $rating->value;
-              }
-              return round($totalValue/count($ratingsWithScore),1);
-          } else {
-              return $totalValue;
-          }
+         return $rating;
      }
 
     /**
@@ -91,9 +84,9 @@ class Resort extends Model
     public function getHighlightsAttribute()
     {
         return $this->ratings()
-        ->orderBy('value', 'desc')
-        ->limit(3)
-        ->get();
+            ->orderBy('value', 'desc')
+            ->limit(3)
+            ->get();
     }
 
     /**
@@ -104,8 +97,8 @@ class Resort extends Model
     public function getLowlightsAttribute()
     {
         return $this->ratings()
-        ->orderBy('value', 'asc')
-        ->limit(3)
-        ->get();
+            ->orderBy('value', 'asc')
+            ->limit(3)
+            ->get();
     }
 }
