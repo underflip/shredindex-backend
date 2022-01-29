@@ -66,12 +66,28 @@ class Resort extends Model
       */
      public function getTotalScoreAttribute()
      {
-         $values = $this->ratings()->pluck('value');
+        // Get the ratings we'll base the total score on
+        $values = $this->ratings()->pluck('value');
 
-         $rating = new Rating();
-         $rating->name = Rating::RATING_NAME_TOTAL_SCORE;
-         $rating->title = __('Total score');
-         $rating->value = round(array_sum($values)/count($values), 1);
+        // Calculate the total score
+        if (is_array($values)) {
+            $score = round(array_sum($values)/count($values), 1);
+        }
+        else {
+            $score = 1;
+        }
+
+        // Dynamically hydrate a resort attribute
+        // Type
+        $type = new Type();
+        $type->name = 'total_score';
+        $type->title = __('Total score');
+        $type->category = Rating::class;
+
+        // Rating
+        $rating = new Rating();
+        $rating->setRelation('type', $type);
+        $rating->value = $score;
 
          return $rating;
      }
