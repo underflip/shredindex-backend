@@ -25,7 +25,7 @@ type Resort {
     title: String!
     url_segment: String!
     url: String!
-    total_score: String!
+    total_score: TotalScore
     description: String!
     location: Location! @hasOne
     ratings: [Rating!]! @hasMany
@@ -37,23 +37,30 @@ type Resort {
     comments: [Comment!]! @hasMany
 }
 
+type TotalScore {
+    id: ID
+    name: String!
+    title: String
+    value: Float
+}
+
 type Rating {
     id: ID
-    name: String
+    name: String!
     title: String
     value: Int
 }
 
 type Numeric {
     id: ID
-    name: String
+    name: String!
     title: String
     value: Int
 }
 
 type Generic {
     id: ID
-    name: String
+    name: String!
     title: String
     value: String
 }

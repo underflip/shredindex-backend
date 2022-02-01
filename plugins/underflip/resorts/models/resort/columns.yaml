@@ -13,11 +13,3 @@ columns:
         label: 'URL Segment'
         type: text
         searchable: true
-    url:
-        label: 'Resort URL'
-        type: text
-        searchable: true
-    total_score:
-        label: 'Total Score'
-        type: text
-        searchable: true

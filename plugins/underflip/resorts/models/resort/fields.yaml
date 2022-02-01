@@ -10,10 +10,6 @@ fields:
         preset:
             field: title
             type: slug
-    url:
-        label: URL
-        span: auto
-        readOnly: true
     description:
         label: Description
         span: full
@@ -24,10 +20,10 @@ fields:
         label: Location
         type: partial
         path: field_location
-    total_score:
+    cms_total_score:
         label: Total Score
-        span: auto
-        type: text
+        attributes:
+            disabled: 1
     ratings:
         label: Ratings
         type: partial

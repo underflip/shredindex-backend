@@ -6,6 +6,7 @@ use App;
 use Backend;
 use System\Classes\PluginBase;
 use System\Classes\SettingsManager;
+use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\models\Settings;
 
 /**
@@ -13,6 +14,8 @@ use Underflip\Resorts\models\Settings;
  */
 class Plugin extends PluginBase
 {
+    public const UNIT_NAME_SCORE = 'score';
+
     /**
      * @var array
      */
@@ -39,6 +42,14 @@ class Plugin extends PluginBase
     public function boot()
     {
         config(['lighthouse.namespaces.directives' => 'Underflip\\Resorts\\GraphQL\\Directives']);
+    }
+
+    /**
+     * @return void
+     */
+    public function register()
+    {
+        $this->registerConsoleCommand('resorts:refresh_total_score', RefreshTotalScore::class);
     }
 
     /**
@@ -102,5 +113,13 @@ class Plugin extends PluginBase
                 return (new \ReflectionClass($value))->getShortName();
             }
         ];
+    }
+
+    /**
+     * @return void
+     */
+    public function registerSchedule($schedule)
+    {
+        $schedule->command('resorts:refresh_total_score')->hourly();
     }
 }

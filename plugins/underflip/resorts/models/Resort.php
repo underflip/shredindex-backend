@@ -4,6 +4,7 @@ namespace Underflip\Resorts\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Fluent;
 use Model;
 use October\Rain\Database\Traits\Validation;
 
@@ -14,6 +15,7 @@ use October\Rain\Database\Traits\Validation;
  * @property string $title
  * @property string $url_segment
  * @property Location location
+ * @property TotalScore total_score
  * @method Collection ratings()
  * @method Collection numerics()
  * @method Collection generics()
@@ -37,6 +39,7 @@ class Resort extends Model
      */
     public $hasOne = [
         'location' => Location::class,
+        'total_score' => TotalScore::class,
     ];
 
     /**
@@ -51,46 +54,14 @@ class Resort extends Model
     ];
 
     /**
-     * The resort URL.
-     * Uses beforeSave function to eliminate duplicate error on save.
+     * The resort's URL
+     *
+     * @return string
      */
-     public function beforeSave()
-     {
-         return $this->url = sprintf('resort/%s', $this->url_segment);
-     }
-
-     /**
-      * The "total score" that represents all ratings of this resort
-      *
-      * @return Rating
-      */
-     public function getTotalScoreAttribute()
-     {
-        // Get the ratings we'll base the total score on
-        $values = $this->ratings()->pluck('value');
-
-        // Calculate the total score
-        if (is_array($values)) {
-            $score = round(array_sum($values)/count($values), 1);
-        }
-        else {
-            $score = 1;
-        }
-
-        // Dynamically hydrate a resort attribute
-        // Type
-        $type = new Type();
-        $type->name = 'total_score';
-        $type->title = __('Total score');
-        $type->category = Rating::class;
-
-        // Rating
-        $rating = new Rating();
-        $rating->setRelation('type', $type);
-        $rating->value = $score;
-
-         return $rating;
-     }
+    public function getUrlAttribute()
+    {
+        return sprintf('resort/%s', $this->url_segment);
+    }
 
     /**
      * The best ratings
@@ -116,5 +87,13 @@ class Resort extends Model
             ->orderBy('value', 'asc')
             ->limit(3)
             ->get();
+    }
+
+    /**
+     * @return int|string
+     */
+    public function getCmsTotalScoreAttribute()
+    {
+        return $this->total_score ? $this->total_score->value : '(No ratings)';
     }
 }

@@ -5,6 +5,7 @@
     - create_ratings_table.php
     - create_numerics_table.php
     - create_generics_table.php
+    - create_total_scores_table.php
     - create_type_values_table.php
     - create_types_table.php
     - create_type_type_value_relation_table.php
