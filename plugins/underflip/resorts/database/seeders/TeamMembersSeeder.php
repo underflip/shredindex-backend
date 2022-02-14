@@ -1,12 +1,11 @@
 <?php
 
-namespace Underflip\Resorts\Updates;
+namespace Underflip\Resorts\Database\Seeders;
 
-use October\Rain\Database\Updates\Seeder;
-use Underflip\Resorts\Models\Supporter;
+use Seeder;
 use Underflip\Resorts\models\TeamMember;
 
-class SeedTeamMembersTable extends Seeder
+class TeamMembersSeeder extends Seeder implements Downable
 {
     public function run()
     {
@@ -31,5 +30,14 @@ class SeedTeamMembersTable extends Seeder
                 DIRECTORY_SEPARATOR .
                 'plugins/underflip/resorts/updates/assets/teammembers/jakxnz.png',
         ]);
+    }
+
+    public function down()
+    {
+        foreach (TeamMember::all() as $teamMember) {
+            $teamMember->image()->delete();
+        }
+
+        TeamMember::query()->truncate();
     }
 }

@@ -14,5 +14,3 @@
     - seed_settings.php
     - seed_units_table.php
     - seed_types_table.php
-    - seed_supporters_table.php
-    - seed_team_members_table.php

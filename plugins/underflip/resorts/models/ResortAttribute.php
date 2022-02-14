@@ -3,6 +3,7 @@
 namespace Underflip\Resorts\Models;
 
 use Model;
+use October\Rain\Database\Relations\BelongsTo;
 
 /**
  * The base architecture for each characteristic of a resort
@@ -12,6 +13,8 @@ use Model;
  * @property int type_id
  * @property Resort resort
  * @property Type type
+ * @method BelongsTo resort()
+ * @method BelongsTo type()
  */
 abstract class ResortAttribute extends Model
 {

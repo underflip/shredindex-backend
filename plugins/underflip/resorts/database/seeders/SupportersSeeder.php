@@ -1,11 +1,11 @@
 <?php
 
-namespace Underflip\Resorts\Updates;
+namespace Underflip\Resorts\Database\Seeders;
 
-use October\Rain\Database\Updates\Seeder;
+use Seeder;
 use Underflip\Resorts\Models\Supporter;
 
-class SeedSupportersTable extends Seeder
+class SupportersSeeder extends Seeder implements Downable
 {
     public function run()
     {
@@ -64,5 +64,14 @@ class SeedSupportersTable extends Seeder
                 DIRECTORY_SEPARATOR .
                 'plugins/underflip/resorts/updates/assets/supporters/safety_wing.png',
         ]);
+    }
+
+    public function down()
+    {
+        foreach (Supporter::all() as $supporter) {
+            $supporter->image()->delete();
+        }
+
+        Supporter::query()->truncate();
     }
 }
