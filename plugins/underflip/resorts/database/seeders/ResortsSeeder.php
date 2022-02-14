@@ -12,6 +12,9 @@ use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\Type;
 
+/**
+ * @codeCoverageIgnore
+ */
 class ResortsSeeder extends Seeder implements Downable
 {
     /**

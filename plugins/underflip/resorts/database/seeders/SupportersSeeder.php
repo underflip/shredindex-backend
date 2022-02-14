@@ -5,6 +5,9 @@ namespace Underflip\Resorts\Database\Seeders;
 use Seeder;
 use Underflip\Resorts\Models\Supporter;
 
+/**
+ * @codeCoverageIgnore
+ */
 class SupportersSeeder extends Seeder implements Downable
 {
     public function run()
