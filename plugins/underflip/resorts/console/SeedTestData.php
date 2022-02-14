@@ -15,6 +15,8 @@ use Underflip\Resorts\Database\Seeders\TeamMembersSeeder;
 /**
  * A command that seeds test data only (to be run outside of our plugin's
  * version.yaml roster)
+ *
+ * @codeCoverageIgnore
  */
 class SeedTestData extends Command
 {
