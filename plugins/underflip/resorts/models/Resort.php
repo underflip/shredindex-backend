@@ -4,6 +4,7 @@ namespace Underflip\Resorts\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Model;
 use October\Rain\Database\Traits\Validation;
 
@@ -13,7 +14,10 @@ use October\Rain\Database\Traits\Validation;
  * @property int $id
  * @property string $title
  * @property string $url_segment
- * @property Location location
+ * @property string $description
+ * @property Location $location
+ * @property int location_id
+ * @method HasOne location()
  * @method Collection ratings()
  * @method Collection numerics()
  * @method Collection generics()

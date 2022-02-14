@@ -53,6 +53,48 @@ You can query the GraphQL server at `/graphql` e.g `http://localhost:8080/graphq
 
 An easy way to query the GraphQL server is to use the [Chrome GraphiQL extension](https://chrome.google.com/webstore/detail/graphiql-extension/jhbedfdjpmemmbghfecnaeeiokonjclb)
 
+## Development & Testing
+
+### Seed Test Data
+
+Test Data can be seeded with the `resorts:seed_test_data` artisan command.
+
+The `resorts:seed_test_data` has the `--fresh` option to tear down seeded data before re-seeding (e.g `php artisan resorts:seed_test_data --fresh`)
+
+There's also a handy composer script to run this from your host machine (uses the `--fresh` option):
+
+```
+composer seed-test-data
+```
+
+### Adding seed data
+
+Our Seeders are in `plugins/underflip/resorts/database/seeders`. Add another Seeder to seed new fixtures for test data. Use the existing Seeders as an example.
+
+To engage a Seeder, add it to the `Underflip\Resorts\Console\SeedTestData::$seeders` e.g
+
+`plugins/underflip/resorts/console/SeedTestData.php`:
+```
+protected $seeders = [
+    ...,
+    YourSeeder::class,
+];
+```
+
+_NOTE: Seeders must be in topological order with dependencies first, so that Seed records exist for subsequent Seeders that depend on them_
+
+#### Seeder::down()
+
+When you want to tear down seeded fixtures with the `--fresh` option seeds a fresh set of fixtures, make sure that your Seeder implements `Downable`.
+
+e.g
+
+```markdown
+class MySeeder extents Seeder implements Downable
+```
+
+Each `Downable` Seeder uses a `public function down()` method to control the tear down behaviour when the `resorts:seed_test_data` command's `--fresh` option is used.
+
 # Contributors
 
 [Thomas Hansen](https://github.com/krank3n)

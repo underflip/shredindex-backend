@@ -2,21 +2,25 @@
 
 namespace Underflip\Resorts\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Model;
 
 /**
-* A location resort attribute for resort location that are
-* expressed as an object, e.g country, state , zip
-*
-* @property Resort $resort
-* @property string address
-* @property string city
-* @property string zip
-* @property int country_id
-* @property int state_id
-* @property float latitude
-* @property float longitude
-* @property string vicinity
+ * A location resort attribute for resort location that are
+ * expressed as an object, e.g country, state , zip
+ *
+ * @property Resort $resort
+ * @property string address
+ * @property string city
+ * @property string zip
+ * @property int country_id
+ * @property int state_id
+ * @property float latitude
+ * @property float longitude
+ * @property string vicinity
+ * @property int resort_id
+ * @method BelongsTo resort()
+ *
 */
 
 class Location extends Model

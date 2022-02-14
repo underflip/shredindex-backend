@@ -50,10 +50,16 @@
         ],
         "plugin-refresh": [
             "docker exec shredindex-backend-php php artisan plugin:refresh Underflip.Resorts"
+        ],
+        "seed-test-data": [
+            "docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh"
         ]
     },
     "config": {
-        "preferred-install": "dist"
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "composer/installers": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true

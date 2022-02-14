@@ -6,6 +6,7 @@ use App;
 use Backend;
 use System\Classes\PluginBase;
 use System\Classes\SettingsManager;
+use Underflip\Resorts\Console\SeedTestData;
 use Underflip\Resorts\models\Settings;
 
 /**
@@ -39,6 +40,14 @@ class Plugin extends PluginBase
     public function boot()
     {
         config(['lighthouse.namespaces.directives' => 'Underflip\\Resorts\\GraphQL\\Directives']);
+    }
+
+    /**
+     * @return void
+     */
+    public function register()
+    {
+        $this->registerConsoleCommand('resorts:seed_test_data', SeedTestData::class);
     }
 
     /**
