@@ -24,6 +24,7 @@ use October\Rain\Database\Relations\HasMany;
  * @method HasMany numerics()
  * @method HasMany generics()
  * @method HasMany resort_images()
+ * @method HasMany comments()
  */
 class Resort extends Model
 {

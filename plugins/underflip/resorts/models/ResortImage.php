@@ -3,16 +3,20 @@
 namespace Underflip\Resorts\Models;
 
 use Model;
+use October\Rain\Database\Relations\AttachOne;
+use October\Rain\Database\Relations\BelongsTo;
 use October\Rain\Database\Traits\Sortable;
 use System\Models\File;
 
 /**
  * An image of a Resort
  *
- * @property string name
- * @property string alt tag
- * @property File image
- * @method File image()
+ * @property string $name
+ * @property string $alt
+ * @property File $image
+ * @property Resort $resort
+ * @method AttachOne image()
+ * @method BelongsTo resort();
  */
 class ResortImage extends Model
 {
@@ -34,5 +38,12 @@ class ResortImage extends Model
      */
     public $attachOne = [
         'image' => File::class,
+    ];
+
+    /**
+     * @var array
+     */
+    public $belongsTo = [
+        'resort' => Resort::class,
     ];
 }

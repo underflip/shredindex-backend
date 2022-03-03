@@ -3,11 +3,16 @@
 namespace Underflip\Resorts\Models;
 
 use Model;
+use October\Rain\Database\Relations\BelongsTo;
 use System\Models\File;
 
 /**
  * Comments for the Resorts
  *
+ * @property string $comment
+ * @property string $author
+ * @property Resort $resort
+ * @method BelongsTo resort()
  */
 class Comment extends Model
 {
