@@ -2,6 +2,7 @@
 
 namespace Underflip\Resorts\Models;
 
+use Event;
 use October\Rain\Database\Traits\Validation;
 use Underflip\Resorts\Traits\Filterable;
 
@@ -38,4 +39,18 @@ class Rating extends ResortAttribute
     public $rules = [
         'value' => 'required|numeric|max:100',
     ];
+
+    protected function afterSave()
+    {
+        parent::afterUpdate();
+
+        Event::fire('rating.save', [$this]);
+    }
+
+    protected function afterDelete()
+    {
+        parent::afterDelete();
+
+        Event::fire('rating.delete', [$this]);
+    }
 }

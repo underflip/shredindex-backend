@@ -107,7 +107,7 @@ composer plugin-refresh
 
 ### Total scores ("Total Shred Score")
 
-Total scores are calculated for each Resort every hour. This is configured under `Underflip\Resorts\Plugin::registerSchedule()`
+Total scores are whenever a Resort's rating is created, saved or deleted.
 
 #### Manually refresh total scores
 
