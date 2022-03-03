@@ -11,7 +11,7 @@ class CreateCommentsTable extends Migration
         Schema::create(app(Comment::class)->getTable(), function ($table) {
             $table->increments('id');
             $table->integer('resort_id')->nullable();
-            $table->string('comment');
+            $table->text('comment');
             $table->string('author');
         });
     }

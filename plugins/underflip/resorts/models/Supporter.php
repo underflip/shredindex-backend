@@ -3,6 +3,7 @@
 namespace Underflip\Resorts\Models;
 
 use Model;
+use October\Rain\Database\Relations\AttachOne;
 use October\Rain\Database\Traits\Sortable;
 use System\Models\File;
 
@@ -12,7 +13,7 @@ use System\Models\File;
  * @property string name
  * @property string url
  * @property File image
- * @method File image()
+ * @method AttachOne image()
  */
 class Supporter extends Model
 {
