@@ -3,9 +3,11 @@
 namespace Underflip\Resorts;
 
 use Backend;
+use Event;
 use System\Classes\PluginBase;
 use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\Console\SeedTestData;
+use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\models\Settings;
 
 /**
@@ -41,6 +43,15 @@ class Plugin extends PluginBase
     public function boot()
     {
         config(['lighthouse.namespaces.directives' => 'Underflip\\Resorts\\GraphQL\\Directives']);
+
+        Event::listen(['rating.save', 'rating.delete'], function (Rating $rating) {
+            $resort = $rating->resort;
+
+            if ($resort) {
+                // Refresh total scores
+                $resort->updateTotalScore();
+            }
+        });
     }
 
     /**
@@ -113,13 +124,5 @@ class Plugin extends PluginBase
                 return (new \ReflectionClass($value))->getShortName();
             }
         ];
-    }
-
-    /**
-     * @return void
-     */
-    public function registerSchedule($schedule)
-    {
-        $schedule->command('resorts:refresh_total_score')->hourly();
     }
 }
