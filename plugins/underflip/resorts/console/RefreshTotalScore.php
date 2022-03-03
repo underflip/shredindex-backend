@@ -50,6 +50,7 @@ class RefreshTotalScore extends Command
      * Create/update a Resort's total score based on average rating
      *
      * @throws Exception
+     * @codeCoverageIgnore
      */
     public function handle()
     {

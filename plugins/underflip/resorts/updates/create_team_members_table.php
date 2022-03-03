@@ -18,6 +18,9 @@ class CreateTeamMembersTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         foreach (TeamMember::all() as $member) {

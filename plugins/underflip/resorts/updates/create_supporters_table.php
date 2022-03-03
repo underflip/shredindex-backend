@@ -18,6 +18,9 @@ class CreateSupportersTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         foreach (Supporter::all() as $supporter) {

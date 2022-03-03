@@ -16,6 +16,9 @@ class CreateTotalScoresTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         Schema::dropIfExists(app(TotalScore::class)->getTable());
