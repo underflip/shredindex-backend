@@ -16,6 +16,9 @@ class CreateCommentsTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         Schema::dropIfExists(app(Comment::class)->getTable());

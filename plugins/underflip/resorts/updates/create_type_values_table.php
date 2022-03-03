@@ -15,6 +15,9 @@ class CreateTypeValuesTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         Schema::dropIfExists(app(TypeValue::class)->getTable());

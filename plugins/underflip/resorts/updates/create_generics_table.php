@@ -18,6 +18,9 @@ class CreateGenericsTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         Schema::dropIfExists(app(Generic::class)->getTable());

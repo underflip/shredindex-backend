@@ -20,6 +20,9 @@ class CreateResortImagesTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         foreach (ResortImage::all() as $resort_image) {

@@ -19,6 +19,9 @@ class CreateTypeTypeValueRelationTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         Schema::dropIfExists(self::$table_name);

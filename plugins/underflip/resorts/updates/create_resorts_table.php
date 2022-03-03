@@ -16,6 +16,9 @@ class CreateResortsTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         Schema::dropIfExists(app(Resort::class)->getTable());

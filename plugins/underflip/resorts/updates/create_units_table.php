@@ -19,6 +19,9 @@ class CreateUnitsTable extends Migration
         });
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function down()
     {
         Schema::dropIfExists(app(Unit::class)->getTable());
