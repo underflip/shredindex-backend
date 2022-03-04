@@ -74,6 +74,7 @@ class ResortsSeeder extends Seeder implements Downable
             // Ratings
             $types = Type::where('category', Rating::class);
             $typesCount = $types->count();
+            $bias = rand(0, 9) * 10; // 0, 10, 20, ..., 80, 90.
 
             if (!$typesCount) {
                 throw new Exception(sprintf(
@@ -86,9 +87,14 @@ class ResortsSeeder extends Seeder implements Downable
 
             // Create a random number of ratings, but no more than the number of types
             for ($r = 0; $r < $ratingsQuantity; $r += 1) {
+                $applyBias = !!rand(0, 9); // We want 1:10 to be unbiased
+                $value = $applyBias
+                    ? $bias + rand(0, 10) // Pick a number within 10 above the bias
+                    : rand(0, 100); // Pick a number between 0 and 100
+
                 // Create a new rating
                 $rating = new Rating();
-                $rating->value = rand(0, 100);
+                $rating->value = $value;
                 $rating->type_id = $types->inRandomOrder()->pluck('id')->first(); // Assign a random type
                 $rating->resort_id = $resort->id;
                 $rating->save();
