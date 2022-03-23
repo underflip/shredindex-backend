@@ -38,6 +38,7 @@ class ResortsTest extends BaseTestCase
         $fooResort = Resort::create([
             'title' => 'Foo Resort',
             'url_segment' => 'foo-resort',
+            'booking_affiliate_url' => 'foo-resort',
             'description' => 'Foo Description',
         ]);
 
@@ -63,6 +64,7 @@ class ResortsTest extends BaseTestCase
         $barResort = Resort::create([
             'title' => 'Bar Resort',
             'url_segment' => 'bar-resort',
+            'booking_affiliate_url' => 'bar-resort',
             'description' => 'Bar Description',
         ]);
 
@@ -82,6 +84,7 @@ class ResortsTest extends BaseTestCase
         $binResort = Resort::create([
             'title' => 'Bin Resort',
             'url_segment' => 'bin-resort',
+            'booking_affiliate_url' => 'bin-resort',
             'description' => 'Bin Description',
         ]);
 
@@ -111,6 +114,7 @@ class ResortsTest extends BaseTestCase
                     id
                     title
                     url_segment
+                    booking_affiliate_url
                     description
                     ratings {
                         id
