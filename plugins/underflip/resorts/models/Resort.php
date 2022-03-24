@@ -13,7 +13,7 @@ use October\Rain\Database\Relations\HasMany;
  * @property int $id
  * @property string $title
  * @property string $url_segment
- * @property string $booking_affiliate_url
+ * @property string $affiliate_url
  * @property string $description
  * @property Location $location
  * @property int $location_id

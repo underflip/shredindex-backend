@@ -10,8 +10,8 @@ fields:
         preset:
             field: title
             type: slug
-    booking_affiliate_url:
-        label: Booking Affiliate URL
+    affiliate_url:
+        label: Affiliate URL
         span: auto
         type: text
     description:

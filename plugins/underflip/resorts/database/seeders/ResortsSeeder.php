@@ -53,7 +53,7 @@ class ResortsSeeder extends Seeder implements Downable
                 ),
                 '-'
             );
-            $resort->booking_affiliate_url = 'https://www.' . $resort->url_segment . '.com';
+            $resort->affiliate_url = sprintf('https://localhost/%s', $resort->url_segment);
             $resort->description = $faker->realText();
             $resort->save();
 
