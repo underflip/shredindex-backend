@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d8cbc19ce1bee46543fb30a8b62f56a1",
+    "content-hash": "fb75458ddcce0b88ea837d8d2102a5b6",
     "packages": [
         {
             "name": "composer/installers",
@@ -2457,6 +2457,54 @@
                 "source": "https://github.com/bobthecow/psysh/tree/v0.11.2"
             },
             "time": "2022-02-28T15:28:54+00:00"
+        },
+        {
+            "name": "rainlab/pages-plugin",
+            "version": "v1.4.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rainlab/pages-plugin.git",
+                "reference": "24997119c80883f64c6b0823d6d3f810c5c5f94f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rainlab/pages-plugin/zipball/24997119c80883f64c6b0823d6d3f810c5c5f94f",
+                "reference": "24997119c80883f64c6b0823d6d3f810c5c5f94f",
+                "shasum": ""
+            },
+            "require": {
+                "composer/installers": "~1.0",
+                "php": ">=5.5.9"
+            },
+            "type": "october-plugin",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Alexey Bobkov",
+                    "email": "aleksey.bobkov@gmail.com",
+                    "role": "Co-founder"
+                },
+                {
+                    "name": "Samuel Georges",
+                    "email": "daftspunky@gmail.com",
+                    "role": "Co-founder"
+                }
+            ],
+            "description": "Pages plugin for October CMS",
+            "homepage": "https://octobercms.com/plugin/rainlab-pages",
+            "keywords": [
+                "october",
+                "octobercms",
+                "pages"
+            ],
+            "support": {
+                "issues": "https://github.com/rainlab/pages-plugin/issues",
+                "source": "https://github.com/rainlab/pages-plugin/tree/v1.4.12"
+            },
+            "time": "2022-03-11T01:18:21+00:00"
         },
         {
             "name": "ramsey/uuid",
