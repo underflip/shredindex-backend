@@ -10,6 +10,10 @@ fields:
         preset:
             field: title
             type: slug
+    affiliate_url:
+        label: Affiliate URL
+        span: auto
+        type: text
     description:
         label: Description
         span: full

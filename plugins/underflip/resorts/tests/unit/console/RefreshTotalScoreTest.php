@@ -34,6 +34,7 @@ class RefreshTotalScoreTest extends BaseTestCase
         $fooResort = Resort::create([
             'title' => 'Foo Resort',
             'url_segment' => 'foo-resort',
+            'affiliate_url' => 'foo-resort',
             'description' => 'Foo Description',
         ]);
 
@@ -53,6 +54,7 @@ class RefreshTotalScoreTest extends BaseTestCase
         $barResort = Resort::create([
             'title' => 'Bar Resort',
             'url_segment' => 'bar-resort',
+            'affiliate_url' => 'bar-resort',
             'description' => 'Bar Description',
         ]);
 
@@ -72,6 +74,7 @@ class RefreshTotalScoreTest extends BaseTestCase
         Resort::create([
             'title' => 'Bin Resort',
             'url_segment' => 'bin-resort',
+            'affiliate_url' => 'bin-resort',
             'description' => 'Bin Description',
         ]);
 
