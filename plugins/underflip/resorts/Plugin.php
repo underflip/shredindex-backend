@@ -3,6 +3,7 @@
 namespace Underflip\Resorts;
 
 use Backend;
+use Backend\Classes\NavigationManager;
 use Event;
 use System\Classes\PluginBase;
 use Underflip\Resorts\Console\RefreshTotalScore;

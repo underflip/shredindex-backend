@@ -1,0 +1,20 @@
+items:
+    -
+        title: Home
+        type: cms-page
+        code: ''
+        reference: home
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -
+        title: Resorts
+        type: cms-page
+        code: ''
+        reference: resorts
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+name: 'Footer menu - Main'

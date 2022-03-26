@@ -12,8 +12,10 @@ class SeedSettings extends Seeder
         /** @var Settings $settings */
         $settings = Settings::instance();
 
-        $settings->copyright_message =
-            '[Shredindex](https://shredindex.com/) © 2021 Developed by [Underflip](https://github.com/underflip/)';
+        $settings->copyright_message = sprintf(
+            '[Shredindex](https://shredindex.com/) © %s Developed by [Underflip](https://github.com/underflip/)',
+            date('Y')
+        );
 
         $settings->save();
     }

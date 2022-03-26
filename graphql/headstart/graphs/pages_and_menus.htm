@@ -1,0 +1,82 @@
+title = "Pages"
+==
+<?php
+use Lang;
+use Cms\Classes\Theme;
+use Cms\Classes\Page;
+use Cms\Classes\Router;
+use Rainlab\Pages\Classes\Menu;
+
+function resolveCmsPages() {
+    if (! $theme = Theme::getActiveTheme()) {
+        throw new \Exception(Lang::get('cms::lang.theme.active.not_found'));
+    }
+
+    $theme = Theme::getEditTheme();
+    return Page::listInTheme($theme, true);
+}
+
+function resolveCmsPage($root, $args) {
+    if (! $theme = Theme::getActiveTheme()) {
+        throw new \Exception(Lang::get('cms::lang.theme.active.not_found'));
+    }
+
+    $router = new Router(Theme::getActiveTheme());
+    return $router->findByUrl($args['url']);
+}
+
+function resolveStaticMenu($root, $args) {
+    if (! $theme = Theme::getActiveTheme()) {
+        throw new \Exception(Lang::get('cms::lang.theme.active.not_found'));
+    }
+
+    if (! $menu = Menu::loadCached($theme, $args['code'])) {
+        throw new \Exception(Lang::get('rainlab.pages::lang.object.not_found'));
+    }
+
+    return $menu;
+}
+
+?>
+==
+extend type Query {
+    cmsPages: [Page]
+    cmsPage(url: String!): Page
+    staticMenu(code: String!): StaticMenu
+}
+
+type Page {
+    url: String!
+    layout: String
+    title: String!
+    description: String
+    is_hidden: Boolean
+    meta_title: String
+    meta_description: String
+    code: String
+}
+
+type StaticMenuItem {
+    title: String
+    type: String
+    url: String
+    code: String
+    cmsPage: String
+    exists: Boolean
+}
+
+type StaticMenuReference {
+    url: String
+    title: String
+    items: [StaticMenuReference]
+}
+
+type StaticMenu {
+    fileName: String!
+    content: String
+    markup: String
+    name: String
+    code: String
+    items: [StaticMenuItem]
+    menuItems: [StaticMenuReference] @method(name: "generateReferences")
+}
