@@ -23,7 +23,7 @@ class AssetList extends CmsAssetList
 
         $this->bindToController();
 
-        $this->checkUploadPostback();
+//        $this->checkUploadPostback();
     }
 
     protected function loadAssets()

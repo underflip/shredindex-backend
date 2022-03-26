@@ -12,8 +12,9 @@
     - create_units_table.php
     - create_supporters_table.php
     - create_team_members_table.php
+    - create_resort_images_table.php
+    - create_comments_table.php
     - seed_settings.php
     - seed_units_table.php
     - seed_types_table.php
-    - create_resort_images_table.php
-    - create_comments_table.php
+    - seed_pages.php

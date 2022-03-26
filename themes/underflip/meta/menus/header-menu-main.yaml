@@ -1,0 +1,15 @@
+items:
+    -
+        title: Resorts
+        nesting: null
+        type: cms-page
+        url: null
+        code: ''
+        reference: resorts
+        cmsPage: null
+        replace: null
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+name: 'Header menu - Main'
