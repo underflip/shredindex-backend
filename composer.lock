@@ -1990,7 +1990,7 @@
         },
         {
             "name": "october/system",
-            "version": "v1.1.11",
+            "version": "v1.1.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/octoberrain/system.git",
@@ -2041,7 +2041,7 @@
                 "system"
             ],
             "support": {
-                "source": "https://github.com/octoberrain/system/tree/v1.1.11"
+                "source": "https://github.com/octoberrain/system/tree/v1.1.12"
             },
             "time": "2022-02-20T01:54:45+00:00"
         },
@@ -7483,5 +7483,5 @@
         "php": ">=7.4"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.3.0"
 }
