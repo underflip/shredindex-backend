@@ -10,6 +10,7 @@ use Seeder;
 use Underflip\Resorts\Models\Comment;
 use Underflip\Resorts\Models\Location;
 use Underflip\Resorts\Models\Rating;
+use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\ResortImage;
 use Underflip\Resorts\Models\Type;
@@ -73,18 +74,18 @@ class ResortsSeeder extends Seeder implements Downable
             $location->save();
 
             // Ratings
-            $types = Type::where('category', Rating::class);
-            $typesCount = $types->count();
+            $ratingTypes = Type::where('category', Rating::class);
+            $ratingCount = $ratingTypes->count();
             $bias = rand(0, 9) * 10; // 0, 10, 20, ..., 80, 90.
 
-            if (!$typesCount) {
+            if (!$ratingCount) {
                 throw new Exception(sprintf(
                     'There are no existing Types (%s) to rate. Try refreshing the Resorts plugin to seed Types.',
                     Type::class
                 ));
             }
 
-            $ratingsQuantity = rand(1, $typesCount);
+            $ratingsQuantity = rand(1, $ratingCount);
 
             // Create a random number of ratings, but no more than the number of types
             for ($r = 0; $r < $ratingsQuantity; $r += 1) {
@@ -96,9 +97,28 @@ class ResortsSeeder extends Seeder implements Downable
                 // Create a new rating
                 $rating = new Rating();
                 $rating->value = $value;
-                $rating->type_id = $types->inRandomOrder()->pluck('id')->first(); // Assign a random type
+                $rating->type_id = $ratingTypes->inRandomOrder()->pluck('id')->first(); // Assign a random type
                 $rating->resort_id = $resort->id;
                 $rating->save();
+            }
+
+            // Generics
+
+            $genericTypes = Type::where('category', Generic::class);
+            $genericCount = $genericTypes->count();
+            $genericsQuantity = rand(1, $genericCount);
+
+            // Create a random number of generics, but no more than the number of types
+            for ($r = 0; $r < $genericsQuantity; $r += 1) {
+
+                $randomValue = $faker->randomElement(['yes', 'no', 'maybe']);
+
+                // Create a new generic
+                $generic = new Generic();
+                $generic->value = $randomValue;
+                $generic->type_id = $genericTypes->inRandomOrder()->pluck('id')->first(); // Assign a random type
+                $generic->resort_id = $resort->id;
+                $generic->save();
             }
 
             // Images
@@ -145,6 +165,7 @@ class ResortsSeeder extends Seeder implements Downable
     {
         Resort::query()->truncate();
         Rating::query()->truncate();
+        Generic::query()->truncate();
         Location::query()->truncate();
 
         foreach (ResortImage::all() as $resortImage) {
