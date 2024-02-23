@@ -97,4 +97,9 @@ class Type extends Model
     {
         return static::getCategories();
     }
+
+    public function numeric()
+    {
+        return $this->hasOne(\Underflip\Resorts\Models\Numeric::class);
+    }
 }
