@@ -24,7 +24,7 @@ class ResortsSeeder extends Seeder implements Downable
      */
     public function run()
     {
-        $quantity = 12;
+        $quantity = 120;
         $faker = Factory::create();
         $images = [
             'plugins/underflip/resorts/updates/assets/resort-images/gondola-1.jpg',
