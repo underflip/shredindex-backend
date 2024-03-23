@@ -1,9 +1,19 @@
 title = "Resorts"
 ==
+input FilterType {
+    type_name: String
+    operator: String
+    value: String
+}
+
 input Filter {
-    type_name: String!
-    operator: String!
-    value: String!
+    groupedType: [FilterType]
+    locationType: LocationType
+}
+
+input LocationType {
+    countryId: [ID]
+    continentId: [ID]
 }
 
 input OrderBy {
@@ -15,7 +25,7 @@ extend type Query {
     resort(id: ID! @eq): Resort @find(model: "Underflip\\Resorts\\Models\\Resort"),
     resortByUrlSegment(url_segment: String! @eq): Resort @find(model: "Underflip\\Resorts\\Models\\Resort"),
     resorts(
-        filter: [Filter!]
+        filter: Filter
         orderBy: OrderBy
     ): [Resort!]! @filterResorts
 }
@@ -75,9 +85,16 @@ type Location {
     longitude: String!
     country: Country! @hasOne
     state: State @hasOne
+    continent: Continent! @hasOne
 }
 
 type Country {
+    id: ID!
+    code: String!
+    name: String!
+}
+
+type Continent {
     id: ID!
     code: String!
     name: String!
