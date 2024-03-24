@@ -1,4 +1,4 @@
-FROM php:8.0-fpm
+FROM php:7.0-fpm
 
 RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install zip pdo_mysql \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd \
-    && pecl install xdebug-3.3.1
+    && pecl install xdebug-3.1.5
 
 RUN { \
     echo 'opcache.memory_consumption=128'; \
