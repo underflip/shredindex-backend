@@ -379,54 +379,29 @@ class SeedTypesTable extends Seeder
         ]);
     }
 
-    /**
-     * @return void
-     */
-    protected function seedGenericTypes(): void
-    {
-        $snowMaking = Type::create([
-            'name' => 'snow_making',
-            'title' => 'Snow Making',
-            'category' => Generic::class,
-        ]);
+/**
+* @return void
+*/
+ protected function seedGenericTypes(): void
+ {
+     $somProperties = [
+         'snow_making' => 'Snow Making',
+         'has_helicopter_skiing' => 'Snow Making',
+         'has_cross_country_skiing' => 'Has Helicopter Skiing',
+         'night_skiing' => 'Has Night Skiing',
+     ];
 
-        $this->populateEnum(
-            $snowMaking,
-            [
-                'yes' => 'Yes',
-                'no' => 'No',
-                'maybe' => 'Maybe',
-            ]
-        );
+     $options = ['yes' => 'Yes', 'no' => 'No', 'maybe' => 'Maybe'];
 
-        $crossCountry = Type::create([
-            'name' => 'has_cross_country_skiiing',
-            'title' => 'Has Cross Country Skiing',
-            'category' => Generic::class,
-        ]);
+     foreach ($somProperties as $name => $title) {
 
-        $this->populateEnum(
-            $crossCountry,
-            [
-                'yes' => 'Yes',
-                'no' => 'No',
-                'maybe' => 'Maybe',
-            ]
-        );
+         $property = Type::create([
+             'name' => $name,
+             'title' => $title,
+             'category' => Generic::class,
+         ]);
 
-        $nightSkiing = Type::create([
-            'name' => 'night_skiing',
-            'title' => 'Has Night Skiing',
-            'category' => Generic::class,
-        ]);
-
-        $this->populateEnum(
-            $nightSkiing,
-            [
-                'yes' => 'Yes',
-                'no' => 'No',
-                'maybe' => 'Maybe',
-            ]
-        );
-    }
+         $this->populateEnum($property, $options);
+     }
+ }
 }

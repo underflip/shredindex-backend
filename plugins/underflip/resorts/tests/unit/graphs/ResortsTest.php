@@ -51,6 +51,7 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 10,
             'type_id' => $avgAnnualSnowfallId,
+            'max_value' => 100,
             'resort_id' => $fooResort->id,
         ]);
 
@@ -78,6 +79,7 @@ class ResortsTest extends BaseTestCase
             'value' => 5,
             'type_id' => $avgAnnualSnowfallId,
             'resort_id' => $barResort->id,
+            'max_value' => 100,
         ]);
 
         // Create resort: Bin
@@ -97,6 +99,7 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 2.5,
             'type_id' => $avgAnnualSnowfallId,
+            'max_value' => 100,
             'resort_id' => $binResort->id,
         ]);
 

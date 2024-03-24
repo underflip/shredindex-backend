@@ -10,6 +10,9 @@ use Seeder;
 use Underflip\Resorts\Models\Comment;
 use Underflip\Resorts\Models\Location;
 use Underflip\Resorts\Models\Rating;
+use Underflip\Resorts\Models\Generic;
+use Underflip\Resorts\Models\Numeric;
+use Underflip\Resorts\Models\Unit;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\ResortImage;
 use Underflip\Resorts\Models\Type;
@@ -101,6 +104,51 @@ class ResortsSeeder extends Seeder implements Downable
                 $rating->save();
             }
 
+            // Numeric
+            $types = Type::where('category', Numeric::class)->get();
+
+            if (!$types->count()) {
+                throw new Exception(sprintf('There are no existing Types (%s) to rate. Try refreshing the Resorts plugin to seed Types.', Type::class));
+            }
+
+            foreach($types as $type) {
+                $value = rand(0, 15000);
+
+                // Create a new numeric
+                $numeric = new Numeric();
+                $numeric->value = $value;
+                $numeric->max_value = rand($value, 15000); // max_value will always be >= value
+                $numeric->type_id = $type->id;
+                $unit = Unit::where('id', $type->unit_id)->first();
+                if($value <= 1) {
+                    $numeric->unit = $unit ? $unit->name : null;
+                } else {
+                    $numeric->unit = $unit ? $unit->plural_title : null;
+                }
+                $numeric->resort_id = $resort->id;
+                $numeric->save();
+            }
+
+            // Generic
+            $genericTypes = Type::where('category', Generic::class)->get();
+
+            if (!$genericTypes->count()) {
+                throw new Exception(sprintf('There are no existing Types (%s) to rate. Try refreshing the Resorts plugin to seed Types.', Type::class));
+            }
+
+            $values = ['yes', 'no', 'maybe'];
+
+            foreach($genericTypes as $type) {
+
+                // Create a new numeric
+                $generic = new Generic();
+                $value = $values[array_rand($values)];
+                $generic->value = $value;
+                $generic->type_id = $type->id;
+                $generic->resort_id = $resort->id;
+                $generic->save();
+            }
+
             // Images
             $imagesCount = rand(0, count($images)/2); // Make sure we don't exceed the available images
             $hasImages = !!rand(0, 99);
@@ -145,6 +193,8 @@ class ResortsSeeder extends Seeder implements Downable
     {
         Resort::query()->truncate();
         Rating::query()->truncate();
+        Numeric::query()->truncate();
+        Generic::query()->truncate();
         Location::query()->truncate();
 
         foreach (ResortImage::all() as $resortImage) {
