@@ -2,7 +2,6 @@
 
 use Backend\Classes\FormWidgetBase;
 use Cms\Classes\ComponentManager;
-use Cms\Classes\ComponentHelpers;
 use Cms\Components\SoftComponent;
 use Cms\Components\UnknownComponent;
 use Exception;
@@ -77,21 +76,21 @@ class Components extends FormWidgetBase
 
     protected function getComponentName($component)
     {
-        return ComponentHelpers::getComponentName($component);
+        return Components::getComponentName($component);
     }
 
     protected function getComponentDescription($component)
     {
-        return ComponentHelpers::getComponentDescription($component);
+        return Components::getComponentDescription($component);
     }
 
     protected function getComponentsPropertyConfig($component)
     {
-        return ComponentHelpers::getComponentsPropertyConfig($component);
+        return Components::getComponentsPropertyConfig($component);
     }
 
     protected function getComponentPropertyValues($component)
     {
-        return ComponentHelpers::getComponentPropertyValues($component);
+        return Components::getComponentPropertyValues($component);
     }
 }

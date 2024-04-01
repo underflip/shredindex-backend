@@ -1,32 +1,25 @@
 <?php namespace Backend\Database\Seeds;
 
-use Str;
 use Seeder;
-use Eloquent;
-use Backend\Database\Seeds\SeedSetupAdmin;
+use Model;
 
+/**
+ * DatabaseSeeder
+ */
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     *
-     * @return string
+     * run the database seeds.
      */
     public function run()
     {
-        $shouldRandomizePassword = SeedSetupAdmin::$password === 'admin';
-        $adminPassword = $shouldRandomizePassword ? Str::random(22) : SeedSetupAdmin::$password;
+        Model::unguard();
 
-        Eloquent::unguarded(function () use ($adminPassword) {
-            // Generate a random password for the seeded admin account
-            $adminSeeder = new \Backend\Database\Seeds\SeedSetupAdmin;
-            $adminSeeder->setDefaults([
-                'password' => $adminPassword
-            ]);
-            $this->call($adminSeeder);
-        });
+        $this->call(\Backend\Database\Seeds\SeedSetupAdmin::class, true);
 
-        return $shouldRandomizePassword ? 'The following password has been automatically generated for the "admin" account: '
-            . "<fg=yellow;options=bold>${adminPassword}</>" : '';
+        // @vuedashboard
+        // $this->call(\Backend\Database\Seeds\DefaultDashboard::class, true);
+
+        Model::reguard();
     }
 }

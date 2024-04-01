@@ -14,7 +14,8 @@ use Redirect;
 use Illuminate\Foundation\AliasLoader;
 use Nocio\Headstart\Models\Settings;
 use Nocio\Headstart\Classes\HeadstartServiceProvider;
-
+use Backend;
+use Lang;
 
 class Plugin extends PluginBase
 {
@@ -24,6 +25,8 @@ class Plugin extends PluginBase
             'Nocio\Headstart\Components\HelloGraphQL' => 'helloGraphQL',
         ];
     }
+
+
 
     public function registerSettings()
     {
@@ -41,7 +44,9 @@ class Plugin extends PluginBase
         ];
     }
 
-    public function boot() {
+
+    public function boot()
+    {
         // register schema folder as name space
         App::make('October\Rain\Support\ClassLoader')->addDirectories(Settings::getSchemaPath());
 
@@ -59,12 +64,13 @@ class Plugin extends PluginBase
         }
     }
 
-    public function setHeadlessOptions() {
-        if (Settings::get('disable_cms_routes', false))  {
+    public function setHeadlessOptions()
+    {
+        if (Settings::get('disable_cms_routes', false)) {
             Event::listen('cms.route', function () {
                 // clear default CMS routes
                 $routes = new RouteCollection();
-                foreach(collect(Route::getRoutes()->getRoutes())->reject(function ($value, $key) {
+                foreach (collect(Route::getRoutes()->getRoutes())->reject(function ($value, $key) {
                     return is_string($value->action['uses'])
                            && is_a($value->getController(), \Cms\Classes\CmsController::class);
                 })->all() as $route) {
@@ -90,8 +96,8 @@ class Plugin extends PluginBase
             }
         }
 
-        if (Settings::get('disable_cms_section', false))  {
-            Event::listen('backend.menu.extendItems', function($manager) {
+        if (Settings::get('disable_cms_section', false)) {
+            Event::listen('backend.menu.extendItems', function ($manager) {
                 $manager->removeMainMenuItem('October.Cms', 'cms');
             });
         }
@@ -116,7 +122,6 @@ class Plugin extends PluginBase
 
         // Boot each package
         foreach ($packages as $name => $options) {
-
             // Setup the configuration for the package, pulling from this plugin's config
             if (!empty($options['config']) && !empty($options['config_namespace'])) {
                 Config::set($options['config_namespace'], $options['config']);

@@ -6,13 +6,13 @@ use Twig\TokenParser\AbstractTokenParser as TwigTokenParser;
 use Twig\Error\SyntaxError as TwigErrorSyntax;
 
 /**
- * Parser for the `{% partial %}` Twig tag.
+ * PartialTokenParser for the `{% partial %}` Twig tag.
  *
  *     {% partial "sidebar" %}
  *
  *     {% partial "sidebar" name='John' %}
  *
- *     {% partial "sidebar" name='John', year=2013 %}
+ *     {% partial "sidebar" name='John' year=2013 %}
  *
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
@@ -20,9 +20,7 @@ use Twig\Error\SyntaxError as TwigErrorSyntax;
 class PartialTokenParser extends TwigTokenParser
 {
     /**
-     * Parses a token and returns a node.
-     *
-     * @param TwigToken $token A TwigToken instance
+     * parse a token and returns a node.
      * @return TwigNode A TwigNode instance
      */
     public function parse(TwigToken $token)
@@ -33,10 +31,46 @@ class PartialTokenParser extends TwigTokenParser
         $name = $this->parser->getExpressionParser()->parseExpression();
         $paramNames = [];
         $nodes = [$name];
+        $hasBody = $hasOnly = $hasLazy = false;
+        $body = null;
+
+        $isAjax = $this->getTag() === 'ajaxPartial';
 
         $end = false;
         while (!$end) {
             $current = $stream->next();
+
+            if (
+                $current->test(TwigToken::NAME_TYPE, 'lazy') &&
+                !$stream->test(TwigToken::OPERATOR_TYPE, '=')
+            ) {
+                if (!$isAjax) {
+                    throw new TwigErrorSyntax(
+                        'Cannot use lazy mode with partial tag. Did you mean ajaxPartial?',
+                        $stream->getCurrent()->getLine(),
+                        $stream->getSourceContext()
+                    );
+                }
+
+                $hasLazy = true;
+                $current = $stream->next();
+            }
+
+            if (
+                $current->test(TwigToken::NAME_TYPE, 'body') &&
+                !$stream->test(TwigToken::OPERATOR_TYPE, '=')
+            ) {
+                $hasBody = true;
+                $current = $stream->next();
+            }
+
+            if (
+                $current->test(TwigToken::NAME_TYPE, 'only') &&
+                !$stream->test(TwigToken::OPERATOR_TYPE, '=')
+            ) {
+                $hasOnly = true;
+                $current = $stream->next();
+            }
 
             switch ($current->getType()) {
                 case TwigToken::NAME_TYPE:
@@ -59,13 +93,31 @@ class PartialTokenParser extends TwigTokenParser
             }
         }
 
-        return new PartialNode(new TwigNode($nodes), $paramNames, $token->getLine(), $this->getTag());
+        if ($hasBody) {
+            $body = $this->parser->subparse([$this, 'decidePartialEnd'], true);
+            $stream->expect(TwigToken::BLOCK_END_TYPE);
+        }
+
+        $options = [
+            'paramNames' => $paramNames,
+            'hasOnly' => $hasOnly,
+            'hasLazy' => $hasLazy,
+            'isAjax' => $isAjax
+        ];
+
+        return new PartialNode(new TwigNode($nodes), $body, $options, $token->getLine(), $this->getTag());
     }
 
     /**
-     * Gets the tag name associated with this token parser.
-     *
-     * @return string The tag name
+     * decidePartialEnd
+     */
+    public function decidePartialEnd(TwigToken $token)
+    {
+        return $token->test('endpartial');
+    }
+
+    /**
+     * getTag name associated with this token parser
      */
     public function getTag()
     {

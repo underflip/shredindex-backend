@@ -1,64 +1,60 @@
 <?php namespace System\Console;
 
-use Illuminate\Console\Command;
-use System\Classes\PluginManager;
 use System\Models\PluginVersion;
+use System\Classes\PluginManager;
+use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputArgument;
 
 /**
- * Console command to enable a plugin.
+ * PluginDisable enables a plugin in the file system and user preferences
  *
  * @package october\system
- * @author Lucas Zamora
+ * @author Alexey Bobkov, Samuel Georges
  */
 class PluginEnable extends Command
 {
-
     /**
-     * The console command name.
-     * @var string
+     * @var string name of console command
      */
     protected $name = 'plugin:enable';
 
     /**
-     * The console command description.
-     * @var string
+     * @var string description of the console command
      */
     protected $description = 'Enable an existing plugin.';
 
     /**
-     * Execute the console command.
-     * @return void
+     * handle executes the console command
      */
     public function handle()
     {
-        $pluginManager = PluginManager::instance();
-        $pluginName = $this->argument('name');
-        $pluginName = $pluginManager->normalizeIdentifier($pluginName);
+        $manager = PluginManager::instance();
+        $name = $manager->normalizeIdentifier($this->argument('name'));
 
-        if (!$pluginManager->hasPlugin($pluginName)) {
-            return $this->error(sprintf('Unable to find a registered plugin called "%s"', $pluginName));
+        // Lookup
+        if (!$manager->hasPlugin($name)) {
+            return $this->output->error("Unable to find plugin '{$name}'");
         }
 
-        // Disable this plugin
-        $pluginManager->enablePlugin($pluginName);
+        // Enable in filesystem
+        $manager->enablePlugin($name);
 
-        $plugin = PluginVersion::where('code', $pluginName)->first();
-        $plugin->is_disabled = false;
-        $plugin->save();
+       // Enable user preference
+        if ($plugin = PluginVersion::where('code', $name)->first()) {
+            $plugin->is_disabled = false;
+            $plugin->save();
+        }
 
-
-        $this->output->writeln(sprintf('<info>%s:</info> enabled.', $pluginName));
+        $this->output->success("Plugin '{$name}' enabled");
     }
 
     /**
-     * Get the console command arguments.
-     * @return array
+     * getArguments get the console command arguments
      */
     protected function getArguments()
     {
         return [
-            ['name', InputArgument::REQUIRED, 'The name of the plugin. Eg: AuthorName.PluginName'],
+            ['name', InputArgument::REQUIRED, 'Name of the plugin, eg: Author.Plugin'],
         ];
     }
 }

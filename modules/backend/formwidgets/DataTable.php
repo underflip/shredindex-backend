@@ -16,7 +16,7 @@ use ApplicationException;
 class DataTable extends FormWidgetBase
 {
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
@@ -31,7 +31,7 @@ class DataTable extends FormWidgetBase
     public $rowSorting = false;
 
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
@@ -76,11 +76,12 @@ class DataTable extends FormWidgetBase
     }
 
     /**
-     * Prepares the list data
+     * prepareVars for display
      */
     public function prepareVars()
     {
         $this->populateTableWidget();
+        $this->vars['name'] = $this->getFieldName();
         $this->vars['table'] = $this->table;
         $this->vars['size'] = $this->size;
         $this->vars['rowSorting'] = $this->rowSorting;
@@ -93,8 +94,7 @@ class DataTable extends FormWidgetBase
     {
         $value = (array) parent::getLoadValue();
 
-        // Sync the array keys as the ID to make the
-        // table widget happy!
+        // Sync the array keys as the ID to make the table widget happy.
         foreach ($value as $key => $_value) {
             $value[$key] = ['id' => $key] + (array) $_value;
         }
@@ -127,8 +127,8 @@ class DataTable extends FormWidgetBase
         return $result;
     }
 
-    /*
-     * Populate data
+    /**
+     * populateTableWidget
      */
     protected function populateTableWidget()
     {
@@ -144,28 +144,28 @@ class DataTable extends FormWidgetBase
         $dataSource->initRecords((array) $records);
     }
 
+    /**
+     * makeTableWidget
+     */
     protected function makeTableWidget()
     {
-        $config = $this->makeConfig((array) $this->config);
+        $fieldName = $this->getFieldName();
 
+        $config = $this->makeConfig((array) $this->config);
+        $config->postbackHandlerWild = true;
         $config->dataSource = 'client';
-        if (isset($this->getParentForm()->arrayName)) {
-            $config->alias = studly_case(HtmlHelper::nameToId($this->getParentForm()->arrayName . '[' . $this->fieldName . ']')) . 'datatable';
-            $config->fieldName = $this->getParentForm()->arrayName . '[' . $this->fieldName . ']';
-        } else {
-            $config->alias = studly_case(HtmlHelper::nameToId($this->fieldName)) . 'datatable';
-            $config->fieldName = $this->fieldName;
-        }
+        $config->alias = studly_case(HtmlHelper::nameToId($fieldName)) . 'datatable';
+        $config->fieldName = $fieldName;
 
         $table = new Table($this->controller, $config);
-
         $table->bindEvent('table.getDropdownOptions', [$this, 'getDataTableOptions']);
+        $table->bindEvent('table.getAutocompleteOptions', [$this, 'getDataTableOptions']);
 
         return $table;
     }
 
     /**
-     * Dropdown/autocomplete option callback handler
+     * getDataTableOptions is a dropdown/autocomplete option callback handler
      *
      * Looks at the model for getXXXDataTableOptions or getDataTableOptions methods
      * to obtain values for autocomplete and dropdown column types.

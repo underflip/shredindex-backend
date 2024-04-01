@@ -1,6 +1,7 @@
 <?php namespace Cms\Widgets;
 
 use App;
+use Cms\Helpers\Component;
 use Str;
 use Lang;
 use Input;
@@ -98,11 +99,11 @@ class ComponentList extends WidgetBase
                 $component->alias = '--alias--';
 
                 $item = (object)[
-                    'title'          => ComponentHelpers::getComponentName($component),
-                    'description'    => ComponentHelpers::getComponentDescription($component),
+                    'title'          => Component::getComponentName($component),
+                    'description'    => Component::getComponentDescription($component),
                     'plugin'         => $pluginName,
-                    'propertyConfig' => ComponentHelpers::getComponentsPropertyConfig($component),
-                    'propertyValues' => ComponentHelpers::getComponentPropertyValues($component, $alias),
+                    'propertyConfig' => Component::getComponentsPropertyConfig($component),
+                    'propertyValues' => Component::getComponentPropertyValues($component, $alias),
                     'className'      => get_class($component),
                     'pluginIcon'     => $pluginIcon,
                     'alias'          => $alias,

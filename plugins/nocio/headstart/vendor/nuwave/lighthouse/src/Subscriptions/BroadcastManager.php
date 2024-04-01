@@ -1,14 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Subscriptions;
 
-use Pusher\Pusher;
-use RuntimeException;
-use Illuminate\Support\Arr;
-use Nuwave\Lighthouse\Support\DriverManager;
-use Nuwave\Lighthouse\Subscriptions\Contracts\Broadcaster;
+use Illuminate\Contracts\Debug\ExceptionHandler as LaravelExceptionHandler;
+use Nuwave\Lighthouse\Subscriptions\Broadcasters\EchoBroadcaster;
 use Nuwave\Lighthouse\Subscriptions\Broadcasters\LogBroadcaster;
 use Nuwave\Lighthouse\Subscriptions\Broadcasters\PusherBroadcaster;
+use Nuwave\Lighthouse\Subscriptions\Contracts\Broadcaster;
+use Nuwave\Lighthouse\Support\DriverManager;
+use Psr\Log\LoggerInterface;
+use Pusher\Pusher;
 
 /**
  * @method void broadcast(\Nuwave\Lighthouse\Subscriptions\Subscriber $subscriber, array $data)
@@ -18,70 +19,53 @@ use Nuwave\Lighthouse\Subscriptions\Broadcasters\PusherBroadcaster;
  */
 class BroadcastManager extends DriverManager
 {
-    /**
-     * Get configuration key.
-     *
-     * @return string
-     */
     protected function configKey(): string
     {
         return 'lighthouse.subscriptions.broadcasters';
     }
 
-    /**
-     * Get configuration driver key.
-     *
-     * @return string
-     */
     protected function driverKey(): string
     {
         return 'lighthouse.subscriptions.broadcaster';
     }
 
-    /**
-     * The interface the driver should implement.
-     *
-     * @return string
-     */
     protected function interface(): string
     {
         return Broadcaster::class;
     }
 
-    /**
-     * Create instance of pusher driver.
-     *
-     * @param  mixed[]  $config
-     * @return \Nuwave\Lighthouse\Subscriptions\Broadcasters\PusherBroadcaster
-     * @throws \Pusher\PusherException
-     */
+    /** @param  array<string, mixed>  $config */
     protected function createPusherDriver(array $config): PusherBroadcaster
     {
         $connection = $config['connection'] ?? 'pusher';
         $driverConfig = config("broadcasting.connections.{$connection}");
 
         if (empty($driverConfig) || $driverConfig['driver'] !== 'pusher') {
-            throw new RuntimeException("Could not initialize Pusher broadcast driver for connection: {$connection}.");
+            throw new \RuntimeException("Could not initialize Pusher broadcast driver for connection: {$connection}.");
         }
 
-        $appKey = Arr::get($driverConfig, 'key');
-        $appSecret = Arr::get($driverConfig, 'secret');
-        $appId = Arr::get($driverConfig, 'app_id');
-        $options = Arr::get($driverConfig, 'options', []);
+        $pusher = new Pusher(
+            $driverConfig['key'],
+            $driverConfig['secret'],
+            $driverConfig['app_id'],
+            $driverConfig['options'] ?? [],
+        );
 
-        $pusher = new Pusher($appKey, $appSecret, $appId, $options);
+        if ($driverConfig['log'] ?? false) {
+            $pusher->setLogger($this->app->make(LoggerInterface::class));
+        }
 
-        return new PusherBroadcaster($pusher);
+        return new PusherBroadcaster($pusher, $this->app->make(LaravelExceptionHandler::class));
     }
 
-    /**
-     * Create instance of log driver.
-     *
-     * @param  mixed[]  $config
-     * @return \Nuwave\Lighthouse\Subscriptions\Broadcasters\LogBroadcaster
-     */
+    /** @param  array<string, mixed>  $config */
     protected function createLogDriver(array $config): LogBroadcaster
     {
         return new LogBroadcaster($config);
+    }
+
+    protected function createEchoDriver(): EchoBroadcaster
+    {
+        return $this->app->make(EchoBroadcaster::class);
     }
 }

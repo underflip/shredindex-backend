@@ -2,25 +2,13 @@
 #  Field Definitions
 # ===================================
 
-fields:
-    is_superuser:
-        context: [create, update]
-        tab: backend::lang.user.permissions
-        label: backend::lang.user.superuser
-        type: switch
-        comment: backend::lang.user.superuser_comment
-
 tabs:
     defaultTab: backend::lang.user.account
-    icons:
-        backend::lang.user.account: icon-user
-        backend::lang.user.groups: icon-users
-        backend::lang.user.permissions: icon-key
 
     fields:
         login:
             span: left
-            label: backend::lang.user.login
+            label: Username
 
         email:
             span: right
@@ -57,24 +45,27 @@ tabs:
             label: backend::lang.user.role_field
             commentAbove: backend::lang.user.role_comment
             type: radio
+            permissions: admins.manage
 
         groups:
-            context: [create, update]
             label: backend::lang.user.groups
             commentAbove: backend::lang.user.groups_comment
             type: checkboxlist
             tab: backend::lang.user.groups
+            permissions: admins.manage
+
+        permissions:
+            context: [create, update]
+            tab: backend::lang.user.permissions
+            type: Backend\FormWidgets\PermissionEditor
+            permissions: admins.roles
+            trigger:
+                action: disable
+                field: is_superuser
+                condition: checked
 
 secondaryTabs:
     fields:
-        btn_impersonate:
-            label: ''
-            context: [update]
-            type: partial
-        btn_unsuspend:
-            label: ''
-            context: [update]
-            type: partial
         avatar:
             label: backend::lang.user.avatar
             type: fileupload

@@ -1,0 +1,124 @@
+.form-document-layout {
+    .control-tabs.primary-tabs:not(.is-nested) {
+        > div > ul.nav-tabs {
+            padding: 13px 0;
+            background: @document-tabs-bg;
+            border-bottom: 1px solid @primary-border;
+
+            &:before {
+                display: none;
+            }
+
+            > li {
+                border-right: 1px solid @primary-border;
+                margin: 0!important;
+                padding: 0;
+
+                &:first-child {
+                    margin-left: -12px!important;
+                }
+
+                &:last-child {
+                    border-right: none;
+                }
+
+                a {
+                    padding: 2px 12px 0;
+                    height: 24px;
+                    border: none;
+                    top: 0;
+
+                    &:before {
+                        display: none;
+                    }
+
+                    > span.title {
+                        padding: 0;
+                        margin: 0;
+
+                        &:before, &:after {
+                            display: none;
+                        }
+
+                        > span {
+                            &:before, &:after {
+                                display: none;
+                            }
+
+                            margin: 0;
+                            padding: 0;
+                            border-top: none;
+                            color: inherit;
+                            background-color: transparent;
+                        }
+                    }
+                }
+
+                &.active a {
+                    color: @brand-primary;
+                }
+            }
+        }
+
+        // Do not display primary tabs if there is just one tab
+        &[data-single-tab] {
+            > div > ul.nav-tabs {
+                display: none!important;
+            }
+        }
+    }
+
+    .form-tabless-fields {
+        .form-group.primary-title-field {
+            .form-label, .form-translatable {
+                display: none;
+            }
+
+            .form-control {
+                display: block;
+                font-size: 24px;
+                width: 100%;
+                border: 1px solid @body-bg;
+                outline: none;
+                background: transparent;
+                color: @input-color;
+                padding: 1px;
+
+                &:not([disabled]):hover,
+                &:not([disabled]):focus {
+                    border: 1px solid @input-border;
+                    box-shadow: none;
+                }
+            }
+            span.form-control {
+                opacity: .5;
+            }
+        }
+    }
+
+    div.primary-tabs-container > div > .layout-row {
+        display: table-cell;
+
+        .tab-pane.is-adaptive {
+            padding-top: 0;
+        }
+    }
+
+    .component-backend-document .document-progress-indicator {
+        z-index: 1;
+    }
+
+    .form-group.span-adaptive {
+        margin-left: -@padding-standard;
+        margin-right: -@padding-standard;
+
+        > .form-label, > .form-translatable {
+            display: none;
+        }
+    }
+
+    .record-management-controls {
+        padding-left: 20px;
+        padding-bottom: 20px;
+    }
+}

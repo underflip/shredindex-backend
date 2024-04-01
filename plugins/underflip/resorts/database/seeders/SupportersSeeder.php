@@ -18,6 +18,13 @@ class SupportersSeeder extends Seeder implements Downable
         ]);
 
         $reddit->image()->create([
+            'disk_name' => 'local',
+            'attachment_id' => $reddit->id, // ID dari instance TeamMember yang baru dibuat
+            'attachment_type' => Supporter::class, // Nama kelas dari model yang ditautkan
+            'is_public' => true, // Sesuaikan dengan kebutuhan Anda
+            'file_name' => 'reddit.png', // Nama file
+            'file_size' => 12345, // Ukuran file dalam byte
+            'content_type' => 'image/png', // Tipe konten file
             'data' => base_path() .
                 DIRECTORY_SEPARATOR .
                 'plugins/underflip/resorts/updates/assets/supporters/reddit.png',
@@ -29,6 +36,13 @@ class SupportersSeeder extends Seeder implements Downable
         ]);
 
         $productHunt->image()->create([
+            'disk_name' => 'local',
+            'attachment_id' => $productHunt->id, // ID dari instance TeamMember yang baru dibuat
+            'attachment_type' => Supporter::class, // Nama kelas dari model yang ditautkan
+            'is_public' => true, // Sesuaikan dengan kebutuhan Anda
+            'file_name' => 'product_hunt.png', // Nama file
+            'file_size' => 12345, // Ukuran file dalam byte
+            'content_type' => 'image/png', // Tipe konten file
             'data' => base_path() .
                 DIRECTORY_SEPARATOR .
                 'plugins/underflip/resorts/updates/assets/supporters/product_hunt.png',
@@ -40,6 +54,13 @@ class SupportersSeeder extends Seeder implements Downable
         ]);
 
         $teton->image()->create([
+            'disk_name' => 'local',
+            'attachment_id' => $teton->id, // ID dari instance TeamMember yang baru dibuat
+            'attachment_type' => Supporter::class, // Nama kelas dari model yang ditautkan
+            'is_public' => true, // Sesuaikan dengan kebutuhan Anda
+            'file_name' => 'teton.png', // Nama file
+            'file_size' => 12345, // Ukuran file dalam byte
+            'content_type' => 'image/png', // Tipe konten file
             'data' => base_path() .
                 DIRECTORY_SEPARATOR .
                 'plugins/underflip/resorts/updates/assets/supporters/teton.png',
@@ -52,6 +73,13 @@ class SupportersSeeder extends Seeder implements Downable
         ]);
 
         $worldNomads->image()->create([
+            'disk_name' => 'local',
+            'attachment_id' => $worldNomads->id, // ID dari instance TeamMember yang baru dibuat
+            'attachment_type' => Supporter::class, // Nama kelas dari model yang ditautkan
+            'is_public' => true, // Sesuaikan dengan kebutuhan Anda
+            'file_name' => 'world_nomads.png', // Nama file
+            'file_size' => 12345, // Ukuran file dalam byte
+            'content_type' => 'image/png', // Tipe konten file
             'data' => base_path() .
                 DIRECTORY_SEPARATOR .
                 'plugins/underflip/resorts/updates/assets/supporters/world_nomads.png',
@@ -63,6 +91,13 @@ class SupportersSeeder extends Seeder implements Downable
         ]);
 
         $safetyWing->image()->create([
+            'disk_name' => 'local',
+            'attachment_id' => $safetyWing->id, // ID dari instance TeamMember yang baru dibuat
+            'attachment_type' => Supporter::class, // Nama kelas dari model yang ditautkan
+            'is_public' => true, // Sesuaikan dengan kebutuhan Anda
+            'file_name' => 'safety_wing.png', // Nama file
+            'file_size' => 12345, // Ukuran file dalam byte
+            'content_type' => 'image/png', // Tipe konten file
             'data' => base_path() .
                 DIRECTORY_SEPARATOR .
                 'plugins/underflip/resorts/updates/assets/supporters/safety_wing.png',

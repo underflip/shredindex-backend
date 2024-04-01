@@ -1,11 +1,13 @@
 <?php namespace System\Models;
 
+use Date;
 use Cache;
+use System;
 use October\Rain\Database\Model;
+use Exception;
 
 /**
- * Parameters model
- * Used for storing internal application parameters.
+ * Parameter model is used for storing internal application parameters.
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
@@ -15,29 +17,35 @@ class Parameter extends Model
     use \October\Rain\Support\Traits\KeyParser;
 
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'system_parameters';
 
+    /**
+     * @var bool timestamps enabled
+     */
     public $timestamps = false;
 
+    /**
+     * @var array cache is an internal cache of model values.
+     */
     protected static $cache = [];
 
     /**
-     * @var array List of attribute names which are json encoded and decoded from the database.
+     * @var array jsonable attribute names that are json encoded and decoded from the database
      */
     protected $jsonable = ['value'];
 
     /**
-     * Clear the cache after saving.
+     * afterSave clears the cache after saving.
      */
     public function afterSave()
     {
-        Cache::forget(implode('-', [$this->table, $this->namespace, $this->group, $this->item]));
+        $this->clearCache();
     }
 
     /**
-     * Returns a setting value by the module (or plugin) name and setting name.
+     * get returns a setting value by the module (or plugin) name and setting name.
      * @param string $key Specifies the setting key value, for example 'system:updates.check'
      * @param mixed $default The default value to return if the setting doesn't exist in the DB.
      * @return mixed Returns the setting value loaded from the database or the default value.
@@ -57,7 +65,7 @@ class Parameter extends Model
     }
 
     /**
-     * Stores a setting value to the database.
+     * set stores a setting value to the database.
      * @param string $key Specifies the setting key value, for example 'system:updates.check'
      * @param mixed $value The setting value to store, serializable.
      * @return bool
@@ -74,7 +82,7 @@ class Parameter extends Model
         $record = static::findRecord($key);
         if (!$record) {
             $record = new static;
-            list($namespace, $group, $item) = $record->parseKey($key);
+            [$namespace, $group, $item] = $record->parseKey($key);
             $record->namespace = $namespace;
             $record->group = $group;
             $record->item = $item;
@@ -88,7 +96,7 @@ class Parameter extends Model
     }
 
     /**
-     * Resets a setting value by deleting the record.
+     * reset a setting value by deleting the record.
      * @param string $key Specifies the setting key value.
      * @return bool
      */
@@ -106,36 +114,115 @@ class Parameter extends Model
     }
 
     /**
-     * Returns a record (cached)
+     * clearCache
+     */
+    public function clearCache()
+    {
+        Cache::forget($this->getCacheKey());
+    }
+
+    /**
+     * findRecord returns a record with cache
      * @return self
      */
     public static function findRecord($key)
     {
-        $record = new static;
+        if (!System::hasDatabase()) {
+            return null;
+        }
 
-        list($namespace, $group, $item) = $record->parseKey($key);
+        $record = new static;
 
         return $record
             ->applyKey($key)
-            ->remember(5, implode('-', [$record->getTable(), $namespace, $group, $item]))
-            ->first();
+            ->remember(5, $record->getCacheKey($key))
+            ->first()
+        ;
     }
 
     /**
-     * Scope to find a setting record for the specified module (or plugin) name and setting name.
-     * @param string $key Specifies the setting key value, for example 'system:updates.check'
-     * @param mixed $default The default value to return if the setting doesn't exist in the DB.
+     * scopeApplyKey is a scope to find a setting record for the specified module
+     * (or plugin) name and setting name. Key specifies the setting key value,
+     * for example 'system:updates.check'. The default value to return if the setting
+     * doesn't exist in the DB.
+     * @param string $key
+     * @param mixed $default
      * @return QueryBuilder
      */
     public function scopeApplyKey($query, $key)
     {
-        list($namespace, $group, $item) = $this->parseKey($key);
+        [$namespace, $group, $item] = $this->parseKey($key);
 
         $query = $query
             ->where('namespace', $namespace)
             ->where('group', $group)
-            ->where('item', $item);
+            ->where('item', $item)
+        ;
 
         return $query;
+    }
+
+    /**
+     * getCacheKey returns a cache key for this record.
+     */
+    public function getCacheKey($key = null)
+    {
+        if ($key !== null) {
+            [$namespace, $group, $item] = $this->parseKey($key);
+
+            return implode('-', [$this->table, $namespace, $group, $item]);
+        }
+
+        return implode('-', [$this->table, $this->namespace, $this->group, $this->item]);
+    }
+
+    /**
+     * clearInternalCache of model cache values.
+     * @return void
+     */
+    public static function clearInternalCache()
+    {
+        static::$cache = [];
+    }
+
+    /**
+     * getGatewayServiceData returns system parameters used to filter
+     * gateway and marketplace package requests by the current version
+     */
+    public static function getGatewayServiceData(): array
+    {
+        $serviceData = [];
+
+        // Include time alive time
+        try {
+            if ($sinceTimestamp = self::get('system::core.since')) {
+                $serviceData['since'] = $sinceTimestamp;
+            }
+            else {
+                $serviceData['since'] = PluginVersion::orderBy('created_at')->value('created_at')
+                    ?: Date::now()->format('Y-m-d H:i:s');
+
+                self::set('system::core.since', $serviceData['since']);
+            }
+        }
+        catch (Exception $ex) {
+            $serviceData['since'] = null;
+        }
+
+        // Include birthmark hash
+        try {
+            if ($birthHash = self::get('system::core.bash')) {
+                $serviceData['bash'] = $birthHash;
+            }
+            else {
+                $serviceData['bash'] = md5($serviceData['since'] ?: Date::now()->format('Y-m-d H:i:s')) . str_random(40);
+                self::set('system::core.bash', $serviceData['bash']);
+            }
+        }
+        catch (Exception $ex) {
+            $serviceData['bash'] = '-1';
+        }
+
+        return $serviceData;
     }
 }

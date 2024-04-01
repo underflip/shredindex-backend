@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://www.lighthouse-php.com">
-    <img src="logo.png" alt=lighthouse-logo" width="150" height="150">
+    <img src="./logo.png" alt=lighthouse-logo" width="150" height="150">
   </a>
 </div>
 
@@ -8,50 +8,68 @@
 
 # Lighthouse
 
-[![Build Status](https://travis-ci.org/nuwave/lighthouse.svg?branch=master)](https://travis-ci.org/nuwave/lighthouse)
-[![codecov](https://codecov.io/gh/nuwave/lighthouse/branch/master/graph/badge.svg)](https://codecov.io/gh/nuwave/lighthouse)
+[![Validate](https://github.com/nuwave/lighthouse/workflows/Validate/badge.svg)](https://github.com/nuwave/lighthouse/actions)
+[![Code Coverage](https://codecov.io/gh/nuwave/lighthouse/branch/master/graph/badge.svg)](https://codecov.io/gh/nuwave/lighthouse)
 [![PHPStan](https://img.shields.io/badge/PHPStan-enabled-brightgreen.svg?style=flat)](https://github.com/phpstan/phpstan)
-[![StyleCI](https://github.styleci.io/repos/59965104/shield?branch=master)](https://github.styleci.io/repos/59965104)
-[![Packagist](https://img.shields.io/packagist/dt/nuwave/lighthouse.svg)](https://packagist.org/packages/nuwave/lighthouse)
-[![GitHub license](https://img.shields.io/github/license/nuwave/lighthouse.svg)](https://github.com/nuwave/lighthouse/blob/master/LICENSE)
-[![Get on Slack](https://img.shields.io/badge/slack-join-orange.svg)](https://join.slack.com/t/lighthouse-php/shared_invite/enQtMzc1NzQwNTUxMjk3LWI1ZDQ1YWM1NmM2MmQ0NTU0NGNjZWFkMTJhY2VjMDAwZmMyZDFlZTc1Mjc3ZGY0MWM1Y2Q5MWNjYmJmYWJkYmU)
 
-**GraphQL Server for Laravel**
+[![Packagist](https://img.shields.io/packagist/dt/nuwave/lighthouse.svg)](https://packagist.org/packages/nuwave/lighthouse)
+[![Latest Stable Version](https://poser.pugx.org/nuwave/lighthouse/v/stable)](https://packagist.org/packages/nuwave/lighthouse)
+[![GitHub license](https://img.shields.io/github/license/nuwave/lighthouse.svg)](https://github.com/nuwave/lighthouse/blob/master/LICENSE)
+
+**A framework for serving GraphQL from Laravel**
+
 </div>
 
-Lighthouse is a PHP package that allows you to serve a GraphQL endpoint from your
-Laravel application. It greatly reduces the boilerplate required to create a schema,
-it integrates well with any Laravel project, and it's highly customizable
-giving you full control over your data.
+Lighthouse is a GraphQL framework that integrates with your Laravel application.
+It takes the best ideas of both and combines them to solve common tasks with ease
+and offer flexibility when you need it.
 
-## [Documentation](https://lighthouse-php.com/)
+## Documentation
 
-The documentation lives at [lighthouse-php.com](https://lighthouse-php.com/).
+The documentation lives at [lighthouse-php.com](https://lighthouse-php.com).
 
-If you like reading plain markdown, you can also find the source files in the  [docs folder](/docs).
-
-## Get started
-
-If you have an existing Laravel project, all you really need
-to get up and running is a few steps:
-
-1. Install via `composer require nuwave/lighthouse`
-2. Publish the default schema `php artisan vendor:publish --provider="Nuwave\Lighthouse\LighthouseServiceProvider" --tag=schema`
-3. Use something like [GraphQL Playground](https://github.com/mll-lab/laravel-graphql-playground) to explore your GraphQL endpoint
-
-Check out [the docs](https://lighthouse-php.com/) to learn more.
+The site includes the latest docs for each major version of Lighthouse.
+You can find docs for specific versions by looking at the contents of [/docs/master](/docs/master)
+at that point in the git history: `https://github.com/nuwave/lighthouse/tree/<SPECIFIC-TAG>/docs/master`.
 
 ## Get involved
 
-We welcome contributions of any kind.
-
-- Have a question? [Use the laravel-lighthouse tag on Stackoverflow](https://stackoverflow.com/questions/tagged/laravel-lighthouse) 
-- Talk to other users? [Hop into Slack](https://join.slack.com/t/lighthouse-php/shared_invite/enQtMzc1NzQwNTUxMjk3LWI1ZDQ1YWM1NmM2MmQ0NTU0NGNjZWFkMTJhY2VjMDAwZmMyZDFlZTc1Mjc3ZGY0MWM1Y2Q5MWNjYmJmYWJkYmU) 
+- Have a question? [Get your answer using GitHub discussions](https://github.com/nuwave/lighthouse/discussions/new?category=q-a)
+- Talk to other users? [Start a discussion](https://github.com/nuwave/lighthouse/discussions/new?category=general)
 - Found a bug? [Report a bug](https://github.com/nuwave/lighthouse/issues/new?template=bug_report.md)
-- Need a feature? [Open a feature request](https://github.com/nuwave/lighthouse/issues/new?template=feature_request.md)
-- Want to improve Lighthouse? [Read our contribution guidelines](https://github.com/nuwave/lighthouse/blob/master/.github/CONTRIBUTING.md)
+- Have an idea? [Propose a feature](https://github.com/nuwave/lighthouse/issues/new?template=feature_proposal.md)
+- Want to improve Lighthouse? [Read our contribution guidelines](https://github.com/nuwave/lighthouse/blob/master/CONTRIBUTING.md)
+
+## Versioning
+
+Lighthouse follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Only the current major version receives new features and bugfixes.
+
+Updating between minor versions will not require changes to PHP code or the GraphQL schema
+and cause no breaking behavioural changes for consumers of the GraphQL API.
+However, only code elements marked with `@api` will remain compatible - all other code in
+Lighthouse is considered internal and is thus subject to change.
+
+## Changelog
+
+All notable changes to this project are documented in [`CHANGELOG.md`](CHANGELOG.md).
+
+## Upgrade Guide
+
+When upgrading between major versions of Lighthouse, consider [`UPGRADE.md`](UPGRADE.md).
+
+## Contributing
+
+We welcome contributions of any kind, see how in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Security Vulnerabilities
 
 If you discover a security vulnerability within Lighthouse,
 please email Benedikt Franke via [benedikt@franke.tech](mailto:benedikt@franke.tech).
+
+## Sponsors
+
+Lighthouse is supported by [its awesome sponsors](https://lighthouse-php.com/sponsors).
+
+If you want to support the development of Lighthouse and see your logo there, consider [sponsoring](https://github.com/sponsors/spawnia).

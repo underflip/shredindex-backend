@@ -1,8 +1,5 @@
 <?php namespace RainLab\Pages\Classes;
 
-use ApplicationException;
-use Validator;
-use Lang;
 use Event;
 
 /**
@@ -36,6 +33,11 @@ class MenuItem
      * @var boolean Determines whether the auto-generated menu items could have subitems.
      */
     public $nesting;
+
+    /**
+     * @var array|bool sites includes a lookup for other sites.
+     */
+    public $sites = false;
 
     /**
      * @var string Specifies the menu item type - URL, static page, etc.

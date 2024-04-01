@@ -14,7 +14,7 @@ class Schema extends Theme
      * @param  string $dirName Optional theme directory. Defaults to $this->getDirName()
      * @return string
      */
-    public function getPath($dirName = null)
+    public function getPath($dirName = null): string
     {
         if (!$dirName) {
             $dirName = $this->getDirName();
@@ -39,7 +39,7 @@ class Schema extends Theme
      * @return string
      * If the theme doesn't exist, returns null.
      */
-    public static function getActiveThemeCode()
+    public static function getActiveThemeCode(): ?string
     {
         return 'headstart';
     }

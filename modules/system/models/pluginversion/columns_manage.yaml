@@ -3,25 +3,21 @@
 # ===================================
 
 columns:
-
     code:
-        label: system::lang.updates.plugin_code
-        sortable: false
+        label: Code
         type: partial
         path: column_code
 
     version:
-        label: system::lang.updates.plugin_version
+        label: Version
         sortable: false
 
-    is_unfrozen:
-        label: system::lang.plugins.unfrozen
-        type: partial
-        path: is_unfrozen
-        sortable: false
+    created_at:
+        label: Installed
+        type: timetense
 
     is_enabled:
-        label: system::lang.plugins.enabled
+        label: Enabled
         type: partial
-        path: is_enabled
+        path: column_is_enabled
         sortable: false

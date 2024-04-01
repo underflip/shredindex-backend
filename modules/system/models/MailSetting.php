@@ -1,46 +1,60 @@
 <?php namespace System\Models;
 
 use App;
-use Model;
+use Site;
+use Event;
+use Config;
+use System\Models\SettingModel;
 
 /**
- * Mail settings
+ * MailSetting model
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
  */
-class MailSetting extends Model
+class MailSetting extends SettingModel
 {
+    use \October\Rain\Database\Traits\Multisite;
     use \October\Rain\Database\Traits\Validation;
 
-    const MODE_LOG       = 'log';
-    const MODE_MAIL      = 'mail';
-    const MODE_SENDMAIL  = 'sendmail';
-    const MODE_SMTP      = 'smtp';
-    const MODE_MAILGUN   = 'mailgun';
-    const MODE_MANDRILL  = 'mandrill';
-    const MODE_SES       = 'ses';
-    const MODE_SPARKPOST = 'sparkpost';
+    const MODE_LOG = 'log';
+    const MODE_SENDMAIL = 'sendmail';
+    const MODE_SMTP = 'smtp';
+    const MODE_MAILGUN = 'mailgun';
+    const MODE_SES = 'ses';
+    const MODE_POSTMARK = 'postmark';
 
     /**
-     * @var array Behaviors implemented by this model.
-     */
-    public $implement = [
-        \System\Behaviors\SettingsModel::class
-    ];
-
-    /**
-     * @var string Unique code
+     * @var string settingsCode is a unique code for these settings
      */
     public $settingsCode = 'system_mail_settings';
 
     /**
-     * @var mixed Settings form field defitions
+     * @var mixed settingsFields definitions
      */
     public $settingsFields = 'fields.yaml';
 
-    /*
-     * Validation rules
+    /**
+     * @var array propagatable fields
+     */
+    protected $propagatable = [
+        'sendmail_path',
+        'smtp_address',
+        'smtp_port',
+        'smtp_user',
+        'smtp_password',
+        'smtp_authorization',
+        'smtp_encryption',
+        'mailgun_domain',
+        'mailgun_secret',
+        'ses_key',
+        'ses_secret',
+        'ses_region',
+        'postmark_token',
+    ];
+
+    /**
+     * @var array rules for validation
      */
     public $rules = [
         'sender_name'  => 'required',
@@ -48,78 +62,130 @@ class MailSetting extends Model
     ];
 
     /**
-     * Initialize the seed data for this model. This only executes when the
+     * initSettingsData for this model. This only executes when the
      * model is first created or reset to default.
      * @return void
      */
     public function initSettingsData()
     {
         $config = App::make('config');
-        $this->send_mode = $config->get('mail.driver', static::MODE_MAIL);
+        $this->send_mode = $config->get('mail.default', static::MODE_LOG);
         $this->sender_name = $config->get('mail.from.name', 'Your Site');
         $this->sender_email = $config->get('mail.from.address', 'admin@domain.tld');
-        $this->sendmail_path = $config->get('mail.sendmail', '/usr/sbin/sendmail');
-        $this->smtp_address = $config->get('mail.host');
-        $this->smtp_port = $config->get('mail.port', 587);
-        $this->smtp_user = $config->get('mail.username');
-        $this->smtp_password = $config->get('mail.password');
+        $this->sendmail_path = $config->get('mail.mailers.sendmail.path', '/usr/sbin/sendmail');
+        $this->smtp_address = $config->get('mail.mailers.smtp.host');
+        $this->smtp_port = $config->get('mail.mailers.smtp.port', 587);
+        $this->smtp_user = $config->get('mail.mailers.smtp.username');
+        $this->smtp_password = $config->get('mail.mailers.smtp.password');
         $this->smtp_authorization = !!strlen($this->smtp_user);
-        $this->smtp_encryption = $config->get('mail.encryption');
+        $this->smtp_encryption = $config->get('mail.mailers.smtp.encryption');
+        $this->mailgun_domain = $config->get('services.mailgun.domain');
+        $this->mailgun_secret = $config->get('services.mailgun.secret');
+        $this->ses_key = $config->get('services.ses.key');
+        $this->ses_secret = $config->get('services.ses.secret');
+        $this->ses_region = $config->get('services.ses.region');
+        $this->postmark_token = $config->get('services.postmark.secret');
     }
 
+    /**
+     * getSendModeOptions
+     */
     public function getSendModeOptions()
     {
-        return [
-            static::MODE_LOG      => 'system::lang.mail.log_file',
-            static::MODE_MAIL     => 'system::lang.mail.php_mail',
-            static::MODE_SENDMAIL => 'system::lang.mail.sendmail',
-            static::MODE_SMTP     => 'system::lang.mail.smtp',
-            static::MODE_MAILGUN  => 'system::lang.mail.mailgun',
-            static::MODE_MANDRILL => 'system::lang.mail.mandrill',
-            static::MODE_SES      => 'system::lang.mail.ses',
-            static::MODE_SPARKPOST => 'system::lang.mail.sparkpost',
-        ];
+        $options =  (array) Config::get('mail.send_mode_options', [
+            static::MODE_LOG => "Log File",
+            static::MODE_SENDMAIL => "Sendmail",
+            static::MODE_SMTP => "SMTP",
+            static::MODE_MAILGUN => "Mailgun",
+            static::MODE_SES => "SES",
+            static::MODE_POSTMARK => "Postmark",
+        ]);
+
+        /**
+         * @event system.mail.getSendModeOptions
+         * Add or remove mailer send mode options.
+         *
+         * The format of the $options variable can be found in
+         * System\Models\MailSetting::getSendModeOptions()
+         *
+         * Example usage:
+         *
+         *     Event::listen('system.mail.getSendModeOptions', function(&$options) {
+         *         $options['mydriver'] = 'My Driver';
+         *     });
+         *
+         */
+        Event::fire('system.mail.getSendModeOptions', [&$options]);
+
+        return $options;
     }
 
+    /**
+     * enableMultisiteMailer uses a just-in-time mail driver to handle mail configuration
+     * for multiple site definitions. A new driver is needed due to the Laravel internals
+     * caching most of the configuration after resolving.
+     */
+    public static function enableMultisiteMailer()
+    {
+        Event::listen('mailer.buildQueueMailable', function ($mailer, $mailable) {
+            $mailable->forceMailer('x_site_mailer_' . Site::getSiteIdFromContext());
+        });
+
+        Event::listen('mailer.beforeResolve', function ($mailer, $name) {
+            if (!str_starts_with($name, 'x_site_mailer_')) {
+                return;
+            }
+
+            // Assuming site context is applied
+            if (static::isConfigured()) {
+                static::applyConfigValues();
+            }
+
+            // Set the unique mailer just in time
+            if ($activeMailer = Config::get('mail.default')) {
+                Config::set("mail.mailers.{$name}", Config::get("mail.mailers.{$activeMailer}"));
+            }
+        });
+    }
+
+    /**
+     * applyConfigValues
+     */
     public static function applyConfigValues()
     {
         $config = App::make('config');
         $settings = self::instance();
-        $config->set('mail.driver', $settings->send_mode);
+        $config->set('mail.default', $settings->send_mode);
         $config->set('mail.from.name', $settings->sender_name);
         $config->set('mail.from.address', $settings->sender_email);
 
         switch ($settings->send_mode) {
             case self::MODE_SMTP:
-                $config->set('mail.host', $settings->smtp_address);
-                $config->set('mail.port', $settings->smtp_port);
+                $config->set('mail.mailers.smtp.host', $settings->smtp_address);
+                $config->set('mail.mailers.smtp.port', $settings->smtp_port);
                 if ($settings->smtp_authorization) {
-                    $config->set('mail.username', $settings->smtp_user);
-                    $config->set('mail.password', $settings->smtp_password);
+                    $config->set('mail.mailers.smtp.username', $settings->smtp_user);
+                    $config->set('mail.mailers.smtp.password', $settings->smtp_password);
                 }
                 else {
-                    $config->set('mail.username', null);
-                    $config->set('mail.password', null);
+                    $config->set('mail.mailers.smtp.username', null);
+                    $config->set('mail.mailers.smtp.password', null);
                 }
                 if ($settings->smtp_encryption) {
-                    $config->set('mail.encryption', $settings->smtp_encryption);
+                    $config->set('mail.mailers.smtp.encryption', $settings->smtp_encryption);
                 }
                 else {
-                    $config->set('mail.encryption', null);
+                    $config->set('mail.mailers.smtp.encryption', null);
                 }
                 break;
 
             case self::MODE_SENDMAIL:
-                $config->set('mail.sendmail', $settings->sendmail_path);
+                $config->set('mail.mailers.sendmail.path', $settings->sendmail_path);
                 break;
 
             case self::MODE_MAILGUN:
                 $config->set('services.mailgun.domain', $settings->mailgun_domain);
                 $config->set('services.mailgun.secret', $settings->mailgun_secret);
-                break;
-
-            case self::MODE_MANDRILL:
-                $config->set('services.mandrill.secret', $settings->mandrill_secret);
                 break;
 
             case self::MODE_SES:
@@ -128,49 +194,45 @@ class MailSetting extends Model
                 $config->set('services.ses.region', $settings->ses_region);
                 break;
 
-            case self::MODE_SPARKPOST:
-                $config->set('services.sparkpost.secret', $settings->sparkpost_secret);
+            case self::MODE_POSTMARK:
+                $config->set('services.postmark.token', $settings->postmark_token);
                 break;
         }
+
+        /**
+         * @event system.mail.applyConfigValues
+         * Applies configuration values from mail settings
+         *
+         * Example usage:
+         *
+         *     Event::listen('system.mail.applyConfigValues', function($settings) {
+         *         if ($settings->send_mode === 'mydriver') {
+         *             Config::set('services.mydriver.secret', $settings->mydriver_secret);
+         *         }
+         *     });
+         *
+         */
+        Event::fire('system.mail.applyConfigValues', [$settings]);
     }
 
     /**
-     * @return array smtp_encryption options values
+     * getSmtpEncryptionOptions values
+     * @return array
      */
     public function getSmtpEncryptionOptions()
     {
         return [
-            '' => 'system::lang.mail.smtp_encryption_none',
-            'tls' => 'system::lang.mail.smtp_encryption_tls',
-            'ssl' => 'system::lang.mail.smtp_encryption_ssl',
+            '' => "No encryption",
+            'tls' => "TLS",
         ];
     }
 
     /**
-     * Filter fields callback.
-     *
-     * We use this to automatically set the SMTP port to the encryption type's corresponding port, if it was originally
-     * using a default port.
-     *
-     * @param array $fields
-     * @param string|null $context
-     * @return void
+     * isMultisiteEnabled allows for programmatic toggling
+     * @return bool
      */
-    public function filterFields($fields, $context = null)
+    public function isMultisiteEnabled()
     {
-        if (in_array($fields->smtp_port->value ?? 25, [25, 465, 587])) {
-            switch ($fields->smtp_encryption->value ?? '') {
-                case 'tls':
-                    $fields->smtp_port->value = 587;
-                    break;
-                case 'ssl':
-                    $fields->smtp_port->value = 465;
-                    break;
-                case '':
-                default:
-                    $fields->smtp_port->value = 25;
-                    break;
-            }
-        }
+        return Site::hasFeature('backend_mail_setting');
     }
 }

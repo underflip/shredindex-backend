@@ -1,30 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Subscriptions;
 
-use Throwable;
 use Nuwave\Lighthouse\Subscriptions\Contracts\SubscriptionExceptionHandler;
 
 class ExceptionHandler implements SubscriptionExceptionHandler
 {
-    /**
-     * Handle authentication error.
-     *
-     * @param  \Throwable  $e
-     * @return void
-     */
-    public function handleAuthError(Throwable $e): void
+    /** Handle authentication error. */
+    public function handleAuthError(\Throwable $e): void
     {
         // Do nothing....
     }
 
-    /**
-     * Handle broadcast error.
-     *
-     * @param  \Throwable  $e
-     * @return void
-     */
-    public function handleBroadcastError(Throwable $e): void
+    /** Handle broadcast error. */
+    public function handleBroadcastError(\Throwable $e): void
     {
         info('graphql.broadcast.exception', [
             'message' => $e->getMessage(),

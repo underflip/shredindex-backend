@@ -44,7 +44,7 @@
 
     /*
      * Forces the processor to hide the editor when the user navigates
-     * away from the cell. Processors can update the sell value in this method.
+     * away from the cell. Processors can update the cell value in this method.
      * Processors must clear the reference to the active cell in this method.
      */
     AutocompleteProcessor.prototype.onUnfocus = function() {
@@ -142,12 +142,12 @@
         if (!tableElement) {
             return
         }
-        
+
         var optionsEvent = $.Event('autocompleteitems.oc.table'),
             values = {} // TODO - implement loading values from the current row.
 
         $(tableElement).trigger(optionsEvent, [{
-            values: values, 
+            values: values,
             callback: callback,
             column: this.columnName,
             columnConfiguration: this.columnConfiguration

@@ -1,64 +1,32 @@
 <?php namespace System\Console;
 
 use Illuminate\Console\Command;
-use System\Classes\UpdateManager;
-use Symfony\Component\Console\Input\InputOption;
 
 /**
- * Console command to tear down the database.
- *
- * This destroys all database tables that are registered for October and all plugins.
+ * OctoberDown is deprecated
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
+ * @deprecated
+ * @see System\Console\OctoberMigrate
  */
 class OctoberDown extends Command
 {
-    use \Illuminate\Console\ConfirmableTrait;
-
     /**
-     * The console command name.
+     * @var string name of console command
      */
     protected $name = 'october:down';
 
     /**
-     * The console command description.
+     * @var string description of the console command
      */
-    protected $description = 'Destroys all database tables for October and all plugins.';
+    protected $description = '[Deprecated] Destroys all database tables for October and all plugins.';
 
     /**
-     * Execute the console command.
+     * handle executes the console command
      */
     public function handle()
     {
-        if (!$this->confirmToProceed('This will DESTROY all database tables.')) {
-            return;
-        }
-
-        UpdateManager::instance()
-            ->setNotesOutput($this->output)
-            ->uninstall()
-        ;
-    }
-
-    /**
-     * Get the console command options.
-     */
-    protected function getOptions()
-    {
-        return [
-            ['force', null, InputOption::VALUE_NONE, 'Force the operation to run.'],
-        ];
-    }
-
-    /**
-     * Get the default confirmation callback.
-     * @return \Closure
-     */
-    protected function getDefaultConfirmCallback()
-    {
-        return function () {
-            return true;
-        };
+        $this->error('Command october:down is deprecated, please use october:migrate --rollback instead');
     }
 }

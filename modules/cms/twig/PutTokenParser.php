@@ -2,9 +2,10 @@
 
 use Twig\Token as TwigToken;
 use Twig\TokenParser\AbstractTokenParser as TwigTokenParser;
+use Twig\Error\SyntaxError;
 
 /**
- * Parser for the `{% put %}` Twig tag.
+ * PutTokenParser for the `{% put %}` Twig tag.
  *
  *     {% put head %}
  *         <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet"/>
@@ -23,37 +24,56 @@ use Twig\TokenParser\AbstractTokenParser as TwigTokenParser;
 class PutTokenParser extends TwigTokenParser
 {
     /**
-     * Parses a token and returns a node.
-     *
-     * @param TwigToken $token A TwigToken instance
-     * @return Twig\Node\Node A Twig\Node\Node instance
+     * parse a token and returns a node.
+     * @return \Twig\Node\Node A Twig\Node\Node instance
      */
     public function parse(TwigToken $token)
     {
         $lineno = $token->getLine();
         $stream = $this->parser->getStream();
-        $name = $stream->expect(TwigToken::NAME_TYPE)->getValue();
-        $stream->expect(TwigToken::BLOCK_END_TYPE);
-        $body = $this->parser->subparse([$this, 'decidePutEnd'], true);
+        $names = $this->parser->getExpressionParser()->parseAssignmentExpression();
 
+        $capture = false;
         $endType = null;
-        if ($token = $stream->nextIf(TwigToken::NAME_TYPE)) {
-            $endType = $token->getValue();
+        if ($stream->nextIf(TwigToken::OPERATOR_TYPE, '=')) {
+            $values = $this->parser->getExpressionParser()->parseMultitargetExpression();
+
+            $stream->expect(TwigToken::BLOCK_END_TYPE);
+
+            if (count($names) !== count($values)) {
+                throw new SyntaxError('When using put, you must have the same number of variables and assignments.', $stream->getCurrent()->getLine(), $stream->getSourceContext());
+            }
+        }
+        else {
+            $capture = true;
+
+            if (count($names) > 1) {
+                throw new SyntaxError('When using put with a block, you cannot have multiple targets.', $stream->getCurrent()->getLine(), $stream->getSourceContext());
+            }
+
+            $stream->expect(TwigToken::BLOCK_END_TYPE);
+            $values = $this->parser->subparse([$this, 'decidePutEnd'], true);
+
+            if ($token = $stream->nextIf(TwigToken::NAME_TYPE)) {
+                $endType = $token->getValue();
+            }
+
+            $stream->expect(TwigToken::BLOCK_END_TYPE);
         }
 
-        $stream->expect(TwigToken::BLOCK_END_TYPE);
-
-        return new PutNode($body, $name, $endType, $lineno, $this->getTag());
+        return new PutNode($capture, $names, $values, $endType, $lineno, $this->getTag());
     }
 
+    /**
+     * decidePutEnd
+     */
     public function decidePutEnd(TwigToken $token)
     {
         return $token->test('endput');
     }
 
     /**
-     * Gets the tag name associated with this token parser.
-     *
+     * getTag name associated with this token parser.
      * @return string The tag name
      */
     public function getTag()

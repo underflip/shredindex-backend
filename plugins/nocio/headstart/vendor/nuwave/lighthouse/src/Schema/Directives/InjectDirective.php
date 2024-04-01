@@ -1,32 +1,22 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use Closure;
-use Illuminate\Support\Arr;
-use GraphQL\Type\Definition\ResolveInfo;
+use Nuwave\Lighthouse\Exceptions\DefinitionException;
+use Nuwave\Lighthouse\Execution\ResolveInfo;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
-use Nuwave\Lighthouse\Exceptions\DirectiveException;
-use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 use Nuwave\Lighthouse\Support\Contracts\FieldMiddleware;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
+use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
-class InjectDirective extends BaseDirective implements FieldMiddleware, DefinedDirective
+class InjectDirective extends BaseDirective implements FieldMiddleware
 {
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'inject';
-    }
-
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
-directive @inject(      
+        return /** @lang GraphQL */ <<<'GRAPHQL'
+"""
+Inject a value from the context object into the arguments.
+"""
+directive @inject(
   """
   A path to the property of the context that will be injected.
   If the value is nested within the context, you may use dot notation
@@ -40,48 +30,33 @@ directive @inject(
   within the incoming argument.
   """
   name: String!
-) on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
-SDL;
+) repeatable on FIELD_DEFINITION
+GRAPHQL;
     }
 
-    /**
-     * Resolve the field directive.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\Values\FieldValue  $fieldValue
-     * @param  \Closure  $next
-     * @return \Nuwave\Lighthouse\Schema\Values\FieldValue
-     *
-     * @throws \Nuwave\Lighthouse\Exceptions\DirectiveException
-     */
-    public function handleField(FieldValue $fieldValue, Closure $next): FieldValue
+    public function handleField(FieldValue $fieldValue): void
     {
         $contextAttributeName = $this->directiveArgValue('context');
         if (! $contextAttributeName) {
-            throw new DirectiveException(
-                "The `inject` directive on {$fieldValue->getParentName()} [{$fieldValue->getFieldName()}] must have a `context` argument"
-            );
+            throw new DefinitionException("The `inject` directive on {$fieldValue->getParentName()} [{$fieldValue->getFieldName()}] must have a `context` argument");
         }
 
         $argumentName = $this->directiveArgValue('name');
         if (! $argumentName) {
-            throw new DirectiveException(
-                "The `inject` directive on {$fieldValue->getParentName()} [{$fieldValue->getFieldName()}] must have a `name` argument"
-            );
+            throw new DefinitionException("The `inject` directive on {$fieldValue->getParentName()} [{$fieldValue->getFieldName()}] must have a `name` argument");
         }
 
-        $previousResolver = $fieldValue->getResolver();
+        $fieldValue->wrapResolver(static fn (callable $resolver): \Closure => static function (mixed $root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) use ($contextAttributeName, $argumentName, $resolver) {
+            $valueFromContext = data_get($context, $contextAttributeName);
+            $argumentSet = $resolveInfo->argumentSet;
+            $argumentSet->addValue($argumentName, $valueFromContext);
 
-        return $next(
-            $fieldValue->setResolver(
-                function ($rootValue, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) use ($contextAttributeName, $argumentName, $previousResolver) {
-                    return $previousResolver(
-                        $rootValue,
-                        Arr::add($args, $argumentName, data_get($context, $contextAttributeName)),
-                        $context,
-                        $resolveInfo
-                    );
-                }
-            )
-        );
+            return $resolver(
+                $root,
+                $argumentSet->toArray(),
+                $context,
+                $resolveInfo,
+            );
+        });
     }
 }

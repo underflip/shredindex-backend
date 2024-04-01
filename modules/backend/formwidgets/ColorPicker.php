@@ -5,8 +5,7 @@ use Backend\Classes\FormWidgetBase;
 use ApplicationException;
 
 /**
- * Color picker
- * Renders a color picker field.
+ * ColorPicker renders a color picker field.
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -14,11 +13,11 @@ use ApplicationException;
 class ColorPicker extends FormWidgetBase
 {
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
-     * @var array Default available colors
+     * @var array availableColors by default
      */
     public $availableColors = [
         '#1abc9c', '#16a085',
@@ -34,27 +33,37 @@ class ColorPicker extends FormWidgetBase
     ];
 
     /**
-     * @var bool Allow empty value
+     * @var bool allowEmpty value
      */
     public $allowEmpty = false;
 
     /**
-     * @var bool Show opacity slider
+     * @var bool allowCustom value
+     */
+    public $allowCustom = true;
+
+    /**
+     * @var bool showAlpha opacity slider
      */
     public $showAlpha = false;
 
     /**
-     * @var bool If true, the color picker is set to read-only mode
+     * @var bool|null showInput displays an input and disables the available colors.
+     */
+    public $showInput;
+
+    /**
+     * @var bool readOnly if true, the color picker is set to read-only mode
      */
     public $readOnly = false;
 
     /**
-     * @var bool If true, the color picker is set to disabled mode
+     * @var bool disabled if true, the color picker is set to disabled mode
      */
     public $disabled = false;
 
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
@@ -69,11 +78,19 @@ class ColorPicker extends FormWidgetBase
     {
         $this->fillFromConfig([
             'availableColors',
+            'allowCustom',
             'allowEmpty',
+            'showInput',
             'showAlpha',
             'readOnly',
             'disabled',
         ]);
+
+        // @deprecated remove default colors with showInput true as default (v4)
+        // when colors provided, even as empty array, showInput becomes false -sg
+        if ($this->availableColors === false && $this->showInput === null) {
+            $this->showInput = true;
+        }
     }
 
     /**
@@ -86,46 +103,50 @@ class ColorPicker extends FormWidgetBase
     }
 
     /**
-     * Prepares the list data
+     * prepareVars for display
      */
     public function prepareVars()
     {
         $this->vars['name'] = $this->getFieldName();
         $this->vars['value'] = $value = $this->getLoadValue();
         $this->vars['availableColors'] = $availableColors = $this->getAvailableColors();
+        $this->vars['allowCustom'] = $this->allowCustom;
         $this->vars['allowEmpty'] = $this->allowEmpty;
         $this->vars['showAlpha'] = $this->showAlpha;
+        $this->vars['showInput'] = $this->showInput;
         $this->vars['readOnly'] = $this->readOnly;
         $this->vars['disabled'] = $this->disabled;
         $this->vars['isCustomColor'] = !in_array($value, $availableColors);
     }
 
     /**
-     * Gets the appropriate list of colors.
-     *
-     * @return array
+     * getAvailableColors as a list of available colors.
      */
-    protected function getAvailableColors()
+    protected function getAvailableColors(): array
     {
         $availableColors = $this->availableColors;
         if (is_array($availableColors)) {
             return $availableColors;
         }
-        elseif (is_string($availableColors) && !empty($availableColors)) {
-            if ($this->model->methodExists($availableColors)) {
-                return $this->availableColors = $this->model->{$availableColors}(
-                    $this->formField->fieldName,
-                    $this->formField->value,
-                    $this->formField->config
-                );
-            } else {
+
+        if (is_string($availableColors) && strlen($availableColors)) {
+            if (!$this->model->methodExists($availableColors)) {
                 throw new ApplicationException(Lang::get('backend::lang.field.colors_method_not_exists', [
-                    'model'  => get_class($this->model),
+                    'model' => get_class($this->model),
                     'method' => $availableColors,
-                    'field'  => $this->formField->fieldName
+                    'field' => $this->formField->fieldName
                 ]));
             }
+
+            // @deprecated just pass form field here -sg
+            return (array) $this->model->{$availableColors}(
+                $this->formField->fieldName,
+                $this->formField->value,
+                $this->formField->config
+            );
         }
+
+        return [];
     }
 
     /**
@@ -133,10 +154,10 @@ class ColorPicker extends FormWidgetBase
      */
     protected function loadAssets()
     {
-        $this->addCss('vendor/spectrum/spectrum.css', 'core');
-        $this->addJs('vendor/spectrum/spectrum.js', 'core');
-        $this->addCss('css/colorpicker.css', 'core');
-        $this->addJs('js/colorpicker.js', 'core');
+        $this->addCss('vendor/spectrum/spectrum.css');
+        $this->addJs('vendor/spectrum/spectrum.js');
+        $this->addCss('css/colorpicker.css');
+        $this->addJs('js/colorpicker.js');
     }
 
     /**
@@ -144,6 +165,18 @@ class ColorPicker extends FormWidgetBase
      */
     public function getSaveValue($value)
     {
-        return strlen($value) ? $value : null;
+        if (!strlen($value)) {
+            return null;
+        }
+
+        return $this->parseAsHex($value);
+    }
+
+    /**
+     * parseAsHex ensures saved value is a valid hex color
+     */
+    protected function parseAsHex($value)
+    {
+        return '#' . preg_replace("/[^a-zA-Z0-9]+/", '', $value);
     }
 }

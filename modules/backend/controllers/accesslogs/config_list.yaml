@@ -2,16 +2,19 @@
 #  List Behavior Config
 # ===================================
 
-title: backend::lang.access_log.menu_label
+title: Access Log
 list: ~/modules/backend/models/accesslog/columns.yaml
+filter: ~/modules/backend/models/accesslog/scopes.yaml
 modelClass: Backend\Models\AccessLog
 noRecordsMessage: backend::lang.list.no_records
 recordsPerPage: 30
 showSetup: true
+defaultSort:
+    column: created_at
+    direction: desc
 
 toolbar:
     buttons: list_toolbar
     search:
         prompt: backend::lang.list.search_prompt
 
-filter: config_filter.yaml

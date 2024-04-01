@@ -31,6 +31,10 @@ return [
         'horizontalrule' => 'Lisää horisontaalinen jakaja',
         'fullscreen' => 'Kokonäyttö',
         'preview' => 'Esikatsele',
+        'strikethrough' => 'Yliviivattu',
+        'cleanblock' => 'Puhdas blokki',
+        'table' => 'Taulukko',
+        'sidebyside' => 'Vierekkäin'
     ],
     'mediamanager' => [
         'insert_link' => 'Lisää linkki Mediaan',
@@ -44,6 +48,9 @@ return [
         'invalid_audio_empty_insert' => 'Valitse linkitettävä äänitiedosto.',
     ],
     'alert' => [
+        'error' => 'Virhe',
+        'confirm' => 'Vahvista',
+        'dismiss' => 'Poistu',
         'confirm_button_text' => 'OK',
         'cancel_button_text' => 'Peruuta',
         'widget_remove_confirm' => 'Poista tämä vimpain?'
@@ -56,7 +63,7 @@ return [
         'weekdaysShort' => ['su', 'ma', 'ti', 'ke', 'to', 'pe', 'la']
     ],
     'colorpicker' => [
-        'choose' => 'Ok',
+        'choose' => 'OK',
     ],
     'filter' => [
         'group' => [
@@ -80,7 +87,7 @@ return [
             'reset_button_text'  => 'Palauta',
             'min_placeholder' => 'Väh.',
             'max_placeholder' => 'Enint.'
-        ]
+        ],
     ],
     'eventlog' => [
         'show_stacktrace' => 'Näytä stacktrace',
@@ -96,6 +103,22 @@ return [
             'remember_choice' => 'Muista valittu vaihtoehto istunnon ajan',
             'open' => 'Avaa',
             'cancel' => 'Peruuta'
-        ]
-    ]
+        ],
+    ],
+    'upload' => [
+        'max_files' => 'Et voi siirtää enempää tiedostoja.',
+        'invalid_file_type' => 'Tämän tyypin tiedostot eivät ole sallittuja.',
+        'file_too_big' => 'Tiedosto on liian iso ({{filesize}}MB). Suurin sallittu tiedostokoko on: {{maxFilesize}}MB.',
+        'response_error' => 'Palvelin vastasi koodilla {{statusCode}}.',
+        'remove_file' => 'Poista tiedosto',
+    ],
+    'inspector' => [
+      'add' => 'Lisää',
+      'remove' => 'Poista',
+      'key' => 'Avain',
+      'value' => 'Arvo',
+      'ok' => 'OK',
+      'cancel' => 'Peruuta',
+      'items' => 'Kohteet',
+    ],
 ];

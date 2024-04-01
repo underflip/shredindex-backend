@@ -1,16 +1,17 @@
 <?php
+
 use RainLab\Builder\Classes\FilesystemGenerator;
 
 class FilesystemGeneratorTest extends TestCase
 {
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
         $this->cleanUp();
     }
 
-    public function tearDown()
+    public function tearDown() : void
     {
         $this->cleanUp();
     }

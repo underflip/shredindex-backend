@@ -1,281 +1,223 @@
 <?php namespace Backend\Classes;
 
-use IteratorAggregate;
-use ArrayIterator;
-use ArrayAccess;
+use Str;
+use October\Rain\Html\Helper as HtmlHelper;
+use October\Rain\Element\Form\FieldsetDefinition;
 
 /**
- * Form Tabs definition
- * A translation of the form field tab configuration
+ * FormTabs is a fieldset definition for backend tabs
+ *
+ * @method FormTabs section(string $section) section specifies the form section these tabs belong to
+ * @method FormTabs lazy(array $lazy) lazy is the names of tabs to lazy load
+ * @method FormTabs adaptive(array $adaptive) adaptive is the names of tabs that use the entire screen space
+ * @method FormTabs defaultTab(string $defaultTab) defaultTab is default tab label to use when none is specified
+ * @method FormTabs activeTab(string $activeTab) activeTab is the selected tab when the form first loads, name or index.
+ * @method FormTabs icons(array $icons) icons lists of icons for their corresponding tabs
+ * @method FormTabs stretch(bool $stretch) stretch should these tabs stretch to the bottom of the page layout
+ * @method FormTabs cssClass(string $cssClass) cssClass specifies a CSS class to attach to the tab container
+ * @method FormTabs paneCssClass(array $paneCssClass) paneCssClass specifies a CSS class to an individual tab pane
+ * @method FormTabs linkable(bool $linkable) linkable means tab gets url fragment to be linkable
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-class FormTabs implements IteratorAggregate, ArrayAccess
+class FormTabs extends FieldsetDefinition
 {
     const SECTION_OUTSIDE = 'outside';
     const SECTION_PRIMARY = 'primary';
     const SECTION_SECONDARY = 'secondary';
 
     /**
-     * @var string Specifies the form section these tabs belong to.
+     * initDefaultValues for this scope
      */
-    public $section = 'outside';
-
-    /**
-     * @var array Collection of panes fields to these tabs.
-     */
-    public $fields = [];
-
-    /**
-     * @var array Names of tabs to lazy load.
-     */
-    public $lazy = [];
-
-    /**
-     * @var string Default tab label to use when none is specified.
-     */
-    public $defaultTab = 'backend::lang.form.undefined_tab';
-
-    /**
-     * @var array List of icons for their corresponding tabs.
-     */
-    public $icons = [];
-
-    /**
-     * @var bool Should these tabs stretch to the bottom of the page layout.
-     */
-    public $stretch;
-
-    /**
-     * @var boolean If set to TRUE, fields will not be displayed in tabs.
-     */
-    public $suppressTabs = false;
-
-    /**
-     * @var string Specifies a CSS class to attach to the tab container.
-     */
-    public $cssClass;
-
-    /**
-     * @var array Specifies a CSS class to an individual tab pane.
-     */
-    public $paneCssClass;
-
-    /**
-     * @var bool Each tab gets url fragment to be linkable.
-     */
-    public $linkable = true;
-
-    /**
-     * Constructor.
-     * Specifies a tabs rendering section. Supported sections are:
-     * - outside - stores a section of "tabless" fields.
-     * - primary - tabs section for primary fields.
-     * - secondary - tabs section for secondary fields.
-     * @param string $section Specifies a section as described above.
-     * @param array $config A list of render mode specific config.
-     */
-    public function __construct($section, $config = [])
+    protected function initDefaultValues()
     {
-        $this->section = strtolower($section) ?: $this->section;
-        $this->config = $this->evalConfig($config);
+        parent::initDefaultValues();
 
-        if ($this->section == self::SECTION_OUTSIDE) {
-            $this->suppressTabs = true;
+        $this
+            ->section(self::SECTION_OUTSIDE)
+            ->defaultTab('backend::lang.form.undefined_tab')
+            ->linkable()
+            ->icons([])
+            ->lazy([])
+            ->adaptive([])
+        ;
+    }
+
+    /**
+     * evalConfig
+     */
+    public function evalConfig(array $config)
+    {
+        if (isset($config['section']) && $config['section'] === self::SECTION_OUTSIDE) {
+            $this->suppressTabs();
         }
     }
 
     /**
-     * Process options and apply them to this object.
-     * @param array $config
-     * @return array
+     * isLazy checks if a tab should be lazy loaded
      */
-    protected function evalConfig($config)
+    public function isLazy($tabName): bool
     {
-        if (array_key_exists('defaultTab', $config)) {
-            $this->defaultTab = $config['defaultTab'];
-        }
-
-        if (array_key_exists('icons', $config)) {
-            $this->icons = $config['icons'];
-        }
-
-        if (array_key_exists('stretch', $config)) {
-            $this->stretch = $config['stretch'];
-        }
-
-        if (array_key_exists('suppressTabs', $config)) {
-            $this->suppressTabs = $config['suppressTabs'];
-        }
-
-        if (array_key_exists('cssClass', $config)) {
-            $this->cssClass = $config['cssClass'];
-        }
-
-        if (array_key_exists('paneCssClass', $config)) {
-            $this->paneCssClass = $config['paneCssClass'];
-        }
-
-        if (array_key_exists('linkable', $config)) {
-            $this->linkable = (bool) $config['linkable'];
-        }
-
-        if (array_key_exists('lazy', $config)) {
-            $this->lazy = $config['lazy'];
-        }
+        return in_array($tabName, $this->config['lazy']);
     }
 
     /**
-     * Add a field to the collection of tabs.
-     * @param string    $name
-     * @param FormField $field
-     * @param string    $tab
+     * addLazy flags a tab to be lazy loaded
      */
-    public function addField($name, FormField $field, $tab = null)
+    public function addLazy($tabName)
     {
-        if (!$tab) {
-            $tab = $this->defaultTab;
-        }
-
-        $this->fields[$tab][$name] = $field;
+        $this->config['lazy'] = array_merge((array) $this->config['lazy'], (array) $tabName);
     }
 
     /**
-     * Remove a field from all tabs by name.
-     * @param string    $name
-     * @return boolean
+     * isAdaptive checks if a tab uses adaptive sizing
      */
-    public function removeField($name)
+    public function isAdaptive($tabName): bool
     {
-        foreach ($this->fields as $tab => $fields) {
-            foreach ($fields as $fieldName => $field) {
-                if ($fieldName == $name) {
-                    unset($this->fields[$tab][$fieldName]);
-
-                    /*
-                     * Remove empty tabs from collection
-                     */
-                    if (!count($this->fields[$tab])) {
-                        unset($this->fields[$tab]);
-                    }
-
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return in_array($tabName, $this->config['adaptive']);
     }
 
     /**
-     * Returns true if any fields have been registered for these tabs
-     * @return boolean
+     * addAdaptive flags a tab to use adaptive sizing
      */
-    public function hasFields()
+    public function addAdaptive($tabName)
     {
-        return count($this->fields) > 0;
+        $this->config['adaptive'] = array_merge((array) $this->config['adaptive'], (array) $tabName);
     }
 
     /**
-     * Returns an array of the registered fields, including tabs.
-     * @return array
-     */
-    public function getFields()
-    {
-        return $this->fields;
-    }
-
-    /**
-     * Returns an array of the registered fields, without tabs.
-     * @return array
-     */
-    public function getAllFields()
-    {
-        $tablessFields = [];
-
-        foreach ($this->getFields() as $tab) {
-            $tablessFields += $tab;
-        }
-
-        return $tablessFields;
-    }
-
-    /**
-     * Returns an icon for the tab based on the tab's name.
+     * getIcon returns an icon for the tab based on the tab's name
      * @param string $name
      * @return string
      */
     public function getIcon($name)
     {
-        if (!empty($this->icons[$name])) {
-            return $this->icons[$name];
+        if (!empty($this->config['icons'][$name])) {
+            return $this->config['icons'][$name];
         }
     }
 
     /**
-     * Returns a tab pane CSS class.
+     * getPaneCssClass returns a tab pane CSS class
      * @param string $index
      * @param string $label
      * @return string
      */
     public function getPaneCssClass($index = null, $label = null)
     {
-        if (is_string($this->paneCssClass)) {
-            return $this->paneCssClass;
+        if (!isset($this->config['paneCssClass'])) {
+            return '';
         }
 
-        if ($index !== null && isset($this->paneCssClass[$index])) {
-            return $this->paneCssClass[$index];
+        if (is_string($this->config['paneCssClass'])) {
+            return $this->config['paneCssClass'];
         }
 
-        if ($label !== null && isset($this->paneCssClass[$label])) {
-            return $this->paneCssClass[$label];
+        if ($index !== null && isset($this->config['paneCssClass'][$index])) {
+            return $this->config['paneCssClass'][$index];
+        }
+
+        if ($label !== null && isset($this->config['paneCssClass'][$label])) {
+            return $this->config['paneCssClass'][$label];
+        }
+
+        return $this->config['paneCssClass']['*'] ?? '';
+    }
+
+    /**
+     * setPaneCssClass appends a CSS class to the tab pane
+     */
+    public function setPaneCssClass($tabNameOrIndex, string $cssClass, bool $overwrite = false)
+    {
+        if (is_string($this->config['paneCssClass'])) {
+            $this->config['paneCssClass'] = ['*' => $this->config['paneCssClass']];
+        }
+
+        if ($overwrite) {
+            $this->config['paneCssClass'][$tabNameOrIndex] = $cssClass;
+        }
+        else {
+            $currentValue = $this->config['paneCssClass'][$tabNameOrIndex] ?? '';
+            $this->config['paneCssClass'][$tabNameOrIndex] = trim($currentValue . ' ' . $cssClass);
         }
     }
 
     /**
-     * Get an iterator for the items.
-     * @return ArrayIterator
+     * isPaneActive returns a tab pane CSS class
      */
-    public function getIterator()
+    public function isPaneActive($index = null, $label = null): bool
     {
-        return new ArrayIterator(
-            $this->suppressTabs
-                ? $this->getAllFields()
-                : $this->getFields()
-        );
+        if ($this->activeTab === null) {
+            return $index === 1;
+        }
+
+        if ($index !== null && $this->activeTab === $index) {
+            return true;
+        }
+
+        if ($label !== null && $this->activeTab === $label) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
-     * ArrayAccess implementation
+     * getPaneAnchorId returns a value suitable for the pane id property.
+     * @return string
      */
-    public function offsetSet($offset, $value)
+    public function getPaneAnchorId($index = null, $label = null)
     {
-        $this->fields[$offset] = $value;
+        $id = $this->section . 'tab';
+
+        if ($this->linkable) {
+            $id .= '-' . (Str::slug(__($label)) ?: $index);
+        }
+        else {
+            $id .= '-' . $index;
+        }
+
+        return HtmlHelper::nameToId($id);
     }
 
     /**
-     * ArrayAccess implementation
+     * getPaneId
      */
-    public function offsetExists($offset)
+    public function getPaneId($tabName)
     {
-        return isset($this->fields[$offset]);
+        if ($id = $this->getIdentifier($tabName)) {
+            return "pane-{$id}";
+        }
+
+        return null;
     }
 
     /**
-     * ArrayAccess implementation
+     * getTabId
      */
-    public function offsetUnset($offset)
+    public function getTabId($tabName)
     {
-        unset($this->fields[$offset]);
+        if ($id = $this->getIdentifier($tabName)) {
+            return "tab-{$id}";
+        }
+
+        return null;
     }
 
     /**
-     * ArrayAccess implementation
+     * getIdentifier returns an API identifier for the specified tab
      */
-    public function offsetGet($offset)
+    public function getIdentifier($tabName): ?string
     {
-        return $this->fields[$offset] ?? null;
+        return $this->config['identifiers'][$tabName] ?? null;
+    }
+
+    /**
+     * addIdentifier adds a new API identifier for the specified tab
+     */
+    public function addIdentifier($tabName, $identifier)
+    {
+        $this->config['identifiers'][$tabName] = $identifier;
     }
 }

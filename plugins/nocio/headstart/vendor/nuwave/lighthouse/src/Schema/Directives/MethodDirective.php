@@ -1,59 +1,45 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use GraphQL\Type\Definition\ResolveInfo;
+use GraphQL\Language\AST\FieldDefinitionNode;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
 use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
-use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
 
-class MethodDirective extends BaseDirective implements FieldResolver, DefinedDirective
+class MethodDirective extends BaseDirective implements FieldResolver
 {
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'method';
-    }
-
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
-Call a method with a given `name` on the class that represents a type to resolve a field.
-Use this if the data is not accessible as an attribute (e.g. `$model->myData`).
+Resolve a field by calling a method on the parent object.
+
+Use this if the data is not accessible through simple property access or if you
+want to pass argument to the method.
 """
-directive @method(      
+directive @method(
   """
   Specify the method of which to fetch the data from.
+  Defaults to the name of the field if not given.
   """
   name: String
 ) on FIELD_DEFINITION
-SDL;
+GRAPHQL;
     }
 
-    /**
-     * Resolve the field directive.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\Values\FieldValue  $fieldValue
-     * @return \Nuwave\Lighthouse\Schema\Values\FieldValue
-     */
-    public function resolveField(FieldValue $fieldValue): FieldValue
+    public function resolveField(FieldValue $fieldValue): callable
     {
-        /** @var string $method */
-        $method = $this->directiveArgValue(
-            'name',
-            $this->definitionNode->name->value
-        );
+        return function (mixed $root, array $args) {
+            $method = $this->directiveArgValue('name', $this->nodeName());
+            assert(is_string($method));
 
-        return $fieldValue->setResolver(
-            function ($root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) use ($method) {
-                return call_user_func([$root, $method], $root, $args, $context, $resolveInfo);
+            $orderedArgs = [];
+            assert($this->definitionNode instanceof FieldDefinitionNode);
+            foreach ($this->definitionNode->arguments as $argDefinition) {
+                $orderedArgs[] = $args[$argDefinition->name->value] ?? null;
             }
-        );
+
+            return $root->{$method}(...$orderedArgs);
+        };
     }
 }

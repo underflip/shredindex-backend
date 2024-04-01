@@ -1,24 +1,30 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Factories;
 
-use Nuwave\Lighthouse\Schema\AST\ASTHelper;
 use GraphQL\Language\AST\InputValueDefinitionNode;
-use Nuwave\Lighthouse\Schema\Conversion\DefinitionNodeConverter;
+use GraphQL\Type\Definition\InputType;
+use GraphQL\Type\Definition\Type;
+use Illuminate\Container\Container;
+use Nuwave\Lighthouse\Schema\AST\ASTHelper;
+use Nuwave\Lighthouse\Schema\AST\ExecutableTypeNodeConverter;
 
+/**
+ * @phpstan-import-type ArgumentConfig from \GraphQL\Type\Definition\Argument
+ */
 class ArgumentFactory
 {
     /**
      * Convert input value definitions to a executable types.
      *
-     * @param  \GraphQL\Language\AST\InputValueDefinitionNode[]|\GraphQL\Language\AST\NodeList  $definitions
-     * @return mixed[]
+     * @param  iterable<\GraphQL\Language\AST\InputValueDefinitionNode>  $definitionNodes
+     *
+     * @return array<string, ArgumentConfig>
      */
-    public function toTypeMap($definitionNodes): array
+    public function toTypeMap(iterable $definitionNodes): array
     {
         $arguments = [];
 
-        /* @var InputValueDefinitionNode $inputValueDefinitionNode */
         foreach ($definitionNodes as $inputDefinition) {
             $arguments[$inputDefinition->name->value] = $this->convert($inputDefinition);
         }
@@ -30,25 +36,26 @@ class ArgumentFactory
      * Convert an argument definition to an executable type.
      *
      * The returned array will be used to construct one of:
-     * @see \GraphQL\Type\Definition\FieldArgument
+     *
+     * @see \GraphQL\Type\Definition\Argument
      * @see \GraphQL\Type\Definition\InputObjectField
      *
-     * @param  \GraphQL\Language\AST\InputValueDefinitionNode  $definitionNode
-     * @return mixed[]
+     * @return ArgumentConfig
      */
     public function convert(InputValueDefinitionNode $definitionNode): array
     {
-        $definitionNodeConverter = app(DefinitionNodeConverter::class);
-        $type = $definitionNodeConverter->toType($definitionNode->type);
+        $definitionNodeConverter = Container::getInstance()->make(ExecutableTypeNodeConverter::class);
+        $type = $definitionNodeConverter->convert($definitionNode->type);
+        assert($type instanceof Type && $type instanceof InputType);
 
         $config = [
             'name' => $definitionNode->name->value,
-            'description' => data_get($definitionNode->description, 'value'),
+            'description' => $definitionNode->description->value ?? null,
             'type' => $type,
             'astNode' => $definitionNode,
         ];
 
-        if ($defaultValue = $definitionNode->defaultValue) {
+        if (($defaultValue = $definitionNode->defaultValue) !== null) {
             $config += [
                 'defaultValue' => ASTHelper::defaultValueForArgument($defaultValue, $type),
             ];

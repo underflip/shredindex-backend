@@ -1,81 +1,39 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use Closure;
-use GraphQL\Type\Definition\Type;
-use Nuwave\Lighthouse\Schema\NodeRegistry;
+use GraphQL\Language\AST\Node;
 use Nuwave\Lighthouse\Schema\AST\ASTHelper;
-use GraphQL\Language\AST\TypeDefinitionNode;
-use Nuwave\Lighthouse\Schema\AST\DocumentAST;
-use Nuwave\Lighthouse\Schema\Values\TypeValue;
-use Nuwave\Lighthouse\Support\Contracts\TypeMiddleware;
-use Nuwave\Lighthouse\Support\Contracts\TypeManipulator;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
 
-class ModelDirective extends BaseDirective implements TypeMiddleware, TypeManipulator, DefinedDirective
+class ModelDirective extends BaseDirective
 {
-    /**
-     * @var \Nuwave\Lighthouse\Schema\NodeRegistry
-     */
-    protected $nodeRegistry;
-
-    /**
-     * @param  \Nuwave\Lighthouse\Schema\NodeRegistry  $nodeRegistry
-     * @return void
-     */
-    public function __construct(NodeRegistry $nodeRegistry)
-    {
-        $this->nodeRegistry = $nodeRegistry;
-    }
-
-    /**
-     * Directive name.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'model';
-    }
+    public const NAME = 'model';
 
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
+"""
+Map a model class to an object type.
 
+This can be used when the name of the model differs from the name of the type.
 """
-Enable fetching an Eloquent model by its global id through the `node` query.
-"""
-directive @model on OBJECT
-SDL;
+directive @model(
+  """
+  The class name of the corresponding model.
+  """
+  class: String!
+) on OBJECT
+GRAPHQL;
     }
 
-    /**
-     * Handle type construction.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\Values\TypeValue  $value
-     * @param  \Closure  $next
-     * @return \GraphQL\Type\Definition\Type
-     */
-    public function handleNode(TypeValue $value, Closure $next): Type
+    /** Attempt to get the model class name from this directive. */
+    public static function modelClass(Node $node): ?string
     {
-        $this->nodeRegistry->registerModel(
-            $value->getTypeDefinitionName(),
-            $this->getModelClass('class')
-        );
+        $modelDirective = ASTHelper::directiveDefinition($node, self::NAME);
+        if ($modelDirective !== null) {
+            return ASTHelper::directiveArgValue($modelDirective, 'class');
+        }
 
-        return $next($value);
-    }
-
-    /**
-     * Apply manipulations from a type definition node.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\AST\DocumentAST  $documentAST
-     * @param  \GraphQL\Language\AST\TypeDefinitionNode  $typeDefinition
-     * @return void
-     */
-    public function manipulateTypeDefinition(DocumentAST &$documentAST, TypeDefinitionNode &$typeDefinition): void
-    {
-        ASTHelper::attachNodeInterfaceToObjectType($typeDefinition);
+        return null;
     }
 }

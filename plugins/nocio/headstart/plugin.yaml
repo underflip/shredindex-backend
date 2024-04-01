@@ -18,6 +18,7 @@ navigation:
         icon: icon-compress
         iconSvg: 'plugins/nocio/headstart/assets/images/logo.svg'
         order: 101
+        useDropdown: false
         permissions:
             - headstart.manage_schema
         sideMenu:

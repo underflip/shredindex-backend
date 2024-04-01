@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'single'),
+    'default' => env('LOG_CHANNEL', 'stack'),
 
     /*
     |--------------------------------------------------------------------------
@@ -31,6 +31,7 @@ return [
     */
 
     'channels' => [
+
         'stack' => [
             'driver' => 'stack',
             'channels' => ['daily'],
@@ -41,6 +42,7 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/system.log'),
             'level' => 'debug',
+            'permission' => octdec((string) env('DEFAULT_FILE_MASK')) ?: null,
         ],
 
         'daily' => [
@@ -48,6 +50,7 @@ return [
             'path' => storage_path('logs/system.log'),
             'level' => 'debug',
             'days' => 14,
+            'permission' => octdec((string) env('DEFAULT_FILE_MASK')) ?: null,
         ],
 
         'slack' => [
@@ -61,7 +64,7 @@ return [
         'papertrail' => [
             'driver' => 'monolog',
             'level' => 'debug',
-            'handler' => \Monolog\Handler\SyslogUdpHandler::class,
+            'handler' => Monolog\Handler\SyslogUdpHandler::class,
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
@@ -70,7 +73,7 @@ return [
 
         'stderr' => [
             'driver' => 'monolog',
-            'handler' => \Monolog\Handler\StreamHandler::class,
+            'handler' => Monolog\Handler\StreamHandler::class,
             'formatter' => env('LOG_STDERR_FORMATTER'),
             'with' => [
                 'stream' => 'php://stderr',
@@ -86,6 +89,7 @@ return [
             'driver' => 'errorlog',
             'level' => 'debug',
         ],
+
     ],
 
 ];

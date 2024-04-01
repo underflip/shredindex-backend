@@ -3,66 +3,13 @@
 // --------------------------------------------------
 
 #layout-side-panel {
-    .fix-button {
-        position: absolute;
-        right: -25px;
-        top: 0;
-        display: none;
-        width: 25px;
-        height: 25px;
-        font-size: 13px;
-        background: #ecf0f1;
-        z-index: 120;
-        .opacity(0.5);
-        .border-radius(~'0 4px 4px 0');
-
-        i {
-            display: block;
-            text-align: center;
-            margin-top: 5px;
-            color: @color-scrollpanel-fix-button;
-        }
-
-        &:hover {
-            text-decoration: none;
-            display: block;
-            .opacity(1)!important;
-        }
-    }
-
-    &:hover {
-        .fix-button {
-            display: block;
-        }
-    }
-
-    .fix-button-content-header .fix-button {
-        top: 46px;
-    }
+    border-right: 1px solid @primary-border;
 
     .sidepanel-content-header {
-        background: #d35400;
-        color: white;
+        background: @color-grey-3;
         font-size: 15px;
         padding: 12px 20px 13px;
         position: relative;
-
-        &:after {
-            .triangle(down, 15px, 8px, #d35400);
-            position: absolute;
-            left: 14px;
-            bottom: -8px;
-        }
-    }
-}
-
-body.side-panel-not-fixed {
-    #layout-side-panel {
-        display: none;
-
-        .fix-button {
-            .opacity(0.5);
-        }
     }
 }
 
@@ -74,24 +21,13 @@ body.display-side-panel {
         // mouseout event fires and sidebar hides when opening a dropdown.
         z-index: @zindex-dropdown;
         width: 350px;
+        border-right: none;
         .box-shadow(3px 0px 3px 0 rgba(0, 0, 0, 0.1));
     }
 }
 
-@media (min-width: @screen-md-min) {
-    body.side-panel-fix-shadow {
-        #layout-side-panel {
-            .box-shadow(none);
-        }
-    }
-}
-
-.touch #layout-side-panel .fix-button {
-    display: none;
-}
-
-@media (max-width: @screen-sm) {
-    #layout-side-panel .fix-button {
-        display: none;
+[data-bs-theme="dark"] {
+    #layout-side-panel .sidepanel-content-header {
+        background: @secondary-bg;
     }
 }

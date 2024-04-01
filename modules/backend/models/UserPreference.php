@@ -5,7 +5,7 @@ use SystemException;
 use October\Rain\Auth\Models\Preferences as PreferencesBase;
 
 /**
- * All preferences for the backend user
+ * UserPreference stores all preferences for the backend user
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -13,16 +13,24 @@ use October\Rain\Auth\Models\Preferences as PreferencesBase;
 class UserPreference extends PreferencesBase
 {
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'backend_user_preferences';
 
+    /**
+     * @var bool timestamps enabled
+     */
     public $timestamps = false;
 
+    /**
+     * @var array cache
+     */
     protected static $cache = [];
 
     /**
-     * Checks for a supplied user or uses the default logged in. You should override this method.
+     * resolveUser checks for a supplied user or uses the default logged in. You should
+     * override this method
+     *
      * @param mixed $user An optional back-end user object.
      * @return User object
      */

@@ -4,30 +4,29 @@ use Yaml;
 use File;
 use Lang;
 use Event;
-use SystemException;
+use System;
 use stdClass;
-use Config;
+use SystemException;
+use October\Rain\Html\Helper as HtmlHelper;
 
 /**
- * Config Maker Trait
- * Adds configuration based methods to a class
+ * ConfigMaker trait adds configuration based methods to a class
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
  */
 trait ConfigMaker
 {
-
     /**
-     * @var string Specifies a path to the config directory.
+     * @var string configPath specifies a path to the config directory.
      */
     protected $configPath;
 
     /**
-     * Reads the contents of the supplied file and applies it to this object.
-     * @param array $configFile
+     * makeConfig reads the contents of the supplied file and applies it to this object.
+     * @param mixed $configFile
      * @param array $requiredConfig
-     * @return array|stdClass
+     * @return object
      */
     public function makeConfig($configFile = [], $requiredConfig = [])
     {
@@ -35,21 +34,15 @@ trait ConfigMaker
             $configFile = [];
         }
 
-        /*
-         * Config already made
-         */
+        // Config already made
         if (is_object($configFile)) {
             $config = $configFile;
         }
-        /*
-         * Embedded config
-         */
+        // Embedded config
         elseif (is_array($configFile)) {
             $config = $this->makeConfigFromArray($configFile);
         }
-        /*
-         * Process config from file contents
-         */
+        // Process config from file contents
         else {
             if (isset($this->controller) && method_exists($this->controller, 'getConfigPath')) {
                 $configFile = $this->controller->getConfigPath($configFile);
@@ -65,7 +58,7 @@ trait ConfigMaker
                 ));
             }
 
-            $config = Yaml::parseFile($configFile);
+            $config = Yaml::parseFileCached($configFile);
 
             /**
              * @event system.extendConfigFile
@@ -94,9 +87,7 @@ trait ConfigMaker
             $config = $this->makeConfigFromArray($config);
         }
 
-        /*
-         * Validate required configuration
-         */
+        // Validate required configuration
         foreach ($requiredConfig as $property) {
             if (!property_exists($config, $property)) {
                 throw new SystemException(Lang::get(
@@ -110,7 +101,8 @@ trait ConfigMaker
     }
 
     /**
-     * Makes a config object from an array, making the first level keys properties of a new object.
+     * makeConfigFromArray makes a config object from an array, making the first
+     * level keys properties of a new object.
      *
      * @param array $configArray Config array.
      * @return stdClass The config object
@@ -131,7 +123,7 @@ trait ConfigMaker
     }
 
     /**
-     * Locates a file based on it's definition. If the file starts with
+     * getConfigPath locates a file based on it's definition. If the file starts with
      * the ~ symbol it will be returned in context of the application base path,
      * otherwise it will be returned in context of the config path.
      * @param string $fileName File to load.
@@ -150,9 +142,7 @@ trait ConfigMaker
 
         $fileName = File::symbolizePath($fileName);
 
-        if (File::isLocalPath($fileName) ||
-            (!Config::get('cms.restrictBaseDir', true) && realpath($fileName) !== false)
-        ) {
+        if (System::checkBaseDir($fileName)) {
             return $fileName;
         }
 
@@ -171,7 +161,7 @@ trait ConfigMaker
     }
 
     /**
-     * Guess the package path for the called class.
+     * guessConfigPath guesses the package path for the called class.
      * @param string $suffix An extra path to attach to the end
      * @return string
      */
@@ -182,7 +172,7 @@ trait ConfigMaker
     }
 
     /**
-     * Guess the package path from a specified class.
+     * guessConfigPathFrom guesses the package path from a specified class.
      * @param string $class Class to guess path from.
      * @param string $suffix An extra path to attach to the end
      * @return string
@@ -195,7 +185,7 @@ trait ConfigMaker
     }
 
     /**
-     * Merges two configuration sources, either prepared or not, and returns
+     * mergeConfig merges two configuration sources, either prepared or not, and returns
      * them as a single configuration object.
      * @param mixed $configA
      * @param mixed $configB
@@ -208,5 +198,38 @@ trait ConfigMaker
         $configB = $this->makeConfig($configB);
 
         return (object) array_merge((array) $configA, (array) $configB);
+    }
+
+    /**
+     * getConfigValueFrom will apply the config getter convention
+     */
+    protected function getConfigValueFrom(object $configObj, string $name = null, $default = null)
+    {
+        // Return all config
+        if ($name === null) {
+            return $configObj;
+        }
+
+        // Array field name, eg: field[key][key2][key3]
+        $keyParts = HtmlHelper::nameToArray($name);
+
+        // First part will be the field name, pop it off
+        $fieldName = array_shift($keyParts);
+        if (!isset($configObj->{$fieldName})) {
+            return $default;
+        }
+
+        $result = $configObj->{$fieldName};
+
+        // Loop the remaining key parts and build a result
+        foreach ($keyParts as $key) {
+            if (!is_array($result) || !array_key_exists($key, $result)) {
+                return $default;
+            }
+
+            $result = $result[$key];
+        }
+
+        return $result;
     }
 }

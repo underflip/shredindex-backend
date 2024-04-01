@@ -86,44 +86,4 @@ trait CollapsableWidget
 
         return $default;
     }
-
-    //
-    // Deprecations, remove if year >= 2019
-    //
-
-    /**
-     * @deprecated  onGroupStatusUpdate is deprecated. Please update onSetCollapseStatus instead.
-     */
-    public function onGroupStatusUpdate()
-    {
-        traceLog('onGroupStatusUpdate is deprecated. Please update onSetCollapseStatus instead. Class: '.get_class($this));
-        $this->onSetCollapseStatus();
-    }
-
-    /**
-     * @deprecated - getGroupStatuses is deprecated. Please update getCollapseStatuses instead.
-     */
-    protected function getGroupStatuses()
-    {
-        traceLog('getGroupStatuses is deprecated. Please update getCollapseStatuses instead. Class: '.get_class($this));
-        return $this->getCollapseStatuses();
-    }
-
-    /**
-     * @deprecated - setGroupStatus is deprecated. Please update setCollapseStatus instead.
-     */
-    protected function setGroupStatus($group, $status)
-    {
-        traceLog('setGroupStatus is deprecated. Please update setCollapseStatus instead. Class: '.get_class($this));
-        return $this->setCollapseStatus($group, $status);
-    }
-
-    /**
-     * @deprecated - getGroupStatus is deprecated. Please update getCollapseStatus instead.
-     */
-    protected function getGroupStatus($group, $default = true)
-    {
-        traceLog('getGroupStatus is deprecated. Please update getCollapseStatus instead. Class: '.get_class($this));
-        return $this->getCollapseStatus($group, $default);
-    }
 }

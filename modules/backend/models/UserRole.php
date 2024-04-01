@@ -1,26 +1,28 @@
 <?php namespace Backend\Models;
 
-use Backend\Classes\AuthManager;
+use Backend\Classes\RoleManager;
 use October\Rain\Auth\Models\Role as RoleBase;
 
 /**
- * Administrator role
+ * UserRole for an administrator
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
 class UserRole extends RoleBase
 {
+    use \October\Rain\Database\Traits\Sortable;
+
     const CODE_DEVELOPER = 'developer';
     const CODE_PUBLISHER = 'publisher';
 
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'backend_user_roles';
 
     /**
-     * @var array Validation rules
+     * @var array rules for validation
      */
     public $rules = [
         'name' => 'required|between:2,128|unique:backend_user_roles',
@@ -28,13 +30,25 @@ class UserRole extends RoleBase
     ];
 
     /**
-     * @var array Relations
+     * @var array hasMany relationship
      */
     public $hasMany = [
-        'users' => [User::class, 'key' => 'role_id'],
-        'users_count' => [User::class, 'key' => 'role_id', 'count' => true]
+        'users' => [User::class, 'key' => 'role_id']
     ];
 
+    /**
+     * @var array fillable fields
+     */
+    protected $fillable = [
+        'name',
+        'code',
+        'description',
+        'color_background'
+    ];
+
+    /**
+     * filterFields used by the form controller
+     */
     public function filterFields($fields)
     {
         if ($this->is_system) {
@@ -43,13 +57,23 @@ class UserRole extends RoleBase
         }
     }
 
+    /**
+     * afterFetch event
+     */
     public function afterFetch()
     {
         if ($this->is_system) {
             $this->permissions = $this->getDefaultPermissions();
         }
+
+        if (is_array($this->permissions)) {
+            $this->permissions = static::applyPermissionPatches($this->permissions);
+        }
     }
 
+    /**
+     * beforeSave event
+     */
     public function beforeSave()
     {
         if ($this->isSystemRole()) {
@@ -58,7 +82,10 @@ class UserRole extends RoleBase
         }
     }
 
-    public function isSystemRole()
+    /**
+     * isSystemRole checks if a role is locked by the system
+     */
+    public function isSystemRole(): bool
     {
         if (!$this->code || !strlen(trim($this->code))) {
             return false;
@@ -71,11 +98,36 @@ class UserRole extends RoleBase
             return true;
         }
 
-        return AuthManager::instance()->hasPermissionsForRole($this->code);
+        return RoleManager::instance()->hasPermissionsForRole($this->code);
     }
 
+    /**
+     * getDefaultPermissions returns default permissions for a role
+     */
     public function getDefaultPermissions()
     {
-        return AuthManager::instance()->listPermissionsForRole($this->code);
+        return RoleManager::instance()->listPermissionsForRole($this->code);
+    }
+
+    /**
+     * applyPermissionPatches replaces old permission codes with new ones. It leaves
+     * the old ones in place since there shouldn't be any harm in doing so.
+     */
+    public static function applyPermissionPatches(array $permissions): array
+    {
+        $toReplace = [
+            'admins.manage.roles' => 'admins.roles',
+            'admins.manage.groups' => 'admins.groups',
+        ];
+
+        foreach ($permissions as $key => $value) {
+            if (!isset($toReplace[$key])) {
+                continue;
+            }
+
+            $permissions[$toReplace[$key]] = $value;
+        }
+
+        return $permissions;
     }
 }

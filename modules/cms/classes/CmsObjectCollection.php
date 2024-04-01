@@ -1,10 +1,9 @@
 <?php namespace Cms\Classes;
 
-use ApplicationException;
 use October\Rain\Support\Collection as CollectionBase;
 
 /**
- * This class represents a collection of Cms Objects.
+ * CmsObjectCollection represents a collection of Cms Objects
  *
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
@@ -12,9 +11,9 @@ use October\Rain\Support\Collection as CollectionBase;
 class CmsObjectCollection extends CollectionBase
 {
     /**
-     * Returns objects that use the supplied component.
+     * withComponent returns objects that use the supplied component
      * @param  string|array $components
-     * @param null|callback $callback
+     * @param null|callable $callback
      * @return static
      */
     public function withComponent($components, $callback = null)
@@ -37,32 +36,14 @@ class CmsObjectCollection extends CollectionBase
     }
 
     /**
-     * Returns objects whose properties match the supplied value.
-     *
-     * Note that this deviates from Laravel 6's Illuminate\Support\Traits\EnumeratesValues::where() method signature,
-     * which uses ($key, $operator = null, $value = null) as parameters and that this class extends.
-     *
-     * To ensure backwards compatibility with our current Halcyon functionality, this method retains the original
-     * parameters and functions the same way as before, with handling for the $value and $strict parameters to ensure
-     * they match the previously expected formats. This means that you cannot use operators for "where" queries on
-     * CMS object collections.
-     *
-     * @param  string  $property
-     * @param  string  $value
-     * @param  bool  $strict
+     * where objects whose properties match the supplied value.
+     * @param string $property
+     * @param string $value
+     * @param bool $strict
      * @return static
      */
     public function where($property, $value = null, $strict = null)
     {
-        if (empty($value) || !is_string($value)) {
-            throw new ApplicationException('You must provide a string value to compare with when executing a "where" '
-             . 'query for CMS object collections.');
-        }
-
-        if (!isset($strict) || !is_bool($strict)) {
-            $strict = true;
-        }
-
         return $this->filter(function ($object) use ($property, $value, $strict) {
             if (!array_key_exists($property, $object->settings)) {
                 return false;
@@ -75,17 +56,37 @@ class CmsObjectCollection extends CollectionBase
     }
 
     /**
-     * Returns objects whose component properties match the supplied value.
+     * whereComponent objects whose component properties match the supplied value.
      * @param mixed $components
      * @param string $property
      * @param string $value
      * @param bool $strict
      * @return static
      */
-    public function whereComponent($components, $property, $value, $strict = false)
+    public function whereComponent($components, $property, $value = null, $strict = false)
     {
-        return $this->filter(function ($object) use ($components, $property, $value, $strict) {
+        $properties = is_array($property) ? $property : [$property => $value];
+        $strictMode = (bool) (is_array($property) ? $value : $strict);
 
+        $checkFunc = function($settings) use ($properties, $strictMode) {
+            foreach ($properties as $property => $value) {
+                if (!array_key_exists($property, $settings)) {
+                    return false;
+                }
+
+                if ($strictMode && $settings[$property] !== $value) {
+                    return false;
+                }
+
+                if (!$strictMode && $settings[$property] != $value) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        return $this->filter(function($object) use ($components, $checkFunc) {
             $hasComponent = false;
 
             foreach ((array) $components as $componentName) {
@@ -94,21 +95,12 @@ class CmsObjectCollection extends CollectionBase
                 }
 
                 $componentSettings = array_get($object->settings, 'components', []);
-
                 if (!array_key_exists($componentAlias, $componentSettings)) {
                     continue;
                 }
 
                 $settings = $componentSettings[$componentAlias];
-
-                if (!array_key_exists($property, $settings)) {
-                    continue;
-                }
-
-                if (
-                    ($strict && $settings[$property] === $value) ||
-                    (!$strict && $settings[$property] == $value)
-                ) {
+                if ($checkFunc($settings)) {
                     $hasComponent = true;
                 }
             }

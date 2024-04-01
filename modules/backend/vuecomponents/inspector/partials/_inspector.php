@@ -1,0 +1,10 @@
+<backend-component-inspector-panel 
+    ref="panel"
+    :controls="dataSchema"
+    :obj="liveObject"
+    :parent-obj="parentObject"
+    :inspector-unique-id="uniqueId"
+    :layout-update-data="layoutUpdateData"
+    :inspector-preferences="inspectorPreferences"
+>
+</backend-component-inspector-panel>

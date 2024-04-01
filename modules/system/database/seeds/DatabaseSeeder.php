@@ -1,20 +1,25 @@
 <?php namespace System\Database\Seeds;
 
+use Model;
 use Seeder;
-use Eloquent;
 
+/**
+ * DatabaseSeeder
+ */
 class DatabaseSeeder extends Seeder
 {
-
     /**
-     * Run the database seeds.
-     *
-     * @return void
+     * run the database seeds.
      */
     public function run()
     {
-        Eloquent::unguarded(function () {
-            $this->call('System\Database\Seeds\SeedSetupMailLayouts');
-        });
+        Model::unguard();
+
+        $this->call(\System\Database\Seeds\SeedSetupPrimarySite::class, true);
+        $this->call(\System\Database\Seeds\SeedSetupMailLayouts::class, true);
+        $this->call(\System\Database\Seeds\SeedArtisanAutoexec::class, true);
+        $this->call(\System\Database\Seeds\SeedSetBuildNumber::class, true);
+
+        Model::reguard();
     }
 }

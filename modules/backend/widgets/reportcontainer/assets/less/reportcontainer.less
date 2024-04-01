@@ -17,19 +17,18 @@
                 position: relative;
 
                 .drag-handle {
-                    width: 14px;
-                    height: 14px;
+                    width: 24px;
+                    height: 24px;
                     position: absolute;
-                    left: 15px;
-                    top: 13px;
-                    .opacity(0);
-                    .transition(opacity 0.2s);
-                    font-size: 14px;
+                    left: 8px;
+                    top: 12px;
+                    opacity: 0;
+                    transition: opacity 0.2s;
                     cursor: move;
 
-                    &:before {
-                        .icon(@bars);
-                        color: @color-report-widget-control-inactive;
+                    > i {
+                        font-size: 24px;
+                        line-height: 1;
                     }
                 }
 
@@ -39,7 +38,6 @@
                     width: 15px;
                     height: 15px;
                     color: @color-report-widget-control-inactive;
-                    .opacity(1);
                     outline: none;
 
                     &:hover {
@@ -54,7 +52,7 @@
 
                 .edit-widget {
                     text-indent: -10000em;
-                    right: 15px;
+                    right: 12px;
                     top: 15px;
 
                     &:before {
@@ -64,7 +62,7 @@
                         left: 0;
                         width: 15px;
                         height: 15px;
-                        font-size: 16px;
+                        font-size: 15px;
                     }
 
                     &:hover:before {
@@ -75,10 +73,29 @@
                         display: block;
                     }
                 }
+            }
 
-                .close {
-                    right: 10px;
-                    top: 15px;
+            &.is-removable {
+                .edit-widget {
+                    right: 40px;
+                }
+
+                .btn-close {
+                    right: 12px;
+                    top: 12px;
+                    font-size: 13px;
+                }
+            }
+
+            &.is-sortable {
+                &:hover, &.dragged {
+                    .report-widget h3 {
+                        padding-left: 18px;
+                    }
+
+                    .drag-handle {
+                        opacity: 1;
+                    }
                 }
             }
 
@@ -86,28 +103,20 @@
                 .widget-control {
                     display: block;
                 }
-
-                .report-widget h3 {
-                    padding-left: 18px;
-                }
-
-                .drag-handle { 
-                    .opacity(1);
-                }
             }
 
-            &.width-1 {width: 8.33%;}
-            &.width-2 {width: 16.66%;}
-            &.width-3 {width: 24.99%;}
-            &.width-4 {width: 33.32%;}
-            &.width-5 {width: 41.65%;}
-            &.width-6 {width: 49.98%;}
-            &.width-7 {width: 58.31%;}
-            &.width-8 {width: 66.64%;}
-            &.width-9 {width: 74.97%;}
-            &.width-10 {width: 83.3%;}
-            &.width-11 {width: 91.63%;}
-            &.width-12 {width: 100%;}			
+            &.width-1 { width: 8.33%; }
+            &.width-2 { width: 16.66%; }
+            &.width-3 { width: 24.99%; }
+            &.width-4 { width: 33.32%; }
+            &.width-5 { width: 41.65%; }
+            &.width-6 { width: 49.98%; }
+            &.width-7 { width: 58.31%; }
+            &.width-8 { width: 66.64%; }
+            &.width-9 { width: 74.97%; }
+            &.width-10 { width: 83.3%; }
+            &.width-11 { width: 91.63%; }
+            &.width-12 { width: 100%; }
 
             &.dragged {
                 .transition-duration(0s) !important;
@@ -127,7 +136,7 @@
         }
 
         &.add-delete .item .content .edit-widget {
-            right: 30px;
+            right: 40px;
         }
 
         &.wrapped {
@@ -139,31 +148,26 @@
 
     .manage-widgets {
         display: inline-block;
-        color: #bcc3c7;
-        padding: 10px 15px;
-        font-size: 14px;
-        font-weight: 400;
-        border: 1px dashed #bcc3c7;
-        .border-radius(@border-radius-base);
+        color: @dropdown-trigger-color;
+        background-color: @dropdown-trigger-bg;
+        border: 1px dashed @dropdown-trigger-border;
+        padding: 7px 15px;
+        font-size: @font-size-base;
+        font-weight: normal;
+        border-radius: @border-radius-base;
         margin-left: 5px;
 
         i {
             margin-right: 5px;
         }
-
-        &:hover {
-            text-decoration: none;
-            background-color: @link-color;
-            color: white;
-            border: 1px solid @link-color;
-        }
     }
 
-    .dropdown.open .manage-widgets {
+    .manage-widgets:hover,
+    .manage-widgets.show {
+        background-color: @dropdown-hover-bg;
+        border-color: transparent;
+        color: @dropdown-hover-color;
         text-decoration: none;
-        background-color: @link-color;
-        color: white;
-        border: 1px solid @link-color;
     }
 
     //
@@ -172,17 +176,15 @@
 
     &.isotope,
     &.isotope .isotope-item {
-      .transition-duration(0.8s);
+        transition-duration: 0.8s;
     }
 
     &.isotope {
-      .transition-property(height, width);
+        transition-property: height, width;
     }
 
     &.isotope .isotope-item {
-      -webkit-transition-property: -webkit-transform, opacity;
-         -moz-transition-property:    -moz-transform, opacity;
-              transition-property:         transform, opacity;
+        transition-property: transform, opacity;
     }
 }
 
@@ -190,7 +192,7 @@
     .report-container {
         ul .item {
             // The breakpoint should be defined in the CSS and JS,
-            // otherwise some widgets can't calculate the width properly, 
+            // otherwise some widgets can't calculate the width properly,
             // as the JS is applied too late.
             width: 100% !important;
         }

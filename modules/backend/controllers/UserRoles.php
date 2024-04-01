@@ -1,19 +1,18 @@
 <?php namespace Backend\Controllers;
 
-use View;
-use Response;
-use BackendMenu;
-use Backend\Classes\Controller;
-use System\Classes\SettingsManager;
+use Backend;
+use BackendAuth;
+use Backend\Classes\SettingsController;
+use ForbiddenException;
 
 /**
- * Backend user groups controller
+ * UserRoles controller
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  *
  */
-class UserRoles extends Controller
+class UserRoles extends SettingsController
 {
     /**
      * @var array Extensions implemented by this controller.
@@ -36,51 +35,60 @@ class UserRoles extends Controller
     /**
      * @var array Permissions required to view this page.
      */
-    public $requiredPermissions = ['backend.manage_users'];
+    public $requiredPermissions = ['admins.roles'];
 
     /**
-     * Constructor.
+     * @var string settingsItemCode determines the settings code
      */
-    public function __construct()
+    public $settingsItemCode = 'adminroles';
+
+    /**
+     * onImpersonateRole
+     */
+    public function onImpersonateRole($roleId = null)
     {
-        parent::__construct();
+        if ($role = $this->formFindModelObject($roleId)) {
+            BackendAuth::impersonateRole($role);
+        }
 
-        BackendMenu::setContext('October.System', 'system', 'users');
-        SettingsManager::setContext('October.System', 'administrators');
-
-        /*
-         * Only super users can access
-         */
-        $this->bindEvent('page.beforeDisplay', function () {
-            if (!$this->user->isSuperUser()) {
-                return Response::make(View::make('backend::access_denied'), 403);
-            }
-        });
+        return Backend::redirect('');
     }
 
     /**
-     * Add available permission fields to the Role form.
+     * listExtendQuery
      */
-    public function formExtendFields($form)
+    public function listExtendQuery($query)
     {
-        /*
-         * Add permissions tab
-         */
-        $form->addTabFields($this->generatePermissionsField());
+        $this->applyRankPermissionsToQuery($query);
     }
 
     /**
-     * Adds the permissions editor widget to the form.
-     * @return array
+     * formExtendQuery
      */
-    protected function generatePermissionsField()
+    public function formExtendQuery($query)
     {
-        return [
-            'permissions' => [
-                'tab' => 'backend::lang.user.permissions',
-                'type' => 'Backend\FormWidgets\PermissionEditor',
-                'mode' => 'checkbox'
-            ]
-        ];
+        $this->applyRankPermissionsToQuery($query);
+    }
+
+    /**
+     * applyRankPermissionsToQuery
+     */
+    protected function applyRankPermissionsToQuery($query)
+    {
+        // Super users have no restrictions
+        if ($this->user->isSuperUser()) {
+            return;
+        }
+
+        // Fetch user role, including impersonation
+        $userRole = $this->user->getRoleImpersonation() ?: $this->user->role;
+
+        // User has no role and therefore cannot manage roles
+        if (!$userRole || !$userRole->sort_order) {
+            $query->whereRaw('1 = 2');
+            return;
+        }
+
+        $query->where('sort_order', '>', $userRole->sort_order);
     }
 }

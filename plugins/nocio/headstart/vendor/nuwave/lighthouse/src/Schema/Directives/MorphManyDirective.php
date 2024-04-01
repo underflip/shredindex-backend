@@ -1,33 +1,16 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
 use Nuwave\Lighthouse\Support\Contracts\FieldManipulator;
 
-class MorphManyDirective extends RelationDirective implements FieldResolver, FieldManipulator, DefinedDirective
+class MorphManyDirective extends RelationDirective implements FieldManipulator
 {
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
+    public static function definition(): string
     {
-        return 'morphMany';
-    }
-
-    /**
-     * SDL definition of the directive.
-     *
-     * @return string
-     */
-    public static function definition()
-    {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
-Corresponds to [Eloquent's MorphMany-Relationship](https://laravel.com/docs/5.8/eloquent-relationships#one-to-one-polymorphic-relations).
+Corresponds to [Eloquent's MorphMany-Relationship](https://laravel.com/docs/eloquent-relationships#one-to-many-polymorphic-relations).
 """
 directive @morphMany(
   """
@@ -35,30 +18,31 @@ directive @morphMany(
   if it is named different from the field in the schema.
   """
   relation: String
-  
+
   """
   Apply scopes to the underlying query.
   """
   scopes: [String!]
 
   """
-  ALlows to resolve the relation as a paginated list.
-  Allowed values: paginator, connection.
+  Allows to resolve the relation as a paginated list.
   """
-  type: String
+  type: MorphManyType
 
   """
-  Specify the default quantity of elements to be returned.
-  Only applies when using pagination.
+  Allow clients to query paginated lists without specifying the amount of items.
+  Overrules the `pagination.default_count` setting from `lighthouse.php`.
+  Setting this to `null` means clients have to explicitly ask for the count.
   """
   defaultCount: Int
-  
+
   """
-  Specify the maximum quantity of elements to be returned.
-  Only applies when using pagination.
+  Limit the maximum amount of items that clients can request from paginated lists.
+  Overrules the `pagination.max_count` setting from `lighthouse.php`.
+  Setting this to `null` means the count is unrestricted.
   """
   maxCount: Int
-  
+
   """
   Specify a custom type that implements the Edge interface
   to extend edge object.
@@ -66,6 +50,26 @@ directive @morphMany(
   """
   edgeType: String
 ) on FIELD_DEFINITION
-SDL;
+
+"""
+Options for the `type` argument of `@morphMany`.
+"""
+enum MorphManyType {
+    """
+    Offset-based pagination, similar to the Laravel default.
+    """
+    PAGINATOR
+
+    """
+    Offset-based pagination like the Laravel "Simple Pagination", which does not count the total number of records.
+    """
+    SIMPLE
+
+    """
+    Cursor-based pagination, compatible with the Relay specification.
+    """
+    CONNECTION
+}
+GRAPHQL;
     }
 }

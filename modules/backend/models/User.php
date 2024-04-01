@@ -1,13 +1,15 @@
 <?php namespace Backend\Models;
 
+use Str;
 use Mail;
 use Event;
+use Config;
 use Backend;
-use BackendAuth;
 use October\Rain\Auth\Models\User as UserBase;
+use ValidationException;
 
 /**
- * Administrator user model
+ * User is an administrator model
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -17,24 +19,25 @@ class User extends UserBase
     use \October\Rain\Database\Traits\SoftDelete;
 
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'backend_users';
 
     /**
-     * Validation rules
+     * @var array rules for validation
      */
     public $rules = [
         'email' => 'required|between:6,255|email|unique:backend_users',
         'login' => 'required|between:2,255|unique:backend_users',
-        'password' => 'required:create|min:4|confirmed',
-        'password_confirmation' => 'required_with:password|min:4'
+        'password' => 'required:create|between:4,255|confirmed',
+        'password_confirmation' => 'required_with:password|between:4,255'
     ];
 
     /**
-     * @var array Attributes that should be cast to dates
+     * @var array dates attributes that should be mutated to dates
      */
     protected $dates = [
+        'password_changed_at',
         'activated_at',
         'last_login',
         'created_at',
@@ -43,7 +46,7 @@ class User extends UserBase
     ];
 
     /**
-     * Relations
+     * belongsToMany relation
      */
     public $belongsToMany = [
         'groups' => [UserGroup::class, 'table' => 'backend_users_groups']
@@ -58,34 +61,44 @@ class User extends UserBase
     ];
 
     /**
-     * Purge attributes from data set.
+     * @var array fillable fields
+     */
+    protected $fillable = [
+        'first_name',
+        'last_name',
+        'login',
+        'email',
+        'password',
+        'password_confirmation',
+        'send_invite',
+    ];
+
+    /**
+     * @var array purgeable list of attribute names which should not be saved to the database
      */
     protected $purgeable = ['password_confirmation', 'send_invite'];
 
     /**
-     * @var string Login attribute
+     * @var string loginAttribute
      */
     public static $loginAttribute = 'login';
 
     /**
-     * @return string Returns the user's full name.
+     * getFullNameAttribute returns the user's full name
      */
-    public function getFullNameAttribute()
+    public function getFullNameAttribute(): string
     {
-        return trim($this->first_name . ' ' . $this->last_name);
+        return "{$this->first_name} {$this->last_name}";
     }
 
     /**
-     * Gets a code for when the user is persisted to a cookie or session which identifies the user.
+     * getPersistCode gets a code for when the user is persisted to a cookie or session
+     * which identifies the user
      * @return string
      */
     public function getPersistCode()
     {
-        // Option A: @todo config
-        // return parent::getPersistCode();
-
-        // Option B:
-        if (!$this->persist_code) {
+        if (!$this->persist_code || Config::get('backend.force_single_session', false)) {
             return parent::getPersistCode();
         }
 
@@ -93,7 +106,7 @@ class User extends UserBase
     }
 
     /**
-     * Returns the public image file path to this user's avatar.
+     * getAvatarThumb returns the public image file path to this user's avatar
      */
     public function getAvatarThumb($size = 25, $options = null)
     {
@@ -104,22 +117,61 @@ class User extends UserBase
             $options = [];
         }
 
-        // Default is "mm" (Mystery man)
-        $default = array_get($options, 'default', 'mm');
-
+        // User has avatar defined
         if ($this->avatar) {
             return $this->avatar->getThumb($size, $size, $options);
         }
 
-        return '//www.gravatar.com/avatar/' .
-            md5(strtolower(trim($this->email))) .
-            '?s='. $size .
-            '&d='. urlencode($default);
+        // User has no avatar, look for default
+        $defaultConfig = Config::get('backend.default_avatar', 'gravatar');
+
+        // Default gravatar is "retro"
+        if ($defaultConfig === 'gravatar') {
+            $default = array_get($options, 'default', 'retro');
+
+            return '//www.gravatar.com/avatar/' .
+                md5(strtolower(trim($this->email))) .
+                '?s='. $size .
+                '&d='. urlencode($default);
+        }
+
+        // Default backend image
+        if ($defaultConfig === 'local') {
+            return Backend::skinAsset('assets/images/default-avatar.png');
+        }
+
+        // Custom URL
+        return $defaultConfig;
     }
 
     /**
-     * After create event
-     * @return void
+     * beforeValidate event
+     */
+    public function beforeValidate()
+    {
+        if ($this->validationForced) {
+            return;
+        }
+
+        // Will pass if password attribute is dirty
+        if ($password = $this->getOriginalHashValue('password')) {
+            $this->password_changed_at = $this->freshTimestamp();
+            $this->validatePasswordPolicy($password);
+        }
+    }
+
+    /**
+     * beforeCreate
+     */
+    public function beforeCreate()
+    {
+        if ($this->send_invite) {
+            $this->is_password_expired = true;
+        }
+    }
+
+    /**
+     * afterCreate event
      */
     public function afterCreate()
     {
@@ -131,8 +183,17 @@ class User extends UserBase
     }
 
     /**
-     * After login event
-     * @return void
+     * afterFetch event
+     */
+    public function afterFetch()
+    {
+        if (is_array($this->permissions)) {
+            $this->permissions = UserRole::applyPermissionPatches($this->permissions);
+        }
+    }
+
+    /**
+     * afterLogin event
      */
     public function afterLogin()
     {
@@ -153,8 +214,7 @@ class User extends UserBase
     }
 
     /**
-     * Sends an invitation to the user using template "backend::mail.invite".
-     * @return void
+     * sendInvitation sends an invitation to the user using template "backend:invite"
      */
     public function sendInvitation()
     {
@@ -165,11 +225,14 @@ class User extends UserBase
             'link' => Backend::url('backend'),
         ];
 
-        Mail::send('backend::mail.invite', $data, function ($message) {
+        Mail::send('backend:invite', $data, function ($message) {
             $message->to($this->email, $this->full_name);
         });
     }
 
+    /**
+     * getGroupsOptions returns available group options
+     */
     public function getGroupsOptions()
     {
         $result = [];
@@ -181,6 +244,9 @@ class User extends UserBase
         return $result;
     }
 
+    /**
+     * getRoleOptions returns available role options
+     */
     public function getRoleOptions()
     {
         $result = [];
@@ -193,20 +259,105 @@ class User extends UserBase
     }
 
     /**
-     * Check if the user is suspended.
-     * @return bool
+     * createDefaultAdmin inserts a new administrator with the default feature set
      */
-    public function isSuspended()
+    public static function createDefaultAdmin(array $data)
     {
-        return BackendAuth::findThrottleByUserId($this->id)->checkSuspended();
+        // Look up default role
+        $roleId = UserRole::where('code', UserRole::CODE_DEVELOPER)->first()->id ?? null;
+
+        // Create admin
+        $user = new self;
+        $user->forceFill([
+            'last_name' => array_get($data, 'last_name'),
+            'first_name' => array_get($data, 'first_name'),
+            'email' => array_get($data, 'email'),
+            'login' => array_get($data, 'login'),
+            'password' => array_get($data, 'password'),
+            'password_confirmation' => array_get($data, 'password_confirmation'),
+            'permissions' => [],
+            'is_superuser' => true,
+            'is_activated' => true,
+            'role_id' => $roleId
+        ]);
+        $user->save();
+
+        // Add to default group
+        if ($group = UserGroup::where('code', UserGroup::CODE_OWNERS)->first()) {
+            $user->addGroup($group);
+        }
+
+        return $user;
     }
 
     /**
-     * Remove the suspension on this user.
-     * @return void
+     * hasPasswordExpired checks if the password has expired for this user
      */
-    public function unsuspend()
+    public function hasPasswordExpired(): bool
     {
-        BackendAuth::findThrottleByUserId($this->id)->unsuspend();
+        if ($this->is_password_expired) {
+            return true;
+        }
+
+        $expireDays = Config::get('backend.password_policy.expire_days');
+        if (!$expireDays) {
+            return false;
+        }
+
+        $changedDays = $this->freshTimestamp()
+            ->diffInDays($this->password_changed_at ?: $this->created_at);
+
+        return $changedDays > $expireDays;
+    }
+
+    /**
+     * validatePasswordPolicy will check the password based on the backend policy
+     */
+    public function validatePasswordPolicy($password)
+    {
+        $policy = Config::get('backend.password_policy', []);
+
+        if ($minLength = $policy['min_length'] ?? 4) {
+            if (mb_strlen($password) < $minLength) {
+                throw new ValidationException(['password' => __('Password must have a minimum of length of :min characters', ['min'=>$minLength])]);
+            }
+        }
+
+        if ($policy['require_uppercase'] ?? false) {
+            if (mb_strtolower($password) === $password) {
+                throw new ValidationException(['password' => __('Password must contain at least one uppercase character.')]);
+            }
+        }
+
+        if ($policy['require_lowercase'] ?? false) {
+            if (mb_strtoupper($password) === $password) {
+                throw new ValidationException(['password' => __('Password must contain at least one lowercase character.')]);
+            }
+        }
+
+        if ($policy['require_number'] ?? false) {
+            if (!array_filter(str_split($password), 'is_numeric')) {
+                throw new ValidationException(['password' => __('Password must contain at least one number.')]);
+            }
+        }
+
+        if ($policy['require_nonalpha'] ?? false) {
+            if (!Str::contains($password, str_split("!@#$%^&*()_+-=[]{}|'"))) {
+                throw new ValidationException(['password' => __('Password must contain at least one nonalphanumeric character.')]);
+            }
+        }
+
+        /**
+         * @event user.validatePasswordPolicy
+         * Called when the user password is validated against the policy
+         *
+         * Example usage:
+         *
+         *     $model->bindEvent('user.validatePasswordPolicy', function (string $password) use ($model) {
+         *         throw new ValidationException(['password' => 'Prevent anything from validating ever!']);
+         *     });
+         *
+         */
+        $this->fireEvent('user.validatePasswordPolicy', compact('password'));
     }
 }

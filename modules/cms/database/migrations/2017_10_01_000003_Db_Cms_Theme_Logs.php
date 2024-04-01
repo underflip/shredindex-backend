@@ -3,12 +3,11 @@
 use October\Rain\Database\Schema\Blueprint;
 use October\Rain\Database\Updates\Migration;
 
-class DbCmsThemeLogs extends Migration
+return new class extends Migration
 {
     public function up()
     {
         Schema::create('cms_theme_logs', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
             $table->increments('id');
             $table->string('type', 20)->index();
             $table->string('theme')->nullable()->index();
@@ -25,4 +24,4 @@ class DbCmsThemeLogs extends Migration
     {
         Schema::dropIfExists('cms_theme_logs');
     }
-}
+};

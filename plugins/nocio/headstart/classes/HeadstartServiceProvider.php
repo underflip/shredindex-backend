@@ -8,8 +8,8 @@ use Nocio\Headstart\Classes\SchemaSourceProvider as HeadstartSchemaSourceProvide
 use Nocio\Headstart\Classes\CreatesContext as HeadstartCreatesContext;
 use October\Rain\Support\ServiceProvider;
 
-
-class HeadstartServiceProvider extends ServiceProvider {
+class HeadstartServiceProvider extends ServiceProvider
+{
 
     public function register()
     {
@@ -17,5 +17,4 @@ class HeadstartServiceProvider extends ServiceProvider {
         $this->app->singleton(CreatesContext::class, HeadstartCreatesContext::class);
         $this->app->singleton(SchemaSourceProvider::class, HeadstartSchemaSourceProvider::class);
     }
-
 }

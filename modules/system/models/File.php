@@ -2,10 +2,9 @@
 
 use Url;
 use Config;
-use File as FileHelper;
 use Storage;
-use October\Rain\Database\Attach\File as FileBase;
 use Backend\Controllers\Files;
+use October\Rain\Database\Attach\File as FileBase;
 
 /**
  * File attachment model
@@ -16,31 +15,26 @@ use Backend\Controllers\Files;
 class File extends FileBase
 {
     /**
-     * @var string The database table used by the model.
+     * @var string table in database used by the model
      */
     protected $table = 'system_files';
 
     /**
      * {@inheritDoc}
      */
-    public function getThumb($width, $height, $options = [])
+    public function getThumbUrl($width, $height, $options = [])
     {
-        $url = '';
-        $width = !empty($width) ? $width : 0;
-        $height = !empty($height) ? $height : 0;
-
         if (!$this->isPublic() && class_exists(Files::class)) {
             $options = $this->getDefaultThumbOptions($options);
+
             // Ensure that the thumb exists first
-            parent::getThumb($width, $height, $options);
+            parent::getThumbUrl($width, $height, $options);
 
             // Return the Files controller handler for the URL
-            $url = Files::getThumbUrl($this, $width, $height, $options);
-        } else {
-            $url = parent::getThumb($width, $height, $options);
+            return Files::getThumbUrl($this, $width, $height, $options);
         }
 
-        return $url;
+        return parent::getThumbUrl($width, $height, $options);
     }
 
     /**
@@ -48,30 +42,27 @@ class File extends FileBase
      */
     public function getPath($fileName = null)
     {
-        $url = '';
         if (!$this->isPublic() && class_exists(Files::class)) {
-            $url = Files::getDownloadUrl($this);
-        } else {
-            $url = parent::getPath($fileName);
+            return Files::getDownloadUrl($this);
         }
 
-        return $url;
+        return parent::getPath($fileName);
     }
 
     /**
-     * If working with local storage, determine the absolute local path.
+     * getLocalRootPath will, if working with local storage, determine the absolute local path
      */
     protected function getLocalRootPath()
     {
-        return Config::get('filesystems.disks.local.root', storage_path('app'));
+        return Config::get('filesystems.disks.uploads.root', storage_path('app/uploads'));
     }
 
     /**
-     * Define the public address for the storage path.
+     * getPublicPath returns the public address for the storage path
      */
     public function getPublicPath()
     {
-        $uploadsPath = Config::get('cms.storage.uploads.path', '/storage/app/uploads');
+        $uploadsPath = Config::get('filesystems.disks.uploads.url', '/storage/app/uploads');
 
         if ($this->isPublic()) {
             $uploadsPath .= '/public';
@@ -80,29 +71,29 @@ class File extends FileBase
             $uploadsPath .= '/protected';
         }
 
+        // Relative links
+        if ($this->isLocalStorage() && Config::get('system.relative_links') === true) {
+            return Url::toRelative($uploadsPath) . '/';
+        }
+
         return Url::asset($uploadsPath) . '/';
     }
 
     /**
-     * Define the internal storage path.
+     * isLocalStorage returns true if storage.uploads.disk in config/system.php is "local"
+     * @return bool
      */
-    public function getStorageDirectory()
+    protected function isLocalStorage()
     {
-        $uploadsFolder = Config::get('cms.storage.uploads.folder');
-
-        if ($this->isPublic()) {
-            return $uploadsFolder . '/public/';
-        }
-
-        return $uploadsFolder . '/protected/';
+        return Config::get('filesystems.disks.uploads.driver') == 'local';
     }
 
     /**
-     * Returns the storage disk the file is stored on
+     * getDisk returns the storage disk the file is stored on
      * @return FilesystemAdapter
      */
     public function getDisk()
     {
-        return Storage::disk(Config::get('cms.storage.uploads.disk'));
+        return Storage::disk('uploads');
     }
 }

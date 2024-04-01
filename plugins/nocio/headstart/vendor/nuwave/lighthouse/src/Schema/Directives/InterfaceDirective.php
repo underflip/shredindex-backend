@@ -1,28 +1,16 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
-
-class InterfaceDirective extends BaseDirective implements DefinedDirective
+class InterfaceDirective extends BaseDirective
 {
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'interface';
-    }
-
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
 Use a custom resolver to determine the concrete type of an interface.
 """
-directive @interface(      
+directive @interface(
   """
   Reference to a custom type-resolver function.
   Consists of two parts: a class name and a method name, seperated by an `@` symbol.
@@ -30,6 +18,6 @@ directive @interface(
   """
   resolveType: String!
 ) on INTERFACE
-SDL;
+GRAPHQL;
     }
 }

@@ -4,43 +4,85 @@ use Twig\Node\Node as TwigNode;
 use Twig\Compiler as TwigCompiler;
 
 /**
- * Represents a partial node
+ * PartialNode represents a "partial" node
  *
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
  */
 class PartialNode extends TwigNode
 {
-    public function __construct(TwigNode $nodes, $paramNames, $lineno, $tag = 'partial')
+    /**
+     * __construct
+     */
+    public function __construct(TwigNode $nodes, $body, $options, $lineno, $tag = 'partial')
     {
-        parent::__construct(['nodes' => $nodes], ['names' => $paramNames], $lineno, $tag);
+        $nodes = ['nodes' => $nodes];
+
+        if ($body) {
+            $nodes['body'] = $body;
+        }
+
+        parent::__construct($nodes, ['options' => $options], $lineno, $tag);
     }
 
     /**
-     * Compiles the node to PHP.
-     *
-     * @param TwigCompiler $compiler A TwigCompiler instance
+     * compile the node to PHP.
      */
     public function compile(TwigCompiler $compiler)
     {
+        $options = $this->getAttribute('options');
+
         $compiler->addDebugInfo($this);
 
-        $compiler->write("\$context['__cms_partial_params'] = [];\n");
+        $compiler->write("\$cmsPartialParams = [];\n");
+
+        if ($this->hasNode('body')) {
+            $compiler
+                ->addDebugInfo($this)
+                ->write('ob_start();')
+                ->subcompile($this->getNode('body'))
+                ->write("\$cmsPartialParams['body'] = ob_get_clean();");
+        }
 
         for ($i = 1; $i < count($this->getNode('nodes')); $i++) {
-            $compiler->write("\$context['__cms_partial_params']['".$this->getAttribute('names')[$i-1]."'] = ");
+            $attrName = $options['paramNames'][$i-1];
+            $compiler->write("\$cmsPartialParams['".$attrName."'] = ");
             $compiler->subcompile($this->getNode('nodes')->getNode($i));
             $compiler->write(";\n");
         }
 
-        $compiler
-            ->write("echo \$this->env->getExtension('Cms\Twig\Extension')->partialFunction(")
-            ->subcompile($this->getNode('nodes')->getNode(0))
-            ->write(", \$context['__cms_partial_params']")
-            ->write(", true")
-            ->write(");\n")
-        ;
+        $isAjax = $options['isAjax'] ?? false;
+        if ($isAjax) {
+            $compiler->write("echo '<div data-ajax-partial=\"'.")
+                ->subcompile($this->getNode('nodes')->getNode(0))
+                ->write(".'\">';".PHP_EOL);
+        }
 
-        $compiler->write("unset(\$context['__cms_partial_params']);\n");
+        $isLazy = $options['hasLazy'] ?? false;
+        if ($isLazy) {
+            $compiler->write("echo '<div data-request=\"onAjax\" data-request-update=\"_self: true\" data-auto-submit>'.(\$cmsPartialParams['body'] ?? '').'</div>';");
+        }
+        else {
+            $compiler
+                ->write("echo \$this->env->getExtension(\Cms\Twig\Extension::class)->partialFunction(")
+                ->subcompile($this->getNode('nodes')->getNode(0))
+            ;
+
+            if ($options['hasOnly']) {
+                $compiler->write(", array_merge(['__cms_partial_params' => \$cmsPartialParams], \$cmsPartialParams)");
+            }
+            else {
+                $compiler->write(", array_merge(\$context, ['__cms_partial_params' => \$cmsPartialParams], \$cmsPartialParams)");
+            }
+
+            $compiler
+                ->write(", true")
+                ->write(");\n")
+            ;
+        }
+
+        if ($isAjax) {
+            $compiler->write("echo '</div>';".PHP_EOL);
+        }
     }
 }

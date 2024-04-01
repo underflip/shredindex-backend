@@ -22,14 +22,8 @@ class ComponentDirective extends BaseDirective implements FieldResolver
         return 'component';
     }
 
-    /**
-     * Resolve the field directive.
-     *
-     * @param FieldValue $fieldValue
-     *
-     * @return FieldValue
-     */
-    public function resolveField(FieldValue $fieldValue): FieldValue
+
+    public function resolveField(FieldValue $fieldValue)
     {
         $alias = $this->directiveArgValue('alias');
         $methodName = $this->directiveArgValue('method');
@@ -58,4 +52,22 @@ class ComponentDirective extends BaseDirective implements FieldResolver
         );
     }
 
+    public static function definition(): string
+    {
+        return /* @lang GraphQL */ <<<'SDL'
+"""
+Query multiple entries as a paginated list.
+"""
+directive @filterResorts(
+  """
+  maxCount: Int
+
+  """
+  Use a default value for the amount of returned items
+  in case the client does not request it explicitly
+  """
+  defaultCount: Int
+) on FIELD_DEFINITION
+SDL;
+    }
 }

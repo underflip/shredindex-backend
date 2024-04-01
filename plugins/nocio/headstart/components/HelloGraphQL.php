@@ -2,7 +2,6 @@
 
 use Cms\Classes\ComponentBase;
 
-
 class HelloGraphQL extends ComponentBase
 {
 
@@ -15,8 +14,8 @@ class HelloGraphQL extends ComponentBase
         ];
     }
 
-    public function resolveHello($root, $args) {
+    public function resolveHello($root, $args)
+    {
         return 'GraphQL';
     }
-
 }

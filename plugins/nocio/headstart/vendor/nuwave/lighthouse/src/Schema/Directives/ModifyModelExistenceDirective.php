@@ -1,146 +1,101 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
+use GraphQL\Error\Error;
 use GraphQL\Language\AST\ListTypeNode;
-use Illuminate\Database\Eloquent\Model;
 use GraphQL\Language\AST\NonNullTypeNode;
-use Illuminate\Database\Eloquent\Collection;
-use GraphQL\Language\AST\FieldDefinitionNode;
-use Nuwave\Lighthouse\Schema\AST\DocumentAST;
+use GraphQL\Language\AST\TypeNode;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
+use Nuwave\Lighthouse\Execution\ErrorPool;
+use Nuwave\Lighthouse\Execution\ResolveInfo;
+use Nuwave\Lighthouse\Execution\TransactionalMutations;
+use Nuwave\Lighthouse\GlobalId\GlobalId;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
-use Nuwave\Lighthouse\Support\Contracts\GlobalId;
-use GraphQL\Language\AST\ObjectTypeDefinitionNode;
-use Nuwave\Lighthouse\Exceptions\DirectiveException;
 use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
-use Nuwave\Lighthouse\Support\Contracts\FieldManipulator;
+use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
-abstract class ModifyModelExistenceDirective extends BaseDirective implements FieldResolver, FieldManipulator, DefinedDirective
+abstract class ModifyModelExistenceDirective extends BaseDirective implements FieldResolver
 {
-    /**
-     * The GlobalId resolver.
-     *
-     * @var \Nuwave\Lighthouse\Support\Contracts\GlobalId
-     */
-    protected $globalId;
+    public function __construct(
+        protected GlobalId $globalId,
+        protected ErrorPool $errorPool,
+        protected TransactionalMutations $transactionalMutations,
+    ) {}
 
-    /**
-     * DeleteDirective constructor.
-     *
-     * @param  \Nuwave\Lighthouse\Support\Contracts\GlobalId  $globalId
-     * @return void
-     */
-    public function __construct(GlobalId $globalId)
+    public function resolveField(FieldValue $fieldValue): callable
     {
-        $this->globalId = $globalId;
-    }
+        $expectsList = $this->expectsList($fieldValue->getField()->type);
+        $modelClass = $this->getModelClass();
+        $scopes = $this->directiveArgValue('scopes', []);
 
-    /**
-     * Resolve the field directive.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\Values\FieldValue  $fieldValue
-     * @return \Nuwave\Lighthouse\Schema\Values\FieldValue
-     */
-    public function resolveField(FieldValue $fieldValue): FieldValue
-    {
-        return $fieldValue->setResolver(
-            function ($root, array $args) {
-                /** @var string|int|string[]|int[] $idOrIds */
-                $idOrIds = reset($args);
+        return function (mixed $root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) use ($modelClass, $scopes, $expectsList): EloquentCollection|Model|null {
+            $builder = $modelClass::query();
 
-                if ($this->directiveArgValue('globalId', false)) {
-                    // At this point we know the type is at least wrapped in a NonNull type, so we go one deeper
-                    if ($this->idArgument()->type instanceof ListTypeNode) {
-                        $idOrIds = array_map(
-                            function (string $id): string {
-                                return $this->globalId->decodeID($id);
-                            },
-                            $idOrIds
-                        );
-                    } else {
-                        $idOrIds = $this->globalId->decodeID($idOrIds);
-                    }
-                }
+            if (! $resolveInfo->wouldEnhanceBuilder($builder, $scopes, $root, $args, $context, $resolveInfo)) {
+                throw self::wouldModifyAll();
+            }
 
-                $modelOrModels = $this->find(
-                    $this->getModelClass(),
-                    $idOrIds
+            $builder = $resolveInfo->enhanceBuilder($builder, $scopes, $root, $args, $context, $resolveInfo);
+            assert($builder instanceof EloquentBuilder);
+
+            $modelOrModels = $this->enhanceBuilder($builder)->get();
+
+            foreach ($modelOrModels as $model) {
+                $success = $this->transactionalMutations->execute(
+                    fn (): bool => $this->modifyExistence($model),
+                    $model->getConnectionName(),
                 );
 
-                if (! $modelOrModels) {
-                    return;
+                if (! $success) {
+                    $this->errorPool->record(self::couldNotModify($model));
                 }
-
-                if ($modelOrModels instanceof Model) {
-                    $this->modifyExistence($modelOrModels);
-                }
-
-                if ($modelOrModels instanceof Collection) {
-                    foreach ($modelOrModels as $model) {
-                        $this->modifyExistence($model);
-                    }
-                }
-
-                return $modelOrModels;
             }
-        );
+
+            return $expectsList
+                ? $modelOrModels
+                : $modelOrModels->first();
+        };
     }
 
-    /**
-     * Get the type of the id argument.
-     *
-     * Not using an actual type hint, as the manipulateFieldDefinition function
-     * validates the type during schema build time.f
-     *
-     * @return \GraphQL\Language\AST\NonNullTypeNode
-     */
-    protected function idArgument()
+    public static function couldNotModify(Model $model): Error
     {
-        return $this->definitionNode->arguments[0]->type;
+        $modelClass = $model::class;
+
+        return new Error("Could not modify model {$modelClass} with ID {$model->getKey()}.");
+    }
+
+    public static function wouldModifyAll(): Error
+    {
+        return new Error('Would modify all models, use an argument to filter.');
+    }
+
+    private function expectsList(TypeNode $typeNode): bool
+    {
+        if ($typeNode instanceof NonNullTypeNode) {
+            return $this->expectsList($typeNode->type);
+        }
+
+        return $typeNode instanceof ListTypeNode;
     }
 
     /**
-     * @param  DocumentAST  $documentAST
-     * @param  FieldDefinitionNode  $fieldDefinition
-     * @param  ObjectTypeDefinitionNode  $parentType
-     * @return void
+     * Enhance the builder used to resolve the models.
      *
-     * @throws \Nuwave\Lighthouse\Exceptions\DirectiveException
-     */
-    public function manipulateFieldDefinition(
-        DocumentAST &$documentAST,
-        FieldDefinitionNode &$fieldDefinition,
-        ObjectTypeDefinitionNode &$parentType
-    ): void {
-        // Ensure there is only a single argument defined on the field.
-        if (count($this->definitionNode->arguments) !== 1) {
-            throw new DirectiveException(
-                'The @'.static::name()." directive requires the field {$this->definitionNode->name->value} to only contain a single argument."
-            );
-        }
-
-        if (! $this->idArgument() instanceof NonNullTypeNode) {
-            throw new DirectiveException(
-                'The @'.static::name()." directive requires the field {$this->definitionNode->name->value} to have a NonNull argument. Mark it with !"
-            );
-        }
-    }
-
-    /**
-     * Find one or more models by id.
+     * @template TModel of \Illuminate\Database\Eloquent\Model
      *
-     * @param  string|\Illuminate\Database\Eloquent\Model  $modelClass
-     * @param  string|int|string[]|int[]  $idOrIds
-     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Collection
+     * @param  \Illuminate\Database\Eloquent\Builder<TModel>  $builder
+     *
+     * @return \Illuminate\Database\Eloquent\Builder<TModel>
      */
-    abstract protected function find(string $modelClass, $idOrIds);
+    abstract protected function enhanceBuilder(EloquentBuilder $builder): EloquentBuilder;
 
     /**
      * Bring a model in or out of existence.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return void
+     * The return value indicates if the operation was successful.
      */
-    abstract protected function modifyExistence(Model $model): void;
+    abstract protected function modifyExistence(Model $model): bool;
 }

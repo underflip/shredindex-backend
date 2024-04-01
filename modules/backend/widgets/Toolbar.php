@@ -12,21 +12,26 @@ use Backend\Classes\WidgetBase;
 class Toolbar extends WidgetBase
 {
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
-     * @var string Partial name containing the toolbar buttons
+     * @var string buttons partial name
      */
     public $buttons;
 
     /**
-     * @var array|string Search widget configuration or partial name, optional.
+     * @var array|string search widget configuration or partial name, optional.
      */
     public $search;
 
+    /**
+     * @var string setupHandler displays a list configuration icon in the toolbar.
+     */
+    public $setupHandler;
+
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
@@ -35,28 +40,32 @@ class Toolbar extends WidgetBase
     protected $defaultAlias = 'toolbar';
 
     /**
-     * @var WidgetBase Reference to the search widget object.
+     * @var WidgetBase searchWidget reference
      */
     protected $searchWidget;
 
     /**
-     * @var array List of CSS classes to apply to the toolbar container element
+     * @var array cssClasses to apply to the toolbar container element
      */
     public $cssClasses = [];
 
     /**
-     * Initialize the widget, called by the constructor and free from its parameters.
+     * @var string listWidgetId
+     */
+    public $listWidgetId;
+
+    /**
+     * init the widget, called by the constructor and free from its parameters.
      */
     public function init()
     {
         $this->fillFromConfig([
             'buttons',
             'search',
+            'setupHandler',
         ]);
 
-        /*
-         * Prepare the search widget (optional)
-         */
+        // Prepare the search widget (optional)
         if (isset($this->search)) {
             if (is_string($this->search)) {
                 $searchConfig = $this->makeConfig(['partial' => $this->search]);
@@ -66,7 +75,7 @@ class Toolbar extends WidgetBase
             }
 
             $searchConfig->alias = $this->alias . 'Search';
-            $this->searchWidget = $this->makeWidget('Backend\Widgets\Search', $searchConfig);
+            $this->searchWidget = $this->makeWidget(\Backend\Widgets\Search::class, $searchConfig);
             $this->searchWidget->bindToController();
         }
     }
@@ -81,24 +90,31 @@ class Toolbar extends WidgetBase
     }
 
     /**
-     * Prepares the view data
+     * prepareVars for display
      */
     public function prepareVars()
     {
         $this->vars['search'] = $this->searchWidget ? $this->searchWidget->render() : '';
         $this->vars['cssClasses'] = implode(' ', $this->cssClasses);
         $this->vars['controlPanel'] = $this->makeControlPanel();
+        $this->vars['setupHandler'] = $this->setupHandler;
     }
 
+    /**
+     * getSearchWidget
+     */
     public function getSearchWidget()
     {
         return $this->searchWidget;
     }
 
+    /**
+     * makeControlPanel
+     */
     public function makeControlPanel()
     {
         if (!isset($this->buttons)) {
-            return false;
+            return '<div data-control="toolbar"></div>';
         }
 
         return $this->controller->makePartial($this->buttons, $this->vars);

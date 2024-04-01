@@ -26,18 +26,23 @@ return [
         'italic' => 'Cursief',
         'unorderedlist' => 'Ongeordende lijst',
         'orderedlist' => 'Gerangschikte lijst',
+        'snippet' => 'Snippet',
         'video' => 'Video',
         'image' => 'Afbeelding',
         'link' => 'Hyperlink',
         'horizontalrule' => 'Invoegen horizontale lijn',
         'fullscreen' => 'Volledig scherm',
         'preview' => 'Voorbeeldweergave',
+        'strikethrough' => 'Doorhalen',
+        'cleanblock' => 'Blok opschonen',
+        'table' => 'Tabel',
+        'sidebyside' => 'Zij aan zij'
     ],
     'mediamanager' => [
-        'insert_link' => 'Invoegen Media Link',
-        'insert_image' => 'Invoegen Media Afbeelding',
-        'insert_video' => 'Invoegen Media Video',
-        'insert_audio' => 'Invoegen Media Audio',
+        'insert_link' => 'Media Link invoegen',
+        'insert_image' => 'Media Afbeelding invoegen',
+        'insert_video' => 'Media Video invoegen',
+        'insert_audio' => 'Media Audio invoegen',
         'invalid_file_empty_insert' => 'Selecteer bestand om een link naar te maken.',
         'invalid_file_single_insert' => 'Selecteer één bestand.',
         'invalid_image_empty_insert' => 'Selecteer afbeelding(en) om in te voegen.',
@@ -45,9 +50,12 @@ return [
         'invalid_audio_empty_insert' => 'Selecteer een audio bestand om in te voegen.',
     ],
     'alert' => [
+        'error' => 'Fout',
+        'confirm' => 'Bevestigen',
+        'dismiss' => 'Afwijzen',
         'confirm_button_text' => 'OK',
         'cancel_button_text' => 'Annuleren',
-        'widget_remove_confirm' => 'Deze widget verwijderen?'
+        'widget_remove_confirm' => 'Deze widget verwijderen?',
     ],
     'datepicker' => [
         'previousMonth' => 'Vorige maand',
@@ -61,24 +69,24 @@ return [
     ],
     'filter' => [
         'group' => [
-            'all' => 'alle'
+            'all' => 'alle',
         ],
         'scopes' => [
             'apply_button_text' => 'Toepassen',
-            'clear_button_text'  => 'Resetten'
+            'clear_button_text' => 'Resetten',
         ],
         'dates' => [
             'all' => 'alle',
             'filter_button_text' => 'Filteren',
-            'reset_button_text'  => 'Resetten',
+            'reset_button_text' => 'Resetten',
             'date_placeholder' => 'Datum',
             'after_placeholder' => 'Na',
-            'before_placeholder' => 'Voor'
+            'before_placeholder' => 'Voor',
         ],
         'numbers' => [
             'all' => 'alle',
             'filter_button_text' => 'Filteren',
-            'reset_button_text'  => 'Resetten',
+            'reset_button_text' => 'Resetten',
             'min_placeholder' => 'Minimum',
             'max_placeholder' => 'Maximum',
         ],
@@ -98,5 +106,21 @@ return [
             'open' => 'Openen',
             'cancel' => 'Annuleren',
         ],
+    ],
+    'upload' => [
+        'max_files' => 'Je kan niet meer bestanden uploaden.',
+        'invalid_file_type' => 'Je kan geen bestanden van dit type uploaden.',
+        'file_too_big' => 'Het bestand is te groot ({{filesize}}MB). Maximale bestandsgrootte: {{maxFilesize}}MB.',
+        'response_error' => 'De server reageerde met de code {{statusCode}}.',
+        'remove_file' => 'Verwijder bestand',
+    ],
+    'inspector' => [
+        'add' => 'Toevoegen',
+        'remove' => 'Verwijderen',
+        'key' => 'Sleutel',
+        'value' => 'Waarde',
+        'ok' => 'Ok',
+        'cancel' => 'Annuleren',
+        'items' => 'Items',
     ],
 ];

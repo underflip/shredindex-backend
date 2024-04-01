@@ -1,17 +1,16 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Support\Contracts;
 
-use Closure;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
 
+/**
+ * Provide a resolver for a subscription field in case no resolver directive is defined.
+ *
+ * @api
+ */
 interface ProvidesSubscriptionResolver
 {
-    /**
-     * Provide a resolver for a subscription field in case no resolver directive is defined.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\Values\FieldValue  $fieldValue
-     * @return \Closure
-     */
-    public function provideSubscriptionResolver(FieldValue $fieldValue): Closure;
+    /** This function is expected to call @see \Nuwave\Lighthouse\Subscriptions\SubscriptionRegistry::register(). */
+    public function provideSubscriptionResolver(FieldValue $fieldValue): \Closure;
 }

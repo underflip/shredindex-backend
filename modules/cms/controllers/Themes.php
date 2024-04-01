@@ -1,23 +1,27 @@
 <?php namespace Cms\Controllers;
 
 use File;
+use Lang;
 use Flash;
+use System;
 use Backend;
 use Redirect;
 use BackendMenu;
+use BackendAuth;
 use ValidationException;
 use ApplicationException;
+use Cms\Models\ThemeSeed;
 use Cms\Models\ThemeExport;
 use Cms\Models\ThemeImport;
 use Cms\Classes\Theme as CmsTheme;
 use Cms\Classes\ThemeManager;
 use System\Classes\SettingsManager;
 use Backend\Classes\Controller;
+use ForbiddenException;
 use Exception;
-use Backend\Widgets\Form;
 
 /**
- * Theme selector controller
+ * Themes selector controller
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -26,62 +30,84 @@ use Backend\Widgets\Form;
 class Themes extends Controller
 {
     /**
-     * @var array Permissions required to view this page.
+     * @var array requiredPermissions to view this page
      */
-    public $requiredPermissions = [
-        'cms.manage_themes',
-        'cms.manage_theme_options',
-    ];
+    public $requiredPermissions = ['cms.themes', 'cms.theme_customize'];
 
     /**
-     * Constructor.
+     * __construct
      */
     public function __construct()
     {
         parent::__construct();
 
-        $this->addCss('/modules/cms/assets/css/october.theme-selector.css', 'core');
+        $this->addCss('/modules/cms/assets/css/themes.css');
 
-        $this->pageTitle = 'cms::lang.theme.settings_menu';
+        $this->pageTitle = 'Frontend Theme';
         BackendMenu::setContext('October.System', 'system', 'settings');
         SettingsManager::setContext('October.Cms', 'theme');
 
-        /*
-         * Custom redirect for unauthorized request
-         */
-        $this->bindEvent('page.beforeDisplay', function () {
-            if (!$this->user->hasAccess('cms.manage_themes')) {
-                return Backend::redirect('cms/themeoptions/update');
-            }
-        });
-
-        /*
-         * Enable AJAX for Form widgets
-         */
+        // Enable AJAX for Form widgets
         if (post('mode') === 'import') {
             $this->makeImportFormWidget($this->findThemeObject())->bindToController();
         }
     }
 
+    /**
+     * beforeDisplay
+     */
+    public function beforeDisplay()
+    {
+        // Custom redirect for unauthorized request
+        if (!$this->user->hasAccess('cms.themes')) {
+            return Backend::redirect('cms/themeoptions/update');
+        }
+    }
+
+    /**
+     * index
+     */
     public function index()
     {
         $this->bodyClass = 'compact-container';
+
+        $this->vars['themes'] = CmsTheme::allAvailable();
     }
 
+    /**
+     * index_onSetActiveTheme
+     */
     public function index_onSetActiveTheme()
     {
-        CmsTheme::setActiveTheme(post('theme'));
+        if (!BackendAuth::userHasAccess('cms.themes.activate')) {
+            throw new ForbiddenException;
+        }
+
+        $themeCode = post('theme');
+
+        // For the frontend
+        CmsTheme::setActiveTheme($themeCode);
+
+        // For the backend
+        CmsTheme::setEditTheme($themeCode);
 
         return [
             '#theme-list' => $this->makePartial('theme_list')
         ];
     }
 
+    /**
+     * index_onDelete
+     */
     public function index_onDelete()
     {
+        if (!BackendAuth::userHasAccess('cms.themes.delete')) {
+            throw new ForbiddenException;
+        }
+
         ThemeManager::instance()->deleteTheme(post('theme'));
 
-        Flash::success(trans('cms::lang.theme.delete_theme_success'));
+        Flash::success(__('Theme deleted!'));
         return Redirect::refresh();
     }
 
@@ -89,8 +115,15 @@ class Themes extends Controller
     // Theme properties
     //
 
+    /**
+     * index_onLoadFieldsForm
+     */
     public function index_onLoadFieldsForm()
     {
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
         $theme = $this->findThemeObject();
         $this->vars['widget'] = $this->makeFieldsFormWidget($theme);
         $this->vars['themeDir'] = $theme->getDirName();
@@ -98,8 +131,15 @@ class Themes extends Controller
         return $this->makePartial('theme_fields_form');
     }
 
+    /**
+     * index_onSaveFields
+     */
     public function index_onSaveFields()
     {
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
         $theme = $this->findThemeObject();
         $widget = $this->makeFieldsFormWidget($theme);
         $theme->writeConfig($widget->getSaveData());
@@ -107,6 +147,9 @@ class Themes extends Controller
         return ['#themeListItem-'.$theme->getId() => $this->makePartial('theme_list_item', ['theme' => $theme])];
     }
 
+    /**
+     * makeFieldsFormWidget
+     */
     protected function makeFieldsFormWidget($theme)
     {
         $widgetConfig = $this->makeConfig('~/modules/cms/classes/theme/fields.yaml');
@@ -117,38 +160,52 @@ class Themes extends Controller
         $widgetConfig->arrayName = 'Theme';
         $widgetConfig->context = 'update';
 
-        return $this->makeWidget(Form::class, $widgetConfig);
+        return $this->makeWidget(\Backend\Widgets\Form::class, $widgetConfig);
     }
 
     //
     // Create theme
     //
 
+    /**
+     * index_onLoadCreateForm
+     */
     public function index_onLoadCreateForm()
     {
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
         $this->vars['widget'] = $this->makeCreateFormWidget();
         return $this->makePartial('theme_create_form');
     }
 
+    /**
+     * index_onCreate
+     */
     public function index_onCreate()
     {
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
         $widget = $this->makeCreateFormWidget();
         $data = $widget->getSaveData();
-        $newDirName = trim(array_get($data, 'dir_name'));
+        $newDirName = trim($data['dir_name'] ?? '');
         $destinationPath = themes_path().'/'.$newDirName;
 
         $data = array_except($data, 'dir_name');
 
-        if (!strlen(trim(array_get($data, 'name')))) {
-            throw new ValidationException(['name' => trans('cms::lang.theme.create_theme_required_name')]);
+        if (!strlen(trim($data['name'] ?? ''))) {
+            throw new ValidationException(['name' => __('Please specify a name for the theme.')]);
         }
 
         if (!preg_match('/^[a-z0-9\_\-]+$/i', $newDirName)) {
-            throw new ValidationException(['dir_name' => trans('cms::lang.theme.dir_name_invalid')]);
+            throw new ValidationException(['dir_name' => __('Name can contain only digits, Latin letters and the following symbols: _-')]);
         }
 
         if (File::isDirectory($destinationPath)) {
-            throw new ValidationException(['dir_name' => trans('cms::lang.theme.dir_name_taken')]);
+            throw new ValidationException(['dir_name' => __('Desired theme directory already exists.')]);
         }
 
         File::makeDirectory($destinationPath);
@@ -162,10 +219,13 @@ class Themes extends Controller
         $theme = CmsTheme::load($newDirName);
         $theme->writeConfig($data);
 
-        Flash::success(trans('cms::lang.theme.create_theme_success'));
+        Flash::success(__('Theme Created!'));
         return Redirect::refresh();
     }
 
+    /**
+     * makeCreateFormWidget
+     */
     protected function makeCreateFormWidget()
     {
         $widgetConfig = $this->makeConfig('~/modules/cms/classes/theme/fields.yaml');
@@ -174,42 +234,50 @@ class Themes extends Controller
         $widgetConfig->arrayName = 'Theme';
         $widgetConfig->context = 'create';
 
-        return $this->makeWidget('Backend\Widgets\Form', $widgetConfig);
+        return $this->makeWidget(\Backend\Widgets\Form::class, $widgetConfig);
     }
 
     //
     // Duplicate
     //
 
+    /**
+     * index_onLoadDuplicateForm
+     */
     public function index_onLoadDuplicateForm()
     {
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
         $theme = $this->findThemeObject();
         $this->vars['themeDir'] = $theme->getDirName();
 
         return $this->makePartial('theme_duplicate_form');
     }
 
+    /**
+     * index_onDuplicateTheme
+     */
     public function index_onDuplicateTheme()
     {
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
         $theme = $this->findThemeObject();
         $newDirName = trim(post('new_dir_name'));
-        $sourcePath = $theme->getPath();
-        $destinationPath = themes_path().'/'.$newDirName;
 
         if (!preg_match('/^[a-z0-9\_\-]+$/i', $newDirName)) {
-            throw new ValidationException(['new_dir_name' => trans('cms::lang.theme.dir_name_invalid')]);
+            throw new ValidationException(['new_dir_name' => __('Name can contain only digits, Latin letters and the following symbols: _-')]);
         }
 
-        if (File::isDirectory($destinationPath)) {
-            throw new ValidationException(['new_dir_name' => trans('cms::lang.theme.dir_name_taken')]);
+        if (!ThemeManager::instance()->duplicateTheme($theme->getDirName(), $newDirName)) {
+            throw new ValidationException(['new_dir_name' => __('Desired theme directory already exists.')]);
         }
 
-        File::copyDirectory($sourcePath, $destinationPath);
-        $newTheme = CmsTheme::load($newDirName);
-        $newName = $newTheme->getConfigValue('name') . ' - Copy';
-        $newTheme->writeConfig(['name' => $newName]);
+        Flash::success(__('Theme Duplicated!'));
 
-        Flash::success(trans('cms::lang.theme.duplicate_theme_success'));
         return Redirect::refresh();
     }
 
@@ -217,6 +285,9 @@ class Themes extends Controller
     // Theme export
     //
 
+    /**
+     * index_onLoadExportForm
+     */
     public function index_onLoadExportForm()
     {
         $theme = $this->findThemeObject();
@@ -226,6 +297,9 @@ class Themes extends Controller
         return $this->makePartial('theme_export_form');
     }
 
+    /**
+     * index_onExport
+     */
     public function index_onExport()
     {
         $theme = $this->findThemeObject();
@@ -237,6 +311,9 @@ class Themes extends Controller
         return Backend::redirect('cms/themes/download/'.$file.'/'.$theme->getDirName().'.zip');
     }
 
+    /**
+     * download
+     */
     public function download($name, $outputName = null)
     {
         try {
@@ -248,6 +325,9 @@ class Themes extends Controller
         }
     }
 
+    /**
+     * makeExportFormWidget
+     */
     protected function makeExportFormWidget($theme)
     {
         $widgetConfig = $this->makeConfig('~/modules/cms/models/themeexport/fields.yaml');
@@ -256,17 +336,24 @@ class Themes extends Controller
         $widgetConfig->model->theme = $theme;
         $widgetConfig->arrayName = 'ThemeExport';
 
-        return $this->makeWidget('Backend\Widgets\Form', $widgetConfig);
+        return $this->makeWidget(\Backend\Widgets\Form::class, $widgetConfig);
     }
 
     //
     // Theme import
     //
 
+    /**
+     * index_onLoadImportForm
+     */
     public function index_onLoadImportForm()
     {
-        if (\Cms\Helpers\Cms::safeModeEnabled()) {
-            throw new ApplicationException(trans('cms::lang.cms_object.safe_mode_enabled'));
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
+        if (System::checkSafeMode()) {
+            throw new ApplicationException(Lang::get('cms::lang.cms_object.safe_mode_enabled'));
         }
 
         $theme = $this->findThemeObject();
@@ -276,10 +363,17 @@ class Themes extends Controller
         return $this->makePartial('theme_import_form');
     }
 
+    /**
+     * index_onImport
+     */
     public function index_onImport()
     {
-        if (\Cms\Helpers\Cms::safeModeEnabled()) {
-            throw new ApplicationException(trans('cms::lang.cms_object.safe_mode_enabled'));
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
+        if (System::checkSafeMode()) {
+            throw new ApplicationException(Lang::get('cms::lang.cms_object.safe_mode_enabled'));
         }
 
         $theme = $this->findThemeObject();
@@ -288,10 +382,13 @@ class Themes extends Controller
         $model = new ThemeImport;
         $model->import($theme, $widget->getSaveData(), $widget->getSessionKey());
 
-        Flash::success(trans('cms::lang.theme.import_theme_success'));
+        Flash::success(__('Theme Imported!'));
         return Redirect::refresh();
     }
 
+    /**
+     * makeImportFormWidget
+     */
     protected function makeImportFormWidget($theme)
     {
         $widgetConfig = $this->makeConfig('~/modules/cms/models/themeimport/fields.yaml');
@@ -300,13 +397,78 @@ class Themes extends Controller
         $widgetConfig->model->theme = $theme;
         $widgetConfig->arrayName = 'ThemeImport';
 
-        return $this->makeWidget('Backend\Widgets\Form', $widgetConfig);
+        return $this->makeWidget(\Backend\Widgets\Form::class, $widgetConfig);
     }
 
     //
-    // Helpers
+    // Theme seed
     //
 
+    /**
+     * index_onLoadSeedForm
+     */
+    public function index_onLoadSeedForm()
+    {
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
+        if (System::checkSafeMode()) {
+            throw new ApplicationException(Lang::get('cms::lang.cms_object.safe_mode_enabled'));
+        }
+
+        $theme = $this->findThemeObject();
+        $this->vars['widget'] = $this->makeSeedFormWidget($theme);
+        $this->vars['themeDir'] = $theme->getDirName();
+
+        return $this->makePartial('theme_seed_form');
+    }
+
+    /**
+     * index_onSeed
+     */
+    public function index_onSeed()
+    {
+        if (!BackendAuth::userHasAccess('cms.themes.create')) {
+            throw new ForbiddenException;
+        }
+
+        if (System::checkSafeMode()) {
+            throw new ApplicationException(Lang::get('cms::lang.cms_object.safe_mode_enabled'));
+        }
+
+        $theme = $this->findThemeObject();
+        $widget = $this->makeSeedFormWidget($theme);
+
+        $model = new ThemeSeed;
+        $model->seed($theme, $widget->getSaveData());
+
+        Flash::success(__('Theme Seeded!'));
+        return Redirect::refresh();
+    }
+
+
+    /**
+     * makeSeedFormWidget
+     */
+    protected function makeSeedFormWidget($theme)
+    {
+        $widgetConfig = $this->makeConfig('~/modules/cms/models/themeseed/fields.yaml');
+        $widgetConfig->alias = 'form'.studly_case($theme->getDirName());
+        $widgetConfig->model = new ThemeSeed;
+        $widgetConfig->model->theme = $theme;
+        $widgetConfig->arrayName = 'ThemeSeed';
+
+        return $this->makeWidget(\Backend\Widgets\Form::class, $widgetConfig);
+    }
+
+    //
+    // Util
+    //
+
+    /**
+     * findThemeObject
+     */
     protected function findThemeObject($name = null)
     {
         if ($name === null) {
@@ -314,7 +476,7 @@ class Themes extends Controller
         }
 
         if (!$name || (!$theme = CmsTheme::load($name))) {
-            throw new ApplicationException(trans('cms::lang.theme.not_found_name', ['name' => $name]));
+            throw new ApplicationException(__("The theme ':name' is not found.", ['name' => $name]));
         }
 
         return $theme;

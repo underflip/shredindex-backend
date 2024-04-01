@@ -4,13 +4,16 @@ namespace Underflip\Resorts\GraphQL\Directives;
 
 use Closure;
 use GraphQL\Language\AST\FieldDefinitionNode;
+use GraphQL\Language\AST\InterfaceTypeDefinitionNode;
 use GraphQL\Language\AST\ObjectTypeDefinitionNode;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
+use Illuminate\Support\Facades\Log;
+use Nuwave\Lighthouse\Execution\ResolveInfo;
+use Nuwave\Lighthouse\Pagination\PaginationArgs;
 use Nuwave\Lighthouse\Pagination\PaginationManipulator;
 use Nuwave\Lighthouse\Pagination\PaginationType;
-use Nuwave\Lighthouse\Pagination\PaginationUtils;
 use Nuwave\Lighthouse\Schema\AST\DocumentAST;
 use Nuwave\Lighthouse\Schema\Directives\BaseDirective;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
@@ -34,6 +37,7 @@ class FilterResortsDirective extends BaseDirective implements FieldResolver, Fie
      */
     public function __construct()
     {
+        Log::info('FilterResortsDirective');
         // Save us from some embarrassment with some quick validation
         foreach ($this->getFilterableScopes() as $scope) {
             if (count(array_diff(['relation', 'class', 'column'], array_keys($scope)))) {
@@ -55,6 +59,7 @@ class FilterResortsDirective extends BaseDirective implements FieldResolver, Fie
 
     public static function definition(): string
     {
+        Log::info('definition call');
         return /* @lang GraphQL */ <<<'SDL'
 """
 Query multiple entries as a paginated list.
@@ -72,22 +77,18 @@ directive @filterResorts(
 SDL;
     }
 
-    /**
-     * @param  \Nuwave\Lighthouse\Schema\AST\DocumentAST  $documentAST
-     * @param  \GraphQL\Language\AST\FieldDefinitionNode  $fieldDefinition
-     * @param  \GraphQL\Language\AST\ObjectTypeDefinitionNode  $parentType
-     * @return void
-     */
+
     public function manipulateFieldDefinition(
         DocumentAST &$documentAST,
         FieldDefinitionNode &$fieldDefinition,
-        ObjectTypeDefinitionNode &$parentType
+        ObjectTypeDefinitionNode|InterfaceTypeDefinitionNode &$parentType,
     ): void {
-        PaginationManipulator::transformToPaginatedField(
+        Log::info('manipulateFieldDefinition call');
+        $paginate = new PaginationManipulator($documentAST);
+        $paginate->transformToPaginatedField(
             $this->paginationType(),
             $fieldDefinition,
             $parentType,
-            $documentAST,
             20,
             $this->paginateMaxCount()
         );
@@ -102,9 +103,8 @@ SDL;
     protected function getFilterableScopes(): array
     {
         $scopes = [];
-
+        Log::info('getFilterableScopes call');
         $relations = app(Resort::class)->hasMany + app(Resort::class)->hasOne;
-
         foreach ($relations as $name => $class) {
             if (!in_array(Filterable::class, class_uses_recursive($class))) {
                 // Relation isn't filterable
@@ -121,15 +121,11 @@ SDL;
         return $scopes;
     }
 
-    /**
-     * Resolve the field directive.
-     *
-     * @param FieldValue $fieldValue
-     * @return FieldValue|void
-     */
-    public function resolveField(FieldValue $fieldValue): FieldValue
+
+    public function resolveField(FieldValue $fieldValue): callable
     {
-        return $fieldValue->setResolver($this->getResolver());
+        Log::info('resolveField call');
+        return $fieldValue->finishResolver($this->getResolver());
     }
 
     /**
@@ -139,7 +135,8 @@ SDL;
      */
     public function getResolver(): Closure
     {
-        return function ($root, array $args): LengthAwarePaginator {
+        Log::info('getResolver call');
+        return function ($root, array $args, ResolveInfo $resolveInfo,): LengthAwarePaginator {
             // Setup builder
             $query = Resort::with(['ratings', 'numerics', 'generics']);
 
@@ -151,10 +148,10 @@ SDL;
             if (array_key_exists('orderBy', $args)) {
                 $this->orderByType($query, $args['orderBy']);
             }
-
             // Pagination
-            [$first, $page] = PaginationUtils::extractArgs(
+            [$first, $page] = PaginationArgs::extractArgs(
                 $args,
+                $resolveInfo,
                 $this->paginationType(),
                 $this->paginateMaxCount()
             );
@@ -170,6 +167,7 @@ SDL;
      */
     public function augmentForFilters(Builder &$query, array $filters): void
     {
+        Log::info('augmentForFilters call');
         foreach ($this->getFilterableScopes() as $scope) {
             if (!array_key_exists($scope['class'], Type::getCategories())) {
                 // Throw a helpful message
@@ -218,6 +216,7 @@ SDL;
      */
     protected function orderByType(Builder &$query, array $orderBy): void
     {
+        Log::info('orderByType call');
         $typeName = $orderBy['type_name']; // Assumes GraphQL input validation assures type_name exists
         $direction = $orderBy['direction'] ?: 'asc';
 
@@ -277,7 +276,7 @@ SDL;
      */
     protected function paginationType(): PaginationType
     {
-        return new PaginationType('default');
+        return new PaginationType(PaginationType::PAGINATOR);
     }
 
     /**

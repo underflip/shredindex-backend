@@ -1,36 +1,26 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
-use GraphQL\Type\Definition\ResolveInfo;
+use Nuwave\Lighthouse\Execution\ResolveInfo;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
 use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
 
-class FirstDirective extends BaseDirective implements FieldResolver, DefinedDirective
+class FirstDirective extends BaseDirective implements FieldResolver
 {
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'first';
-    }
-
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
 Get the first query result from a collection of Eloquent models.
 """
-directive @first(  
+directive @first(
   """
   Specify the class name of the model to use.
-  This is only needed when the default model resolution does not work.
+  This is only needed when the default model detection does not work.
   """
   model: String
 
@@ -39,33 +29,23 @@ directive @first(
   """
   scopes: [String!]
 ) on FIELD_DEFINITION
-SDL;
+GRAPHQL;
     }
 
-    /**
-     * Resolve the field directive.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\Values\FieldValue  $fieldValue
-     * @return \Nuwave\Lighthouse\Schema\Values\FieldValue
-     */
-    public function resolveField(FieldValue $fieldValue): FieldValue
+    public function resolveField(FieldValue $fieldValue): callable
     {
-        /** @var \Illuminate\Database\Eloquent\Model $model */
-        $model = $this->getModelClass();
+        return function (mixed $root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo): ?Model {
+            $builder = $resolveInfo->enhanceBuilder(
+                $this->getModelClass()::query(),
+                $this->directiveArgValue('scopes', []),
+                $root,
+                $args,
+                $context,
+                $resolveInfo,
+            );
+            assert($builder instanceof EloquentBuilder);
 
-        return $fieldValue->setResolver(
-            function ($root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) use ($model): ?Model {
-                return $resolveInfo
-                    ->builder
-                    ->addScopes(
-                        $this->directiveArgValue('scopes', [])
-                    )
-                    ->apply(
-                        $model::query(),
-                        $args
-                    )
-                    ->first();
-            }
-        );
+            return $builder->first();
+        };
     }
 }

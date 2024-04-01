@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Subscriptions\Contracts;
 
@@ -6,11 +6,6 @@ use Illuminate\Http\Request;
 
 interface AuthorizesSubscriptions
 {
-    /**
-     * Authorize subscription request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return bool
-     */
-    public function authorize(Request $request);
+    /** Is the subscription request authorized? */
+    public function authorize(Request $request): bool;
 }

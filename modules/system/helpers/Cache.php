@@ -5,12 +5,24 @@ use File;
 use Cache as CacheFacade;
 use Config;
 
+/**
+ * Cache helper
+ *
+ * @package october\system
+ * @author Alexey Bobkov, Samuel Georges
+ */
 class Cache
 {
-    use \October\Rain\Support\Traits\Singleton;
+    /**
+     * instance creates a new instance of this singleton
+     */
+    public static function instance(): static
+    {
+        return App::make('system.cacher');
+    }
 
     /**
-     * Execute the console command.
+     * clear from the console command
      */
     public static function clear()
     {
@@ -18,21 +30,26 @@ class Cache
         self::clearInternal();
     }
 
+    /**
+     * clearInternal
+     */
     public static function clearInternal()
     {
         $instance = self::instance();
         $instance->clearCombiner();
         $instance->clearCache();
+        $instance->clearThemeCache();
+        $instance->clearBlueprintCache();
 
-        if (!Config::get('cms.twigNoCache')) {
+        if (Config::get('cms.enable_twig_cache', true)) {
             $instance->clearTwig();
         }
 
         $instance->clearMeta();
     }
 
-    /*
-     * Combiner
+    /**
+     * clearCombiner
      */
     public function clearCombiner()
     {
@@ -41,8 +58,8 @@ class Cache
         }
     }
 
-    /*
-     * Cache
+    /**
+     * clearCache
      */
     public function clearCache()
     {
@@ -51,8 +68,8 @@ class Cache
         }
     }
 
-    /*
-     * Twig
+    /**
+     * clearTwig
      */
     public function clearTwig()
     {
@@ -61,13 +78,51 @@ class Cache
         }
     }
 
-    /*
-     * Meta
+    /**
+     * clearThemeCache
+     */
+    public function clearThemeCache()
+    {
+        collect(File::files(cache_path('cms')))
+            ->reject(function($file) {
+                return !starts_with($file->getFilename(), 'theme-');
+            })
+            ->each(function($file) {
+                File::delete(cache_path('cms/'.$file->getFilename()));
+            });
+    }
+
+    /**
+     * clearBlueprintCache
+     */
+    public function clearBlueprintCache()
+    {
+        collect(File::files(cache_path('cms')))
+            ->reject(function($file) {
+                return !starts_with($file->getFilename(), 'blueprint-');
+            })
+            ->each(function($file) {
+                File::delete(cache_path('cms/'.$file->getFilename()));
+            });
+    }
+
+    /**
+     * clearMeta
      */
     public function clearMeta()
     {
-        File::delete(storage_path().'/cms/disabled.json');
+        File::delete(cache_path('cms/manifest.php'));
+
+        File::delete(App::getCachedClassesPath());
+
         File::delete(App::getCachedCompilePath());
+
+        File::delete(App::getCachedConfigPath());
+
         File::delete(App::getCachedServicesPath());
+
+        File::delete(App::getCachedPackagesPath());
+
+        File::delete(App::getCachedRoutesPath());
     }
 }
