@@ -79,10 +79,10 @@ class Schema extends Controller
         @mkdir(Settings::getSchemaDirectory(), 0777, true);
 
         // inherit CMS functionality
-        $this->addJs('/modules/cms/assets/js/october.cmspage.js', 'core');
-        $this->addJs('/modules/cms/assets/js/october.dragcomponents.js', 'core');
-        $this->addJs('/modules/cms/assets/js/october.tokenexpander.js', 'core');
-        $this->addCss('/modules/cms/assets/css/october.components.css', 'core');
+        $this->addJs('/plugins/nocio/headstart/assets/js/october.cmspage.js', 'core');
+        $this->addJs('/plugins/nocio/headstart/assets/js/october.dragcomponents.js', 'core');
+        $this->addJs('/plugins/nocio/headstart/assets/js/october.tokenexpander.js', 'core');
+        $this->addCss('/plugins/nocio/headstart/assets/css/october.components.css', 'core');
         $this->addJs('/modules/backend/formwidgets/codeeditor/assets/js/build-min.js', 'core');
 
         // Color overrides

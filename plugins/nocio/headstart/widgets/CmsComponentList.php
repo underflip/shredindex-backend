@@ -1,4 +1,6 @@
-<?php namespace Cms\Widgets;
+<?php
+
+namespace nocio\headstart\widgets;
 
 use App;
 use Cms\Helpers\Component;
@@ -6,16 +8,9 @@ use Str;
 use Lang;
 use Input;
 use System\Classes\PluginManager;
-use Cms\Classes\ComponentHelpers;
 use Backend\Classes\WidgetBase;
 
-/**
- * Component list widget.
- *
- * @package october\cms
- * @author Alexey Bobkov, Samuel Georges
- */
-class ComponentList extends WidgetBase
+class CmsComponentList extends WidgetBase
 {
     use \Backend\Traits\CollapsableWidget;
 

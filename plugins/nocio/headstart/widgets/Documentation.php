@@ -7,7 +7,6 @@ use Str;
 use Lang;
 use Input;
 use Markdown;
-use Cms\Widgets\ComponentList as CmsComponentList;
 
 class Documentation extends CmsComponentList
 {

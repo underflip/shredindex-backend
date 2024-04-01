@@ -1,4 +1,4 @@
-<?php namespace Cms\Widgets;
+<?php namespace Nocio\Headstart\Widgets;
 
 use Str;
 use Url;

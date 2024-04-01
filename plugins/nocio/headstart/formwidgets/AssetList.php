@@ -3,11 +3,9 @@
 namespace Nocio\Headstart\FormWidgets;
 
 use Backend\Classes\WidgetBase;
-use Cms\Widgets\AssetList as CmsAssetList;
+use Nocio\Headstart\Widgets\AssetList as CmsAssetList;
 use Nocio\Headstart\Classes\Schema;
-use October\Rain\Filesystem\Definitions as FileDefinitions;
 use Nocio\Headstart\Models\Settings;
-use Url;
 
 class AssetList extends CmsAssetList
 {
@@ -28,8 +26,8 @@ class AssetList extends CmsAssetList
 
     protected function loadAssets()
     {
-        $this->addCss('/modules/cms/widgets/assetlist/assets/css/assetlist.css', 'core');
-        $this->addJs('/modules/cms/widgets/assetlist/assets/js/assetlist.js', 'core');
+        $this->addCss('/plugins/nocio/headstart/widgets/assetlist/assets/css/assetlist.css', 'core');
+        $this->addJs('/plugins/nocio/headstart/widgets/assetlist/assets/js/assetlist.js', 'core');
     }
 
     protected function getAssetsPath()

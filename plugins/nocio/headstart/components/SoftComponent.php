@@ -1,4 +1,6 @@
-<?php namespace Cms\Components;
+<?php
+
+namespace Nocio\Headstart\Components;
 
 use Cms\Classes\ComponentBase;
 
