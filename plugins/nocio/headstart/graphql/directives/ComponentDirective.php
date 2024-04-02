@@ -11,7 +11,6 @@ use Nocio\Headstart\Classes\GraphController;
 
 class ComponentDirective extends BaseDirective implements FieldResolver
 {
-
     /**
      * Name of the directive.
      *
@@ -23,51 +22,51 @@ class ComponentDirective extends BaseDirective implements FieldResolver
     }
 
 
-    public function resolveField(FieldValue $fieldValue)
+    public function resolveField(FieldValue $fieldValue): callable
     {
         $alias = $this->directiveArgValue('alias');
         $methodName = $this->directiveArgValue('method');
 
-        return $fieldValue->setResolver(
-            function ($root, array $args, $context, ResolveInfo $resolveInfo) use ($fieldValue, $alias, $methodName) {
-                /* @var $graphObj \Nocio\Headstart\Classes\Graph */
-                $graphObj = $context->source->findGraph($resolveInfo->path[0], true);
-                $controller = new GraphController($graphObj, $args);
-                $alias = empty($alias) ? $fieldValue->getFieldName() : $alias;
-                $component = $controller->component($alias);
+        return function ($root, array $args, $context, ResolveInfo $resolveInfo) use ($fieldValue, $alias, $methodName) {
+            /* @var $graphObj \Nocio\Headstart\Classes\Graph */
+            $graphObj = $context->source->findGraph($resolveInfo->path[0], true);
+            $controller = new GraphController($graphObj, $args);
+            $alias = empty($alias) ? $fieldValue->getFieldName() : $alias;
+            $component = $controller->component($alias);
 
-                if (is_null($component)) {
-                    throw new \Exception("Component '" . $alias .
-                        "' not found. Did you specify the correct alias (@component(alias: ...))?");
-                }
-
-                $resolveMethod = $methodName ? $methodName : 'resolve' . studly_case($fieldValue->getFieldName());
-                if (method_exists($component, $resolveMethod)) {
-                    return $component->$resolveMethod($root, $args, $context, $resolveInfo);
-                }
-
-                // if no resolve method can be found at the component, we return the component object itself
-                return $component;
+            if (is_null($component)) {
+                throw new \Exception("Component '" . $alias .
+                    "' not found. Did you specify the correct alias (@component(alias: ...))?");
             }
-        );
+
+            $resolveMethod = $methodName ? $methodName : 'resolve' . studly_case($fieldValue->getFieldName());
+            if (method_exists($component, $resolveMethod)) {
+                return $component->$resolveMethod($root, $args, $context, $resolveInfo);
+            }
+
+            // if no resolve method can be found at the component, we return the component object itself
+            return $component;
+        };
     }
 
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
-Query multiple entries as a paginated list.
+Corresponds to [the Eloquent relationship HasOne](https://laravel.com/docs/eloquent-relationships#one-to-one).
 """
-directive @filterResorts(
+directive @hasOne(
   """
-  maxCount: Int
+  Specify the relationship method name in the model class,
+  if it is named different from the field in the schema.
+  """
+  relation: String
 
   """
-  Use a default value for the amount of returned items
-  in case the client does not request it explicitly
+  Apply scopes to the underlying query.
   """
-  defaultCount: Int
+  scopes: [String!]
 ) on FIELD_DEFINITION
-SDL;
+GRAPHQL;
     }
 }

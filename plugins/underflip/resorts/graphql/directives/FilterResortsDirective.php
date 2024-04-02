@@ -6,18 +6,31 @@ use Closure;
 use GraphQL\Language\AST\FieldDefinitionNode;
 use GraphQL\Language\AST\InterfaceTypeDefinitionNode;
 use GraphQL\Language\AST\ObjectTypeDefinitionNode;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\JoinClause;
+use Nuwave\Lighthouse\Exceptions\DefinitionException;
+use Nuwave\Lighthouse\Execution\BatchLoader\BatchLoaderRegistry;
+use Nuwave\Lighthouse\Execution\BatchLoader\RelationBatchLoader;
+use Nuwave\Lighthouse\Execution\ModelsLoader\PaginatedModelsLoader;
+use Nuwave\Lighthouse\Execution\ModelsLoader\SimpleModelsLoader;
 use Nuwave\Lighthouse\Execution\ResolveInfo;
 use Nuwave\Lighthouse\Pagination\PaginationArgs;
 use Nuwave\Lighthouse\Pagination\PaginationManipulator;
 use Nuwave\Lighthouse\Pagination\PaginationType;
+use Nuwave\Lighthouse\Schema\AST\ASTHelper;
 use Nuwave\Lighthouse\Schema\AST\DocumentAST;
 use Nuwave\Lighthouse\Schema\Directives\BaseDirective;
+use Nuwave\Lighthouse\Schema\Directives\RelationDirectiveHelpers;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
 use Nuwave\Lighthouse\Support\Contracts\FieldManipulator;
 use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
+use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Plugin;
@@ -28,13 +41,19 @@ use Underflip\Resorts\Traits\Filterable;
  *
  * {@see Plugin} to find how this directive's namespace is configured.
  */
-class FilterResortsDirective extends BaseDirective implements FieldResolver, FieldManipulator
+class FilterResortsDirective extends BaseDirective implements FieldResolver
 {
+    use RelationDirectiveHelpers;
+
+    /** @var array<string, mixed> */
+    protected array $lighthouseConfig = [];
     /**
      * @throws \Exception
      */
-    public function __construct()
-    {
+    public function __construct(
+
+    ) {
+        //$this->lighthouseConfig = $configRepository->get('lighthouse');
         // Save us from some embarrassment with some quick validation
         foreach ($this->getFilterableScopes() as $scope) {
             if (count(array_diff(['relation', 'class', 'column'], array_keys($scope)))) {
@@ -89,6 +108,11 @@ SDL;
         );
     }
 
+    protected function paginationMaxCount(): ?int
+    {
+        return $this->directiveArgValue('maxCount', $this->lighthouseConfig['pagination']['max_count']);
+    }
+
     /**
      * The data needed to filter a resort's type relations,
      * structured by the type model's categories
@@ -118,7 +142,7 @@ SDL;
 
     public function resolveField(FieldValue $fieldValue): callable
     {
-        return $fieldValue->finishResolver($this->getResolver());
+        return $this->getResolver();
     }
 
     /**
@@ -128,7 +152,7 @@ SDL;
      */
     public function getResolver(): Closure
     {
-        return function ($root, array $args, ResolveInfo $resolveInfo,): LengthAwarePaginator {
+        return function (Model $parent, array $args, ResolveInfo $resolveInfo,) {
             // Setup builder
             $query = Resort::with(['ratings', 'numerics', 'generics']);
 

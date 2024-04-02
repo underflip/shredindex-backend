@@ -56,7 +56,7 @@ return [
                         Nuwave\Lighthouse\Http\Middleware\AcceptJson::class,
 
                         // Logs every incoming GraphQL query.
-                         Nuwave\Lighthouse\Http\Middleware\LogGraphQLQueries::class,
+                         //Nuwave\Lighthouse\Http\Middleware\LogGraphQLQueries::class,
                     ],
 
                     /*
@@ -176,16 +176,14 @@ return [
                 */
 
                 'namespaces' => [
-                    'models' => ['App', 'App\\Models'],
-                    'queries' => 'App\\GraphQL\\Queries',
-                    'mutations' => 'App\\GraphQL\\Mutations',
-                    'subscriptions' => 'App\\GraphQL\\Subscriptions',
-                    'types' => 'App\\GraphQL\\Types',
-                    'interfaces' => 'App\\GraphQL\\Interfaces',
-                    'unions' => 'App\\GraphQL\\Unions',
-                    'scalars' => 'App\\GraphQL\\Scalars',
-                    'directives' => 'App\\GraphQL\\Directives',
-                    'validators' => 'App\\GraphQL\\Validators',
+                    'models' => 'Headstart\\Models',
+                    'queries' => 'Headstart\\Queries',
+                    'mutations' => 'Headstart\\Mutations',
+                    'subscriptions' => 'Headstart\\Subscriptions',
+                    'interfaces' => 'Headstart\\Interfaces',
+                    'unions' => 'Headstart\\Unions',
+                    'scalars' => 'Headstart\\Scalars',
+                    'directives' => ['Nocio\\Headstart\\GraphQL\\Directives', 'Headstart\\Directives'],
                 ],
 
                 /*

@@ -10,11 +10,10 @@ use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
 class CreatesContext implements LighthouseCreatesContext
 {
-
-
     public function generate(?Request $request): GraphQLContext
     {
-        return new CustomGraphQLContext($request);
+        //return new CustomGraphQLContext($request);
+        return new SchemaContext($request);
     }
 
 }

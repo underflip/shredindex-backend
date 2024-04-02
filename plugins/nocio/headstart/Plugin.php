@@ -50,8 +50,8 @@ class Plugin extends PluginBase
         // register schema folder as name space
         App::make('October\Rain\Support\ClassLoader')->addDirectories(Settings::getSchemaPath());
 
-        $this->app['Illuminate\Contracts\Http\Kernel']
-             ->pushMiddleware('Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse');
+//        $this->app['Illuminate\Contracts\Http\Kernel']
+//             ->pushMiddleware('Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse');
 
         $this->setHeadlessOptions();
 
