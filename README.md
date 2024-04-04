@@ -17,22 +17,11 @@ A set of Docker platform is included for running the project.
 4. Copy `.infrastructre/.env.dist` to `.infrastructre/.env`
 5. Copy `.infrastructre/etc/nginx/conf.d/default.conf.dist` to `.infrastructre/etc/nginx/conf.d/default.conf`
 6. Copy `.env.dist` to `.env`
-
-Optionally, you can make any changes to the resulting `.env` `docker-compose.yml` and `default.conf` to suit your needs.
-
-### Up
-
-From `.infrastructure/` use
-
-```
-docker-compose up -d
-```
-
-When all docker containers are running, use
-
-```
-docker exec shredindex-backend-php php artisan october:migrate
-```
+7. docker-compose up -d
+8. cd .. && cp .env.dist .env
+9. rm -rf vendor && docker exec shredindex-backend-php composer install
+10.docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
+11. docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
 
 ### Open in browser
 
@@ -61,56 +50,6 @@ The frontend relies on page-data from the CMS for its routes and views. For this
 To add a new page, you can create a CMS page (be sure to make one with no content). Simply follow the out-of-the-box [Pages documentation](https://docs.octobercms.com/2.x/cms/pages.html).
 
 **Note: Our frontend **does not** use any page-content from the CMS.**
-
-### Seed Test Data
-
-Test Data can be seeded with the `resorts:seed_test_data` artisan command.
-
-The `resorts:seed_test_data` has the `--fresh` option to tear down seeded data before re-seeding (e.g `php artisan resorts:seed_test_data --fresh`)
-
-There's also a handy composer script to run this from your host machine (uses the `--fresh` option):
-
-```
-composer seed-test-data
-```
-
-### Adding seed data
-
-Our Seeders are in `plugins/underflip/resorts/database/seeders`. Add another Seeder to seed new fixtures for test data. Use the existing Seeders as an example.
-
-To engage a Seeder, add it to the `Underflip\Resorts\Console\SeedTestData::$seeders` e.g
-
-`plugins/underflip/resorts/console/SeedTestData.php`:
-```
-protected $seeders = [
-    ...,
-    YourSeeder::class,
-];
-```
-
-_NOTE: Seeders must be in topological order with dependencies first, so that Seed records exist for subsequent Seeders that depend on them_
-
-#### Seeder::down()
-
-When you want to tear down seeded fixtures with the `--fresh` option seeds a fresh set of fixtures, make sure that your Seeder implements `Downable`.
-
-e.g
-
-```markdown
-class MySeeder extents Seeder implements Downable
-```
-
-Each `Downable` Seeder uses a `public function down()` method to control the tear down behaviour when the `resorts:seed_test_data` command's `--fresh` option is used.
-
-### Plugin refresh
-
-When you make any changes to our Resort plugin's migrations or seeders, you can refresh the plugin to re-run the current version using the `plugin:refresh Underflip.Resorts` artisan command.
-
-There's also a handy composer script to run this from your host machine:
-
-```
-composer plugin-refresh
-```
 
 ### Total scores ("Total Shred Score")
 
