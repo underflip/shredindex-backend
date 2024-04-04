@@ -17,36 +17,23 @@ class TeamMembersSeeder extends Seeder implements Downable
             'url' => 'https://thomasandrewhansen.com',
         ]);
 
-        $tom->image()->create([
-            'disk_name' => 'local',
-            'attachment_id' => $tom->id, // ID dari instance TeamMember yang baru dibuat
-            'attachment_type' => TeamMember::class, // Nama kelas dari model yang ditautkan
-            'is_public' => true, // Sesuaikan dengan kebutuhan Anda
-            'file_name' => 't-hansen.png', // Nama file
-            'file_size' => 12345, // Ukuran file dalam byte
-            'content_type' => 'image/png', // Tipe konten file
-            'data' => base_path() .
-                DIRECTORY_SEPARATOR .
-                'plugins/underflip/resorts/updates/assets/teammembers/t-hansen.png',
-        ]);
+        $tom->image()->createFromFile( base_path() .
+            DIRECTORY_SEPARATOR .
+            'plugins/underflip/resorts/updates/assets/teammembers/t-hansen.png',
+            ['file_name' => 't-hansen.png', 'content_type' => 'image/png']
+        );
+
 
         $jd = TeamMember::create([
             'name' => 'jakxnz',
             'url' => 'https://github.com/jakxnz',
         ]);
 
-        $jd->image()->create([
-            'disk_name' => 'local',
-            'attachment_id' => $jd->id, // ID dari instance TeamMember yang baru dibuat
-            'attachment_type' => TeamMember::class, // Nama kelas dari model yang ditautkan
-            'is_public' => true, // Sesuaikan dengan kebutuhan Anda
-            'file_name' => 'jakxnz.png', // Nama file
-            'file_size' => 12345, // Ukuran file dalam byte
-            'content_type' => 'image/png', // Tipe konten file
-            'data' => base_path() .
-                DIRECTORY_SEPARATOR .
-                'plugins/underflip/resorts/updates/assets/teammembers/jakxnz.png',
-        ]);
+        $jd->image()->createFromFile( base_path() .
+            DIRECTORY_SEPARATOR .
+            'plugins/underflip/resorts/updates/assets/teammembers/jakxnz.png',
+            ['file_name' => 'jakxnz.png', 'content_type' => 'image/png']
+        );
     }
 
     public function down()

@@ -4,6 +4,7 @@ namespace Nuwave\Lighthouse\Http;
 
 use Illuminate\Contracts\Events\Dispatcher as EventsDispatcher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Laragraph\Utils\RequestParser;
 use Nuwave\Lighthouse\Events\EndRequest;
 use Nuwave\Lighthouse\Events\StartRequest;

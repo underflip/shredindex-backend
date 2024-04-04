@@ -1,7 +1,6 @@
 title = "Pages"
 ==
 <?php
-use Lang;
 use Cms\Classes\Theme;
 use Cms\Classes\Page;
 use Cms\Classes\Router;
@@ -9,31 +8,28 @@ use Rainlab\Pages\Classes\Menu;
 
 function resolveCmsPages() {
     if (! $theme = Theme::getActiveTheme()) {
-        throw new \Exception(Lang::get('cms::lang.theme.active.not_found'));
+        throw new \Exception('not found');
     }
-
     $theme = Theme::getEditTheme();
+
     return Page::listInTheme($theme, true);
 }
 
 function resolveCmsPage($root, $args) {
     if (! $theme = Theme::getActiveTheme()) {
-        throw new \Exception(Lang::get('cms::lang.theme.active.not_found'));
+        throw new \Exception('not found');
     }
-
     $router = new Router(Theme::getActiveTheme());
     return $router->findByUrl($args['url']);
 }
 
 function resolveStaticMenu($root, $args) {
     if (! $theme = Theme::getActiveTheme()) {
-        throw new \Exception(Lang::get('cms::lang.theme.active.not_found'));
+        throw new \Exception('not found');
     }
-
     if (! $menu = Menu::loadCached($theme, $args['code'])) {
-        throw new \Exception(Lang::get('rainlab.pages::lang.object.not_found'));
+        throw new \Exception('not found menu');
     }
-
     return $menu;
 }
 

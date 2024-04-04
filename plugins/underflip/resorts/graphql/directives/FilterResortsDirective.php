@@ -7,23 +7,14 @@ use GraphQL\Language\AST\FieldDefinitionNode;
 use GraphQL\Language\AST\InterfaceTypeDefinitionNode;
 use GraphQL\Language\AST\ObjectTypeDefinitionNode;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\JoinClause;
-use Nuwave\Lighthouse\Exceptions\DefinitionException;
-use Nuwave\Lighthouse\Execution\BatchLoader\BatchLoaderRegistry;
-use Nuwave\Lighthouse\Execution\BatchLoader\RelationBatchLoader;
-use Nuwave\Lighthouse\Execution\ModelsLoader\PaginatedModelsLoader;
-use Nuwave\Lighthouse\Execution\ModelsLoader\SimpleModelsLoader;
+use Illuminate\Support\Facades\Log;
 use Nuwave\Lighthouse\Execution\ResolveInfo;
 use Nuwave\Lighthouse\Pagination\PaginationArgs;
 use Nuwave\Lighthouse\Pagination\PaginationManipulator;
 use Nuwave\Lighthouse\Pagination\PaginationType;
-use Nuwave\Lighthouse\Schema\AST\ASTHelper;
 use Nuwave\Lighthouse\Schema\AST\DocumentAST;
 use Nuwave\Lighthouse\Schema\Directives\BaseDirective;
 use Nuwave\Lighthouse\Schema\Directives\RelationDirectiveHelpers;
@@ -41,7 +32,7 @@ use Underflip\Resorts\Traits\Filterable;
  *
  * {@see Plugin} to find how this directive's namespace is configured.
  */
-class FilterResortsDirective extends BaseDirective implements FieldResolver
+class FilterResortsDirective extends BaseDirective implements FieldResolver, FieldManipulator
 {
     use RelationDirectiveHelpers;
 
@@ -51,7 +42,8 @@ class FilterResortsDirective extends BaseDirective implements FieldResolver
      * @throws \Exception
      */
     public function __construct(
-
+        protected ConnectionResolverInterface $database,
+        ConfigRepository $configRepository
     ) {
         //$this->lighthouseConfig = $configRepository->get('lighthouse');
         // Save us from some embarrassment with some quick validation
@@ -142,17 +134,8 @@ SDL;
 
     public function resolveField(FieldValue $fieldValue): callable
     {
-        return $this->getResolver();
-    }
-
-    /**
-     * Get the wrapped resolver
-     *
-     * @return Closure
-     */
-    public function getResolver(): Closure
-    {
-        return function (Model $parent, array $args, ResolveInfo $resolveInfo,) {
+        return function (mixed $root, array $args,GraphQLContext $context, ResolveInfo $resolveInfo) {
+            Log::info('$args', $args);
             // Setup builder
             $query = Resort::with(['ratings', 'numerics', 'generics']);
 
@@ -165,12 +148,14 @@ SDL;
                 $this->orderByType($query, $args['orderBy']);
             }
             // Pagination
-            [$first, $page] = PaginationArgs::extractArgs(
+            $pageArg = PaginationArgs::extractArgs(
                 $args,
                 $resolveInfo,
                 $this->paginationType(),
-                $this->paginateMaxCount()
+                $this->paginateMaxCount() //this line 153
             );
+            $first = $pageArg->first;
+            $page = $pageArg->page;
 
             return $query->paginate($first, ['*'], 'page', $page);
         };

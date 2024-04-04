@@ -18,6 +18,7 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Nuwave\Lighthouse\Events\BuildExtensionsResponse;
 use Nuwave\Lighthouse\Events\EndExecution;
 use Nuwave\Lighthouse\Events\EndOperationOrOperations;
@@ -106,7 +107,6 @@ class GraphQL
         // so we do it before we fire the StartExecution event.
         // This allows tracking the time for batched queries independently.
         $schema = $this->schemaBuilder->schema();
-
         $this->eventDispatcher->dispatch(
             new StartExecution($schema, $query, $variables, $operationName, $context),
         );
@@ -173,7 +173,6 @@ class GraphQL
             fn (OperationParams $operationParams): array => $this->executeOperation($operationParams, $context),
             $operationOrOperations,
         );
-
         $this->eventDispatcher->dispatch(
             new EndOperationOrOperations($resultOrResults),
         );

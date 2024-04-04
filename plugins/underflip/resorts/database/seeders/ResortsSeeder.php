@@ -107,6 +107,8 @@ class ResortsSeeder extends Seeder implements Downable
 
             if ($hasImages) {
                 shuffle($images);
+                $name = str_replace('.', '', uniqid('', true));
+                $diskName = $name.'.png';
 
                 for ($x = 0; $x < $imagesCount; $x += 1) {
                     // Create a resort image
@@ -115,19 +117,11 @@ class ResortsSeeder extends Seeder implements Downable
                     $image->alt = $faker->words(3, true);
                     $resort->resort_images()->add($image);
 
-                    // Hook it up with a file
-                    $image->image()->create([
-                        'disk_name' => 'local',
-                        'attachment_id' => $image->id, // ID dari instance TeamMember yang baru dibuat
-                        'attachment_type' => ResortImage::class, // Nama kelas dari model yang ditautkan
-                        'is_public' => true, // Sesuaikan dengan kebutuhan Anda
-                        'file_name' => $image->name.'.png', // Nama file
-                        'file_size' => 12345, // Ukuran file dalam byte
-                        'content_type' => 'image/png', // Tipe konten file
-                        'data' => base_path() .
-                            DIRECTORY_SEPARATOR .
-                            $images[$x],
-                    ]);
+                    $image->image()->createFromFile(base_path() .
+                        DIRECTORY_SEPARATOR .
+                        $images[$x],
+                        ['file_name' => $image->name.'.png', 'content_type' => 'image/png']
+                    );
                 }
             }
 

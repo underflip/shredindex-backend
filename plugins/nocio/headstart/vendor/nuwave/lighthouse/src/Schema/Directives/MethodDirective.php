@@ -3,8 +3,11 @@
 namespace Nuwave\Lighthouse\Schema\Directives;
 
 use GraphQL\Language\AST\FieldDefinitionNode;
+use GraphQL\Type\Definition\ResolveInfo;
+use Illuminate\Support\Facades\Log;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
 use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
+use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 
 class MethodDirective extends BaseDirective implements FieldResolver
 {
@@ -29,17 +32,14 @@ GRAPHQL;
 
     public function resolveField(FieldValue $fieldValue): callable
     {
-        return function (mixed $root, array $args) {
-            $method = $this->directiveArgValue('name', $this->nodeName());
-            assert(is_string($method));
+        /** @var string $method */
+        $method = $this->directiveArgValue(
+            'name',
+            $this->definitionNode->name->value
+        );
 
-            $orderedArgs = [];
-            assert($this->definitionNode instanceof FieldDefinitionNode);
-            foreach ($this->definitionNode->arguments as $argDefinition) {
-                $orderedArgs[] = $args[$argDefinition->name->value] ?? null;
-            }
-
-            return $root->{$method}(...$orderedArgs);
+        return function ($root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) use ($method) {
+            return call_user_func([$root, $method], $root, $args, $context, $resolveInfo);
         };
     }
 }

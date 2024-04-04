@@ -23,11 +23,7 @@ class Schema extends Theme
         return Settings::getSchemaDirectory() . '/' . $dirName;
     }
 
-    /**
-     * Returns a list of graphs in the template.
-     * @param boolean $skipCache Indicates if the pages should be reloaded from the disk bypassing the cache.
-     * @return array Returns an array of Nocio\Headstart\Classes\Graph objects.
-     */
+
     public function listGraphs($skipCache = false)
     {
         return Graph::listInTheme($this, $skipCache);

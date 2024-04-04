@@ -1,1 +1,2 @@
-static-pages: {  }
+static-pages:
+    index: {  }
