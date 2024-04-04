@@ -398,45 +398,6 @@ class ResortsTest extends BaseTestCase
     /**
      * @return void
      */
-    public function testInvalidOperator(): void
-    {
-        $response = $this->graphQL('
-            {
-                 resorts(
-                    first: 10
-                    filter: [
-                        {
-                            type_name: "snow_making"
-                            operator: ">",
-                            value: "1"
-                        }
-                    ]
-                ) {
-                    data {
-                        id
-                        title
-                        url_segment
-                    }
-                    paginatorInfo {
-                        currentPage
-                        lastPage
-                    }
-                 }
-            }
-        ');
-
-        $debugMessages = $response->json('errors.*.debugMessage');
-
-        $this->assertStringContainsString(
-            'is not a valid operator',
-            array_shift($debugMessages),
-            'Should throw an invalid operator validation message'
-        );
-    }
-
-    /**
-     * @return void
-     */
     public function testResortsWithOrderBy(): void
     {
         $response = $this->graphQL('

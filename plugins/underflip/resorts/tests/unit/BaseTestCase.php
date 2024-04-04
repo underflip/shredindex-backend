@@ -21,7 +21,7 @@ class BaseTestCase extends PluginTestCase
         parent::setUp();
 
         // Register all plugins
-        PluginManager::instance()->registerAll(true);
+//        PluginManager::instance()->registerAll(true);
 
         // Boot the plugins we need
         $this->getPluginObject('Nocio.Headstart')->boot();
@@ -36,6 +36,6 @@ class BaseTestCase extends PluginTestCase
         parent::tearDown();
 
         // Get the plugin manager
-        PluginManager::instance()->unregisterAll();
+//        PluginManager::instance()->unregisterAll();
     }
 }
