@@ -1,0 +1,25 @@
+title = "Filters"
+description = "Global filters"
+==
+extend type Query {
+    filters: [Type!]! @all(model: "Underflip\\Resorts\\Models\\Type") @orderBy(column: "sort_order", direction: "ASC")
+}
+
+type Type {
+    id: ID!
+    name: String
+    title: String
+    category: String
+    unit_id: String
+    unit: String
+    numeric: Numeric @belongsTo(relation: "numeric")
+}
+
+type Numeric {
+    id: ID
+    name: String!
+    title: String
+    value: Int
+    unit: String
+    max_value: Int
+}
