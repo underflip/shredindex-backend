@@ -351,8 +351,8 @@ class ResortsTest extends BaseTestCase
                         {groupedType: [
                                 {
                                     type_name: "average_annual_snowfall"
-                                    operator: "<",
-                                    value: "3"
+                                    operator: ">",
+                                    value: "25"
                                 },
                                 {
                                     type_name: "average_annual_snowfall"
