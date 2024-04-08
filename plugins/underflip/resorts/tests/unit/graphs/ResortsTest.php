@@ -302,7 +302,7 @@ class ResortsTest extends BaseTestCase
                  resorts(
                     first: 10
                     filter: {groupedType: [{
-                        type_name: "digital_nomad_score"
+                        type_name: "digital_nomad_score",
                         operator: ">",
                         value: "75"
                     }]}
@@ -325,7 +325,7 @@ class ResortsTest extends BaseTestCase
                  resorts(
                     first: 10
                     filter: {groupedType: [{
-                        type_name: "average_annual_snowfall"
+                        type_name: "average_annual_snowfall",
                         operator: ">",
                         value: "3"
                     }]}
@@ -350,12 +350,12 @@ class ResortsTest extends BaseTestCase
                     filter: {
                         {groupedType: [
                                 {
-                                    type_name: "digital_nomad_score"
+                                    type_name: "digital_nomad_score",
                                     operator: ">",
                                     value: "25"
                                 },
                                 {
-                                    type_name: "average_annual_snowfall"
+                                    type_name: "average_annual_snowfall",
                                     operator: "<",
                                     value: "7.5"
                                 }
