@@ -303,7 +303,7 @@ class ResortsTest extends BaseTestCase
                     filter: [{
                         type_name: "digital_nomad_score"
                         operator: ">",
-                        value: "75"
+                        value: "76"
                     }]
                  ) {
                     data {
