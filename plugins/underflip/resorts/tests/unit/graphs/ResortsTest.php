@@ -28,7 +28,7 @@ class ResortsTest extends BaseTestCase
     {
         parent::setUp();
 
-        $totalShredScoreId = Type::where('name', 'digital_nomad_score')->first()->id;
+        $totalShredScoreId = Type::where('name', 'total_score')->first()->id;
         $avgAnnualSnowfallId = Type::where('name', 'average_annual_snowfall')->first()->id;
         $snowMakingId = Type::where('name', 'snow_making')->first()->id;
 
@@ -162,7 +162,7 @@ class ResortsTest extends BaseTestCase
 
         $this->assertSame(
             [
-                'digital_nomad_score'
+                'total_score'
             ],
             $response->json('data.resort.ratings.*.name'),
             'Should graph ratings with expected output'
@@ -302,7 +302,7 @@ class ResortsTest extends BaseTestCase
                  resorts(
                     first: 10
                     filter: {groupedType: [{
-                        type_name: "digital_nomad_score",
+                        type_name: "total_score",
                         operator: ">",
                         value: "75"
                     }]}
@@ -350,7 +350,7 @@ class ResortsTest extends BaseTestCase
                     filter: {
                         {groupedType: [
                                 {
-                                    type_name: "digital_nomad_score",
+                                    type_name: "total_score",
                                     operator: ">",
                                     value: "25"
                                 },
@@ -398,7 +398,7 @@ class ResortsTest extends BaseTestCase
                 'bar-resort',
             ],
             $responseByScoreAndSnowFall->json("data.resorts.data.*.url_segment"),
-            'Should return resorts with shred score above 25 and snowfall below 7.5m'
+            'Should return resorts with total score above 25 and snowfall below 7.5m'
         );
     }
 
@@ -450,7 +450,7 @@ class ResortsTest extends BaseTestCase
                  resorts(
                     first: 10
                     orderBy: {
-                        type_name: "digital_nomad_score",
+                        type_name: "total_score",
                         direction: "asc"
                     }
                  ) {
