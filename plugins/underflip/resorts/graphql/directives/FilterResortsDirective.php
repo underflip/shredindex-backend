@@ -275,8 +275,8 @@ SDL;
      */
     protected function orderByType(Builder &$query, array $orderBy): void
     {
-        $typeName = $orderBy['type_name'];
-        $direction = $orderBy['direction'] ?: 'asc';
+        $typeName = $orderBy['type_name'] ?? 'total_score';
+        $direction = $orderBy['direction'] ?? 'asc';
 
         $type = Type::where('name', '=', $typeName)->first();
 
