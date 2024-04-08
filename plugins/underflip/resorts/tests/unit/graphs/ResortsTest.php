@@ -350,7 +350,7 @@ class ResortsTest extends BaseTestCase
                     filter: {
                         {groupedType: [
                                 {
-                                    type_name: "average_annual_snowfall"
+                                    type_name: "digital_nomad_score"
                                     operator: ">",
                                     value: "25"
                                 },
