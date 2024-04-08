@@ -148,7 +148,9 @@ SDL;
                 $this->augmentForFilters($query, $args['filter']);
             }
 
-            if (array_key_exists('orderBy', $args)) {
+            if (!array_key_exists('orderBy', $args)) {
+                $this->orderByType($query, ['type_name' => 'total_score', 'direction' => 'desc']); // Assuming 'total_score' is the type_name
+            } else {
                 $this->orderByType($query, $args['orderBy']);
             }
 
@@ -275,7 +277,7 @@ SDL;
      */
     protected function orderByType(Builder &$query, array $orderBy): void
     {
-        $typeName = $orderBy['type_name'];
+        $typeName = $orderBy['type_name']; // Assumes GraphQL input validation assures type_name exists
         $direction = $orderBy['direction'] ?: 'asc';
 
         $type = Type::where('name', '=', $typeName)->first();

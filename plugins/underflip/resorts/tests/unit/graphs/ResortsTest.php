@@ -130,6 +130,7 @@ class ResortsTest extends BaseTestCase
                         name
                         title
                         value
+                        max_value
                     }
                     generics {
                         id
@@ -300,11 +301,11 @@ class ResortsTest extends BaseTestCase
             {
                  resorts(
                     first: 10
-                    filter: [{
+                    filter: {groupedType: [{
                         type_name: "digital_nomad_score"
                         operator: ">",
                         value: "75"
-                    }]
+                    }]}
                  ) {
                     data {
                         id
@@ -323,11 +324,11 @@ class ResortsTest extends BaseTestCase
             {
                  resorts(
                     first: 10
-                    filter: [{
+                    filter: {groupedType: [{
                         type_name: "average_annual_snowfall"
                         operator: ">",
                         value: "3"
-                    }]
+                    }]}
                  ) {
                     data {
                         id
@@ -346,18 +347,21 @@ class ResortsTest extends BaseTestCase
             {
                  resorts(
                     first: 10
-                    filter: [
-                        {
-                            type_name: "digital_nomad_score"
-                            operator: ">",
-                            value: "25"
-                        },
-                        {
-                            type_name: "average_annual_snowfall"
-                            operator: "<",
-                            value: "7.5"
+                    filter: {
+                        {groupedType: [
+                                {
+                                    type_name: "digital_nomad_score"
+                                    operator: ">",
+                                    value: "25"
+                                },
+                                {
+                                    type_name: "average_annual_snowfall"
+                                    operator: "<",
+                                    value: "7.5"
+                                }
+                            ]
                         }
-                    ]
+                    }
                  ) {
                     data {
                         id
@@ -407,13 +411,12 @@ class ResortsTest extends BaseTestCase
             {
                  resorts(
                     first: 10
-                    filter: [
-                        {
-                            type_name: "snow_making"
-                            operator: ">",
-                            value: "1"
-                        }
-                    ]
+                    filter: {
+                    groupedType: [{
+                        type_name: "snow_making"
+                        operator: ">",
+                        value: "1"
+                    }]}
                 ) {
                     data {
                         id
