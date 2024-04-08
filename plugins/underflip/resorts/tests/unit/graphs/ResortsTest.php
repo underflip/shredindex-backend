@@ -301,7 +301,7 @@ class ResortsTest extends BaseTestCase
                  resorts(
                     first: 10
                     filter: [{
-                        type_name: "shred_score"
+                        type_name: "digital_nomad_score"
                         operator: ">",
                         value: "75"
                     }]
