@@ -349,16 +349,16 @@ class ResortsTest extends BaseTestCase
                     first: 10
                     filter: {
                         {groupedType: [
-                                {
-                                    type_name: "total_score",
-                                    operator: ">",
-                                    value: "25"
-                                },
-                                {
-                                    type_name: "average_annual_snowfall",
-                                    operator: "<",
-                                    value: "7.5"
-                                }
+                            {
+                                type_name: "total_score",
+                                operator: ">",
+                                value: "25"
+                            }
+                            {
+                                type_name: "average_annual_snowfall",
+                                operator: "<",
+                                value: "7.5"
+                            }
                             ]
                         }
                     }
