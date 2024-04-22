@@ -17,11 +17,14 @@ A set of Docker platform is included for running the project.
 4. Copy `.infrastructre/.env.dist` to `.infrastructre/.env`
 5. Copy `.infrastructre/etc/nginx/conf.d/default.conf.dist` to `.infrastructre/etc/nginx/conf.d/default.conf`
 6. Copy `.env.dist` to `.env`
-7. docker-compose up -d
-8. cd .. && cp .env.dist .env
-9. rm -rf vendor && docker exec shredindex-backend-php composer install
-10.docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
-11. docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
+7. Mac users with M-chip will need to change image: mariadb:10.6.15 in docker-compose.yml
+8. docker-compose up -d
+9. cd .. && cp .env.dist .env
+10. rm -rf vendor && docker exec shredindex-backend-php composer install
+11. docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
+12. docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
+
+Do not update Headstart Nocio Plugin as it has been customized to handle the latest lighthouse.
 
 ### Open in browser
 

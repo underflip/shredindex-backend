@@ -20,6 +20,7 @@
             <!-- Passable fields -->
             <input type="hidden" name="_relation_field" value="<?= $relationField ?>" />
             <input type="hidden" name="_relation_extra_config" value="<?= e(json_encode($relationExtraConfig)) ?>" />
+            <input type="hidden" name="_form_session_key" value="<?= $formSessionKey ?>" />
             <input type="hidden" name="EntryRecord[content_group]" value="<?= e($formModel->content_group) ?>"/>
 
             <div class="modal-header" data-popup-size="<?= $relationPopupSize ?? 950 ?>">
@@ -73,6 +74,7 @@
             <!-- Passable fields -->
             <input type="hidden" name="_relation_field" value="<?= $relationField ?>" />
             <input type="hidden" name="_relation_extra_config" value="<?= e(json_encode($relationExtraConfig)) ?>" />
+            <input type="hidden" name="_form_session_key" value="<?= $formSessionKey ?>" />
             <input type="hidden" name="EntryRecord[content_group]" value="<?= e($formModel->content_group) ?>"/>
 
             <div class="modal-header" data-popup-size="<?= $relationPopupSize ?? 950 ?>">

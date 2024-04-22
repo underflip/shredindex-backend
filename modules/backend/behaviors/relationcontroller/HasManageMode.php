@@ -272,7 +272,7 @@ trait HasManageMode
 
         $modelsToSave = $this->prepareModelsToSave($newModel, $saveData);
         foreach ($modelsToSave as $modelToSave) {
-            $modelToSave->save(['sessionKey' => $this->manageFormWidget->getSessionKey()]);
+            $modelToSave->save(['sessionKey' => $this->manageFormWidget->getSessionKey(), 'propagate' => true]);
         }
 
         // No need to add relationships that have a valid association via HasOneOrMany::make
@@ -312,7 +312,7 @@ trait HasManageMode
 
         $modelsToSave = $this->prepareModelsToSave($this->manageModel, $saveData);
         foreach ($modelsToSave as $modelToSave) {
-            $modelToSave->save(['sessionKey' => $this->manageFormWidget->getSessionKey()]);
+            $modelToSave->save(['sessionKey' => $this->manageFormWidget->getSessionKey(), 'propagate' => true]);
         }
 
         // Display updated form

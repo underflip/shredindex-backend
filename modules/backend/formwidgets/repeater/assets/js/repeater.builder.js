@@ -26,6 +26,8 @@ oc.Modules.register('backend.formwidget.repeater.builder', function() {
 
         connect() {
             // Locals
+            this.$el = $(this.element);
+            this.$itemContainer = $('> .field-repeater-items', this.$el);
             this.$sidebar = $('> .field-repeater-builder > .field-repeater-groups:first', this.$el);
             this.$sidebar.on('click', '> li:not(.is-placeholder)', this.proxy(this.clickBuilderItem));
 
@@ -138,12 +140,14 @@ oc.Modules.register('backend.formwidget.repeater.builder', function() {
         }
 
         eventSortableOnEnd() {
-            var self = this;
+            this.sortable.option('disabled', true);
+            $('> li', this.$sidebar).each((index, sbItem) => {
+                var itemIndex = $(sbItem).data('repeater-index'),
+                    $item = this.findItemFromIndex(itemIndex);
 
-            $('> li', this.$sidebar).each(function() {
-                var itemIndex = $(this).data('repeater-index');
-                self.$itemContainer.append(self.findItemFromIndex(itemIndex));
+                this.$itemContainer.append($item);
             });
+            this.sortable.option('disabled', false);
         }
 
         eventOnAddItem() {

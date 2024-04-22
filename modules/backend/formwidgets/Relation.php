@@ -299,6 +299,10 @@ class Relation extends FormWidgetBase
             $controllerConfig['readOnly'] = $this->readOnly;
         }
 
+        if (!isset($controllerConfig['sessionKey'])) {
+            $controllerConfig['sessionKey'] = $this->getParentForm()?->getSessionKeyWithSuffix();
+        }
+
         $this->controller->relationRegisterField($this->getRelationControllerFieldName(), $controllerConfig);
     }
 

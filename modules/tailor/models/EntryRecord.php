@@ -492,4 +492,20 @@ class EntryRecord extends BlueprintModel
     {
         return $this->getBlueprintDefinition()->getMultisiteConfig($key, $default);
     }
+
+    /**
+     * makePageUrlParams returns parameters used when linking to this record as a page
+     */
+    public function makePageUrlParams(): array
+    {
+        $replacements = parent::makePageUrlParams();
+
+        $wantReplace = $this->getBlueprintDefinition()->getPageFinderReplacements();
+
+        foreach ($wantReplace as $key => $path) {
+            $replacements[$key] = array_get($this, $path);
+        }
+
+        return $replacements;
+    }
 }

@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Underflip\Resorts\Database\Seeders\Downable;
 use Underflip\Resorts\Database\Seeders\ResortsSeeder;
 use Underflip\Resorts\Database\Seeders\SupportersSeeder;
+use Underflip\Resorts\Database\Seeders\ContinentsSeeder;
 use Underflip\Resorts\Database\Seeders\TeamMembersSeeder;
 
 /**
@@ -30,6 +31,7 @@ class SeedTestData extends Command
      * @var Seeder[]
      */
     protected $seeders = [
+        ContinentsSeeder::class,
         TeamMembersSeeder::class,
         SupportersSeeder::class,
         ResortsSeeder::class,

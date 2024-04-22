@@ -117,7 +117,7 @@
                 handler: 'onRelationClickViewList',
                 extraData: $.extend({}, requestData, {
                     'manage_id': recordId,
-                    '_session_key': sessionKey
+                    '_relation_session_key': sessionKey
                 })
             });
         }
@@ -130,7 +130,7 @@
             $(target).request('onRelationClickManageList', {
                 data: $.extend({}, requestData, {
                     'record_id': recordId,
-                    '_session_key': sessionKey
+                    '_relation_session_key': sessionKey
                 })
             })
             .done(() => {
@@ -156,7 +156,7 @@
                 handler: 'onRelationClickManageListPivot',
                 extraData: $.extend({}, requestData, {
                     'foreign_id': foreignId,
-                    '_session_key': sessionKey
+                    '_relation_session_key': sessionKey
                 })
             });
         }

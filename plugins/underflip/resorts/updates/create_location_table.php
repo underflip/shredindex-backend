@@ -21,6 +21,7 @@ class CreateLocationTable extends Migration
             $table->decimal('latitude');
             $table->decimal('longitude');
             $table->string('vicinity');
+            $table->integer('continent_id')->nullable();
         });
     }
 

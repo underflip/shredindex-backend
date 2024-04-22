@@ -67,6 +67,13 @@ trait HasRelationStore
             ;
         }
 
+        // Store the results locally on the model to make it available to the
+        // RelationController via the initNestedRelation method
+        if ($this->relatedRecords) {
+            [$model, $attribute] = $this->resolveModelAttribute($this->valueFrom);
+            $model->setRelation($attribute, $model->newCollection($this->relatedRecords));
+        }
+
         return $this->relatedRecords;
     }
 
@@ -152,7 +159,7 @@ trait HasRelationStore
             $saveData = $widget->getSaveData();
 
             // Save data to the model
-            $model = $widget->model;
+            $model = $widget->getModel();
 
             $modelsToSave = $this->prepareModelsToSave($model, $saveData);
 

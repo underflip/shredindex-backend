@@ -59,6 +59,18 @@ class Resort extends Model
         'comments' => Comment::class,
     ];
 
+    public function continent()
+    {
+        return $this->hasOneThrough(
+            Continent::class,
+            Location::class,
+            'resort_id', // Foreign key on Location table referencing Resort
+            'id', // Primary key on Continents table
+            'id', // Local key on Resort table (primary key)
+            'country_id' // Foreign key on the pivot table referencing Location's country_id
+        );
+    }
+
     /**
      * The resort's URL
      *

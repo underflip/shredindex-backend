@@ -15,11 +15,6 @@ use Tailor\Models\EntryRecord;
 trait PageManagerRegistry
 {
     /**
-     * @var array pageManagerReplacementCache stores blueprint replacements for multiple model lookups
-     */
-    protected static $pageManagerReplacementCache = [];
-
-    /**
      * listPrimaryNavigation
      */
     public function listPageManagerTypes(): array
@@ -221,17 +216,15 @@ trait PageManagerRegistry
     /**
      * getPageManagerPageUrl
      */
-    protected static function getPageManagerPageUrl($pageCode, $record, $theme)
+    protected function getPageManagerPageUrl($pageCode, $record, $theme)
     {
-        $replacements = static::makeReplacementsForRecord($record);
-
-        return Cms::pageUrl($pageCode, $replacements);
+        return Cms::pageUrl($pageCode, $record->makePageUrlParams());
     }
 
     /**
      * getPageManagerSites
      */
-    protected static function getPageManagerSites($pageCode, $record, $theme): array
+    protected function getPageManagerSites($pageCode, $record, $theme): array
     {
         if (
             !Site::hasMultiSite() ||
@@ -259,9 +252,7 @@ trait PageManagerRegistry
                 continue;
             }
 
-            $replacements = static::makeReplacementsForRecord($otherRecord);
-
-            $url = Cms::siteUrl($page, $site, $replacements);
+            $url = Cms::siteUrl($page, $site, $otherRecord->makePageUrlParams());
 
             $result[] = [
                 'url' => $url,
@@ -303,30 +294,5 @@ trait PageManagerRegistry
         }
 
         return '';
-    }
-
-    /**
-     * makeReplacementsForRecord builds an array of replacements for a given record
-     */
-    protected static function makeReplacementsForRecord($record): array
-    {
-        $replacements = [
-            'id' => $record->id,
-            'code' => $record->code,
-            'slug' => $record->slug,
-            'fullslug' => $record->fullslug
-        ];
-
-        // Process custom replacements from blueprint
-        if ($record instanceof EntryRecord) {
-            $wantReplace = static::$pageManagerReplacementCache[$record->uuid]
-                ??= $record->getBlueprintDefinition()->getPageFinderReplacements();
-
-            foreach ($wantReplace as $key => $path) {
-                $replacements[$key] = array_get($record, $path);
-            }
-        }
-
-        return $replacements;
     }
 }

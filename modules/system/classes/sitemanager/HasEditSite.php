@@ -46,14 +46,6 @@ trait HasEditSite
     }
 
     /**
-     * setEditSite
-     */
-    public function setEditSite($site)
-    {
-        $this->setEditSiteId($site->id);
-    }
-
-    /**
      * setEditSiteId
      */
     public function setEditSiteId($id)
@@ -76,6 +68,14 @@ trait HasEditSite
         Event::fire('system.site.setEditSite', [$id]);
 
         $this->broadcastSiteChange($id);
+    }
+
+    /**
+     * setEditSite
+     */
+    public function setEditSite($site)
+    {
+        $this->setEditSiteId($site->id);
     }
 
     /**

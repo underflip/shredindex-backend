@@ -147,6 +147,7 @@ class FormController extends ControllerBehavior
         $config->arrayName = class_basename($model);
         $config->context = $context;
         $config->surveyMode = $this->isSurveyDesign();
+        $config->sessionKey = post('_form_session_key');
         $config->horizontalMode = $this->isHorizontalForm();
 
         // Make Form Widget and apply extensions

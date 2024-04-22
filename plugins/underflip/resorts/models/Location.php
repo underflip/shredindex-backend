@@ -47,4 +47,9 @@ class Location extends Model
     public $belongsTo = [
       'resort' => Resort::class,
     ];
+
+    public function continent()
+    {
+        return $this->belongsTo(Continent::class);
+    }
 }

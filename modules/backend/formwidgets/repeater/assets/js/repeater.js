@@ -6,8 +6,6 @@
 oc.Modules.register('backend.formwidget.repeater.base', function() {
     class RepeaterFormWidgetBase extends oc.ControlBase {
         init() {
-            this.$el = $(this.element);
-            this.$itemContainer = $('> .field-repeater-items', this.$el);
             this.itemCount = 0;
             this.canAdd = true;
             this.canRemove = true;
@@ -30,8 +28,8 @@ oc.Modules.register('backend.formwidget.repeater.base', function() {
             };
 
             for (const key in defaults) {
-                if (this.element.dataset[key] === undefined) {
-                    this.element.dataset[key] = defaults[key];
+                if (this.config[key] === undefined) {
+                    this.config[key] = defaults[key];
                 }
             }
         }
@@ -40,6 +38,10 @@ oc.Modules.register('backend.formwidget.repeater.base', function() {
             if (this.config.useReorder) {
                 this.bindSorting();
             }
+
+            // Init elements
+            this.$el = $(this.element);
+            this.$itemContainer = $('> .field-repeater-items', this.$el);
 
             // Items
             var headSelect = this.selectorHeader;

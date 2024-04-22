@@ -7,9 +7,14 @@ use Faker\Factory;
 use RainLab\Location\Models\Country;
 use RainLab\Location\Models\State;
 use Seeder;
+use DB;
 use Underflip\Resorts\Models\Comment;
 use Underflip\Resorts\Models\Location;
+use Underflip\Resorts\Models\Continent;
 use Underflip\Resorts\Models\Rating;
+use Underflip\Resorts\Models\Generic;
+use Underflip\Resorts\Models\Numeric;
+use Underflip\Resorts\Models\Unit;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\ResortImage;
 use Underflip\Resorts\Models\Type;
@@ -24,7 +29,7 @@ class ResortsSeeder extends Seeder implements Downable
      */
     public function run()
     {
-        $quantity = 12;
+        $quantity = 120;
         $faker = Factory::create();
         $images = [
             'plugins/underflip/resorts/updates/assets/resort-images/gondola-1.jpg',
@@ -35,6 +40,14 @@ class ResortsSeeder extends Seeder implements Downable
             'plugins/underflip/resorts/updates/assets/resort-images/ski-1.jpg',
             'plugins/underflip/resorts/updates/assets/resort-images/ski-2.jpg',
             'plugins/underflip/resorts/updates/assets/resort-images/snowboard-1.jpg',
+        ];
+
+        $continentLookup = [
+            'AU' => 'OC', // Oceania
+            'CA' => 'NA', // North America
+            'GB' => 'EU', // Europe
+            'US' => 'NA', // North America
+            // ... Add more country codes and their continent codes
         ];
 
         // Ordinarily we would like to use Laravel's factories
@@ -72,6 +85,16 @@ class ResortsSeeder extends Seeder implements Downable
             $location->resort_id = $resort->id;
             $location->save();
 
+            $country = Country::inRandomOrder()->first();
+            $continentCode = $continentLookup[$country->code] ?? null;
+
+//             // Find or create the Continent model based on the code
+//             $continent = Continent::inRandomOrder()->first();
+//
+//             // Associate the continent with the resort's location
+//             $location->continent()->associate($continentCode);
+//             $continent->save();
+
             // Ratings
             $types = Type::where('category', Rating::class);
             $typesCount = $types->count();
@@ -99,6 +122,51 @@ class ResortsSeeder extends Seeder implements Downable
                 $rating->type_id = $types->inRandomOrder()->pluck('id')->first(); // Assign a random type
                 $rating->resort_id = $resort->id;
                 $rating->save();
+            }
+
+            // Numeric
+            $types = Type::where('category', Numeric::class)->get();
+
+            if (!$types->count()) {
+                throw new Exception(sprintf('There are no existing Types (%s) to rate. Try refreshing the Resorts plugin to seed Types.', Type::class));
+            }
+
+            foreach($types as $type) {
+                $value = rand(0, 15000);
+
+                // Create a new numeric
+                $numeric = new Numeric();
+                $numeric->value = $value;
+                $numeric->max_value = rand($value, 15000); // max_value will always be >= value
+                $numeric->type_id = $type->id;
+                $unit = Unit::where('id', $type->unit_id)->first();
+                if($value <= 1) {
+                    $numeric->unit = $unit ? $unit->name : null;
+                } else {
+                    $numeric->unit = $unit ? $unit->plural_title : null;
+                }
+                $numeric->resort_id = $resort->id;
+                $numeric->save();
+            }
+
+            // Generic
+            $genericTypes = Type::where('category', Generic::class)->get();
+
+            if (!$genericTypes->count()) {
+                throw new Exception(sprintf('There are no existing Types (%s) to rate. Try refreshing the Resorts plugin to seed Types.', Type::class));
+            }
+
+            $values = ['yes', 'no', 'maybe'];
+
+            foreach($genericTypes as $type) {
+
+                // Create a new numeric
+                $generic = new Generic();
+                $value = $values[array_rand($values)];
+                $generic->value = $value;
+                $generic->type_id = $type->id;
+                $generic->resort_id = $resort->id;
+                $generic->save();
             }
 
             // Images
@@ -146,7 +214,10 @@ class ResortsSeeder extends Seeder implements Downable
     {
         Resort::query()->truncate();
         Rating::query()->truncate();
+        Numeric::query()->truncate();
+        Generic::query()->truncate();
         Location::query()->truncate();
+        Continent::query()->truncate();
 
         foreach (ResortImage::all() as $resortImage) {
             if ($resortImage->image) {

@@ -9,6 +9,7 @@
             <!-- Passable fields -->
             <input type="hidden" name="_relation_field" value="<?= $relationField ?>" />
             <input type="hidden" name="_relation_extra_config" value="<?= e(json_encode($relationExtraConfig)) ?>" />
+            <input type="hidden" name="_form_session_key" value="<?= $formSessionKey ?>" />
 
             <div class="modal-header" data-popup-size="<?= $relationPopupSize ?? 950 ?>">
                 <h4 class="modal-title"><?= e($relationManageTitle) ?></h4>
@@ -56,6 +57,7 @@
             <!-- Passable fields -->
             <input type="hidden" name="_relation_field" value="<?= $relationField ?>" />
             <input type="hidden" name="_relation_extra_config" value="<?= e(json_encode($relationExtraConfig)) ?>" />
+            <input type="hidden" name="_form_session_key" value="<?= $formSessionKey ?>" />
 
             <div class="modal-header" data-popup-size="<?= $relationPopupSize ?? 950 ?>">
                 <h4 class="modal-title"><?= e($relationManageTitle) ?></h4>
@@ -91,6 +93,7 @@
 <script>
     oc.popup.bindToPopups('#<?= $relationManageFormWidget->getId("managePopup") ?>', {
         _relation_field: '<?= $relationField ?>',
-        _relation_extra_config: '<?= e(json_encode($relationExtraConfig)) ?>'
+        _relation_extra_config: '<?= e(json_encode($relationExtraConfig)) ?>',
+        _form_session_key: '<?= $formSessionKey ?>'
     });
 </script>

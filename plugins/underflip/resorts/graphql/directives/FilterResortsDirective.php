@@ -144,7 +144,9 @@ SDL;
                 $this->augmentForFilters($query, $args['filter']);
             }
 
-            if (array_key_exists('orderBy', $args)) {
+            if (!array_key_exists('orderBy', $args)) {
+                $this->orderByType($query, ['type_name' => 'total_score', 'direction' => 'desc']); // Assuming 'total_score' is the type_name
+            } else {
                 $this->orderByType($query, $args['orderBy']);
             }
             // Pagination
@@ -168,42 +170,99 @@ SDL;
      */
     public function augmentForFilters(Builder &$query, array $filters): void
     {
-        foreach ($this->getFilterableScopes() as $scope) {
-            if (!array_key_exists($scope['class'], Type::getCategories())) {
-                // Throw a helpful message
-                throw new \Exception(sprintf(
-                    'Can only filter relations that exist as a category of "%s"',
-                    Type::class
-                ));
-            }
 
-            foreach ($filters as $filter) {
-                if (!Type::where('name', $filter['type_name'])->where('category', $scope['class'])->count()) {
-                    // No types exist for the queried type/category
-                    continue;
-                }
+                    if (isset($filters['locationType'])) {
+                        $locationFilter = $filters['locationType'];
 
-                // We can assume that only types of the current scope's class reach this point
-                $validOperators = app($scope['class'])->getValidOperators();
-                if (!in_array($filter['operator'], $validOperators)) {
+                        if (isset($locationFilter['countryId'])) {
+                            $query->whereHas('location.country', function (Builder $query) use ($locationFilter) {
+                                $query->whereIn('id', $locationFilter['countryId']);  // used whereIn instead of where
+                            });
+                        }
+
+        // A temporary way of filtering by continents
+                        $regions = [
+                            'worldwide' => [],
+                            'africa' => [5, 6, 7, 8, 11, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 27, 32, 33, 35, 36, 38, 39, 43, 46, 49, 51, 52, 53, 54, 69, 75, 76, 77, 90, 95, 96, 97, 99, 102, 103, 104, 105, 117, 118, 119, 122, 126, 135, 136, 161, 162, 164, 166, 172, 173, 174, 175, 191, 196, 197, 198, 201, 220, 234, 236, 239, 248, 249],
+                            'asia' => [5, 14, 20, 40, 41, 42, 45, 47, 48, 55, 56, 57, 58, 59, 60, 61, 62, 67, 68, 70, 71, 74, 78, 79, 80, 83, 84, 85, 86, 87, 89, 91, 92, 93, 94, 98, 100, 101, 108, 109, 110, 112, 113, 114, 115, 116, 120, 121, 123, 124, 125, 127, 132, 133, 134, 137, 138, 139, 140, 141, 150, 155, 157, 159, 160, 163, 165, 167, 168, 169, 170, 171, 176, 181, 182, 184, 185, 187, 189, 190, 192, 193, 194, 195, 199, 200, 202, 203, 204, 206, 207, 209, 210, 215, 217, 218, 221, 222, 223, 225, 227, 228, 229, 230, 231, 232, 233, 237, 240, 241, 247],
+                            'europe' => [3, 13, 26, 28, 29, 30, 31, 34, 37, 44, 50, 63, 64, 65, 66, 72, 73, 81, 82, 88, 106, 107, 111, 128, 129, 130, 131, 142, 143, 144, 145, 146, 147, 148, 149, 151, 152, 153, 154, 156, 158, 177, 178, 179, 180, 183, 186, 188, 205, 208, 211, 212, 213, 214, 216, 219, 224, 226, 235, 238, 242, 243, 244, 245, 246],
+                            'northAmerica' => [2, 4, 9, 10, 12, 50, 72, 111, 128, 154, 177, 205, 208, 213, 214, 219, 224],
+                            'oceania' => [1, 6, 14, 24, 60, 66, 81, 102, 108, 115, 130, 153, 172, 185, 218, 227],
+                            'southAmerica' => [20, 30, 45, 47, 48, 62, 74, 78, 79, 83, 84, 85, 86, 89, 91, 92, 93, 94, 98, 100, 101, 116, 121, 123, 133, 137, 138, 143, 144, 150, 157, 159, 163, 165, 167, 168, 169, 170, 171, 176, 182, 187, 190, 192, 193, 194, 195, 199, 203, 206, 209, 210, 215, 221, 223, 231, 232, 240, 241]
+                        ];
+
+                        if(isset($locationFilter['continentId'])) {
+                            // Assuming 'continentId' could be an array, we'll take the first element for simplicity.
+                            // You might need a different logic if multiple continentIds can be handled at once.
+                            $continentIds = $locationFilter['continentId'];
+                            $name = is_array($continentIds) ? $continentIds[0] : $continentIds;
+
+                            // Ensure $name is a valid string or integer key for the $regions array
+                            if (is_string($name) || is_int($name)) {
+                                if(array_key_exists($name, $regions)) {
+                                    if( $name !== 'worldwide' ) {
+                                        // Assuming $name now correctly holds a single continent ID that exists in $regions
+                                            $query->whereHas('location.country', function($query) use ($regions, $name) {
+                                                // Use $regions[$name] directly expecting it to be an array of IDs
+                                                $query->whereIn('id', $regions[$name]);
+                                            });
+                                    } else {
+                                        $query->Raw(1===1);
+                                    }
+                                }
+
+                            }
+                        }
+
+                        if (isset($locationFilter['city'])) {
+                            $query->whereHas('location', function (Builder $query) use ($locationFilter) {
+                                $query->where('city', 'like', '%'.$locationFilter['city'].'%');
+                            });
+                        }
+
+                        if (isset($locationFilter['zip'])) {
+                            $query->whereHas('location', function (Builder $query) use ($locationFilter) {
+                                $query->where('zip', 'like', '%'.$locationFilter['zip'].'%');
+                            });
+                        }
+                    }
+
+            foreach ($this->getFilterableScopes() as $scope) {
+                if (!array_key_exists($scope['class'], Type::getCategories())) {
                     // Throw a helpful message
                     throw new \Exception(sprintf(
-                        '"%s" is not a valid operator for "%s", available operators: "%s"',
-                        $filter['operator'],
-                        $filter['type_name'],
-                        join(', ', $validOperators)
+                        'Can only filter relations that exist as a category of "%s"',
+                        Type::class
                     ));
                 }
 
-                $query->whereHas($scope['relation'], function (Builder $query) use ($filter, $scope) {
-                    // Filter score's type name vs value
-                    $query
-                        ->where($scope['column'], $filter['operator'], $filter['value'])
-                        ->whereHas('type', function (Builder $query) use ($filter) {
-                            $query->where('name', $filter['type_name']);
-                        });
-                });
-            }
+                foreach ($filters['groupedType'] as $filter) {
+                    if (!Type::where('name', $filter['type_name'])->where('category', $scope['class'])->count()) {
+                        // No types exist for the queried type/category
+                        continue;
+                    }
+
+                    // We can assume that only types of the current scope's class reach this point
+                    $validOperators = app($scope['class'])->getValidOperators();
+                    if (!in_array($filter['operator'], $validOperators)) {
+                        // Throw a helpful message
+                        throw new \Exception(sprintf(
+                            '"%s" is not a valid operator for "%s", available operators: "%s"',
+                            $filter['operator'],
+                            $filter['type_name'],
+                            join(', ', $validOperators)
+                        ));
+                    }
+
+                    $query->whereHas($scope['relation'], function (Builder $query) use ($filter, $scope) {
+                        // Filter score's type name vs value
+                        $query
+                            ->where($scope['column'], $filter['operator'], $filter['value'])
+                            ->whereHas('type', function (Builder $query) use ($filter) {
+                                $query->where('name', $filter['type_name']);
+                            });
+                    });
+                }
         }
     }
 
@@ -256,18 +315,17 @@ SDL;
 
         // Order by values of that metric
         $query
-            // Explicate the select to avoid fields being overridden by the join table
-            ->select('underflip_resorts_resorts.*')
-            // Attempt the join
-            ->join(
-                sprintf('%s as comparisons', app($type->category)->getTable()),
-                function (JoinClause $join) use ($orderBy, $type) {
-                    $join
-                        ->on('underflip_resorts_resorts.id', '=', 'comparisons.resort_id')
-                        ->where('comparisons.type_id', '=', $type->id);
-                }
-            )
-            ->orderBy(sprintf('comparisons.%s', $column), $direction);
+        // Explicate the select to avoid fields being overridden by the join table
+        ->select('underflip_resorts_resorts.*')
+        // Join with a subquery that aggregates comparison values
+        ->joinSub(function ($subquery) use ($type, $column) {$subquery
+        ->from(app($type->category)
+        ->getTable() . ' as comparisons')
+        ->select('resort_id', \DB::raw("AVG($column) as avg_value"))
+        ->where('type_id', '=', $type->id)
+        ->groupBy('resort_id');    }, 'comparisons', 'comparisons.resort_id', '=', 'underflip_resorts_resorts.id')
+        // Order by the aggregated value
+        ->orderBy('comparisons.avg_value', $orderBy['direction'] ?: 'asc');
     }
 
     /**

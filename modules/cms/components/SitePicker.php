@@ -60,7 +60,7 @@ class SitePicker extends ComponentModuleBase
     }
 
     /**
-     * pageSites
+     * pageSites returns a CMS page for all available sites
      */
     public function pageSites($pageName, $params = [])
     {

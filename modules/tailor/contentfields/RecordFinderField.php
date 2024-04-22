@@ -1,7 +1,6 @@
 <?php namespace Tailor\ContentFields;
 
 use Lang;
-use Tailor\Models\EntryRecord;
 use Tailor\Models\RepeaterItem;
 use Tailor\Classes\Relations\CustomMultiJoinRelation;
 use Tailor\Classes\Relations\CustomNestedJoinRelation;
@@ -285,12 +284,13 @@ class RecordFinderField extends FallbackField
         }
 
         // Transfer custom configuration
-        if (isset($this->controller['view'])) {
-            $fieldConfig['view'] = array_merge($fieldConfig['view'], (array) $this->controller['view']);
-        }
-
-        if (isset($this->controller['manage'])) {
-            $fieldConfig['manage'] = array_merge($fieldConfig['manage'], (array) $this->controller['manage']);
+        $toTransfer = ['label', 'list', 'form', 'view', 'manage'];
+        foreach ($toTransfer as $transfer) {
+            if (isset($this->controller[$transfer])) {
+                $fieldConfig[$transfer] = is_array($this->controller[$transfer])
+                    ? array_merge($fieldConfig[$transfer], (array) $this->controller[$transfer])
+                    : $this->controller[$transfer];
+            }
         }
 
         $field->controller($fieldConfig);

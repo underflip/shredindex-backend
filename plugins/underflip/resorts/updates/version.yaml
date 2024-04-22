@@ -2,6 +2,7 @@
     - First version of Resorts for ShredIndex
     - create_resorts_table.php
     - create_location_table.php
+    - create_continents_table.php
     - create_ratings_table.php
     - create_numerics_table.php
     - create_generics_table.php

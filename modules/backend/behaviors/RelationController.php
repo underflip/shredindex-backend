@@ -3,6 +3,7 @@
 use Lang;
 use Flash;
 use Request;
+use Form as FormHelper;
 use October\Rain\Html\Helper as HtmlHelper;
 use Backend\Classes\FormField;
 use Backend\Classes\ControllerBehavior;
@@ -265,7 +266,6 @@ class RelationController extends ControllerBehavior
         $this->vars['relationToolbarButtons'] = $this->toolbarButtons;
         $this->vars['relationSessionKey'] = $this->relationSessionKey;
         $this->vars['relationExtraConfig'] = $this->extraConfig;
-        $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
 
         // Manage
         $this->vars['relationManageId'] = $this->manageId;
@@ -286,6 +286,10 @@ class RelationController extends ControllerBehavior
         // Pivot
         $this->vars['relationPivotTitle'] = $this->pivotTitle;
         $this->vars['relationPivotWidget'] = $this->pivotWidget;
+
+        // Misc
+        $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
+        $this->vars['formSessionKey'] = post('_form_session_key', post('_session_key', FormHelper::getSessionKey()));
 
         // @deprecated
         $this->vars['relationManageWidget'] = $this->relationGetManageWidget();

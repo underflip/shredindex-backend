@@ -16,7 +16,6 @@ use Exception;
  */
 class MailBrandSetting extends SettingModel
 {
-    use \System\Traits\ViewMaker;
     use \October\Rain\Database\Traits\Validation;
 
     /**

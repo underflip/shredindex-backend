@@ -911,18 +911,20 @@ class Lists extends WidgetBase implements ListElement
      */
     protected function defineListColumns(): array
     {
-        if ($this->model && method_exists($this->model, 'defineListColumns')) {
-            $this->model->defineListColumns($this);
-        }
-
-        $hasColumns = ($this->columns && is_array($this->columns)) || $this->allColumns;
-        if (!$hasColumns) {
-            $class = get_class($this->model instanceof Model ? $this->model : $this->controller);
-            throw new ApplicationException(Lang::get('backend::lang.list.missing_columns', compact('class')));
+        if (!isset($this->columns) || !is_array($this->columns)) {
+            $this->columns = [];
         }
 
         if ($this->columns) {
             $this->addColumns($this->columns);
+        }
+        else {
+            $this->addColumnsFromModel();
+        }
+
+        if (!$this->allColumns) {
+            $class = get_class($this->model instanceof Model ? $this->model : $this->controller);
+            throw new ApplicationException(Lang::get('backend::lang.list.missing_columns', compact('class')));
         }
 
         /**

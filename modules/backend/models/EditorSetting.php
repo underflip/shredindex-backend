@@ -15,7 +15,6 @@ use Exception;
  */
 class EditorSetting extends SettingModel
 {
-    use \System\Traits\ViewMaker;
     use \October\Rain\Database\Traits\Validation;
 
     /**

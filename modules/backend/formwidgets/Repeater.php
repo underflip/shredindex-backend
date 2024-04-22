@@ -1,9 +1,7 @@
 <?php namespace Backend\FormWidgets;
 
-use Lang;
 use Backend\Classes\FormField;
 use Backend\Classes\FormWidgetBase;
-use ApplicationException;
 
 /**
  * Repeater Form Widget
@@ -350,19 +348,21 @@ class Repeater extends FormWidgetBase
 
         if ($this->useRelation) {
             $config->model = $this->getModelFromIndex($index);
+            $indexName = ($modelKey = $config->model->getKey()) ? "id:{$modelKey}" : $index;
         }
         else {
             $config->model = $this->model;
             $config->data = $this->getValueFromIndex($dataIndex);
             $config->isNested = true;
+            $indexName = $index;
         }
 
         $config->alias = $this->alias . 'Form' . $index;
         $config->context = self::$onAddItemCalled ? FormField::CONTEXT_CREATE : FormField::CONTEXT_UPDATE;
         $config->arrayName = $this->getFieldName().'['.$index.']';
         $config->sessionKey = $this->sessionKey;
-        $config->sessionKeySuffix = $this->sessionKeySuffix . '-' . $index;
-        $config->parentFieldName = $this->formField->fieldName;
+        $config->sessionKeySuffix = $this->sessionKeySuffix . "-{$index}";
+        $config->parentFieldName = $this->formField->fieldName . "[{$indexName}]";
 
         $widget = $this->makeWidget(\Backend\Widgets\Form::class, $config);
         $widget->previewMode = $this->previewMode;
