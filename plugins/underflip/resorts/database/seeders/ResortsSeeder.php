@@ -18,12 +18,21 @@ use Underflip\Resorts\Models\Unit;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\ResortImage;
 use Underflip\Resorts\Models\Type;
+use Underflip\Resorts\Classes\ContinentService;
+use Illuminate\Support\Facades\App;
 
 /**
  * @codeCoverageIgnore
  */
 class ResortsSeeder extends Seeder implements Downable
 {
+    protected ContinentService $continentService;
+
+    public function __construct()
+    {
+        $this->continentService = new ContinentService(); // Instantiate manually
+    }
+
     /**
      * @throws Exception
      */
@@ -40,14 +49,6 @@ class ResortsSeeder extends Seeder implements Downable
             'plugins/underflip/resorts/updates/assets/resort-images/ski-1.jpg',
             'plugins/underflip/resorts/updates/assets/resort-images/ski-2.jpg',
             'plugins/underflip/resorts/updates/assets/resort-images/snowboard-1.jpg',
-        ];
-
-        $continentLookup = [
-            'AU' => 'OC', // Oceania
-            'CA' => 'NA', // North America
-            'GB' => 'EU', // Europe
-            'US' => 'NA', // North America
-            // ... Add more country codes and their continent codes
         ];
 
         // Ordinarily we would like to use Laravel's factories
@@ -85,15 +86,15 @@ class ResortsSeeder extends Seeder implements Downable
             $location->resort_id = $resort->id;
             $location->save();
 
-            $country = Country::inRandomOrder()->first();
-            $continentCode = $continentLookup[$country->code] ?? null;
+            $country = Country::where('id', $location->country_id)->first();
 
-//             // Find or create the Continent model based on the code
-//             $continent = Continent::inRandomOrder()->first();
-//
-//             // Associate the continent with the resort's location
-//             $location->continent()->associate($continentCode);
-//             $continent->save();
+            $continentCode = $this->continentService->getContinentCode($country->code);
+
+            // Associate the continent with the resort's location
+            $continent = Continent::where('code', $continentCode)->first();
+
+            $location->continent()->associate($continent);
+            $location->save();
 
             // Ratings
             $types = Type::where('category', Rating::class);

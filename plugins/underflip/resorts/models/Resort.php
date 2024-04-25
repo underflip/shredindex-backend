@@ -45,6 +45,7 @@ class Resort extends Model
      */
     public $hasOne = [
         'location' => Location::class,
+        'continent' => Continent::class,
         'total_score' => TotalScore::class,
     ];
 
