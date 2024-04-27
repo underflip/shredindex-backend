@@ -102,13 +102,13 @@
 
         $target.trigger('close.oc.popover')
 
-        var promise = $.oc.builder.formbuilder.controller.addControlFromControlPalette(controlId, 
-            $target.data('builderControlType'), 
+        var promise = $.oc.builder.formbuilder.controller.addControlFromControlPalette(controlId,
+            $target.data('builderControlType'),
             $target.data('builderControlName'))
 
         promise.done(function() {
             $.oc.inspector.manager.createInspector(control)
-            $(control).trigger('change')  // Set modified state for the form
+            $(control).trigger('change')  // Set pluginsmodified state for the form
         })
 
         return false
@@ -208,7 +208,7 @@
             $container.trigger('render')
         }
     }
- 
+
     ControlPalette.prototype.onRemovePaletteFromContainer = function(ev) {
         this.removePaletteFromContainer($(ev.target))
     }

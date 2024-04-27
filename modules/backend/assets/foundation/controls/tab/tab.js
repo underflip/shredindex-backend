@@ -43,7 +43,7 @@
 
             this.$el.on('close.oc.tab', this.proxy(this.onCloseTab));
             this.$el.on('mousedown', "li[data-tab-id]", this.proxy(this.onMiddleClickTab));
-            this.$el.on('modified.oc.tab', this.proxy(this.onModifyTab));
+            this.$el.on('pluginsmodified.oc.tab', this.proxy(this.onModifyTab));
             this.$el.on('unmodified.oc.tab', this.proxy(this.onUnmodifyTab));
             this.$tabsContainer.on('shown.bs.tab', 'li', this.proxy(this.onContainerTabShown));
 
@@ -62,7 +62,7 @@
         disconnect() {
             this.$el.off('close.oc.tab', this.proxy(this.onCloseTab));
             this.$el.off('mousedown', "li[data-tab-id]", this.proxy(this.onMiddleClickTab));
-            this.$el.off('modified.oc.tab', this.proxy(this.onModifyTab));
+            this.$el.off('pluginsmodified.oc.tab', this.proxy(this.onModifyTab));
             this.$el.off('unmodified.oc.tab', this.proxy(this.onUnmodifyTab));
             this.$tabsContainer.off('shown.bs.tab', 'li', this.proxy(this.onContainerTabShown));
 
@@ -270,7 +270,7 @@
                 $tab = $('> li', this.$tabsContainer).eq(tabIndex),
                 $pane = $('> div', this.$pagesContainer).eq(tabIndex),
                 isActive = $tab.hasClass('active'),
-                isModified = $tab.attr('data-modified') !== undefined;
+                isModified = $tab.attr('data-pluginsmodified') !== undefined;
 
             if (isModified && this.options.closeConfirmation && force !== true) {
                 if (!confirm(this.options.closeConfirmation)) {
@@ -318,8 +318,8 @@
                 return;
             }
 
-            $('> li', this.$tabsContainer).eq(tabIndex).attr('data-modified', '');
-            $('> div', this.$pagesContainer).eq(tabIndex).attr('data-modified', '');
+            $('> li', this.$tabsContainer).eq(tabIndex).attr('data-pluginsmodified', '');
+            $('> div', this.$pagesContainer).eq(tabIndex).attr('data-pluginsmodified', '');
         }
 
         unmodifyTab(tab) {
@@ -328,8 +328,8 @@
                 return;
             }
 
-            $('> li', this.$tabsContainer).eq(tabIndex).removeAttr('data-modified');
-            $('> div', this.$pagesContainer).eq(tabIndex).removeAttr('data-modified');
+            $('> li', this.$tabsContainer).eq(tabIndex).removeAttr('data-pluginsmodified');
+            $('> div', this.$pagesContainer).eq(tabIndex).removeAttr('data-pluginsmodified');
         }
 
         findTabIndex(tab) {

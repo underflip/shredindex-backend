@@ -1,0 +1,63 @@
+/** GraphiQL */
+.graphiql {
+    height: 100%;
+}
+
+
+/** Overrides */
+
+.oc-logo {
+    background-image:url(../images/headstart-logo.svg);
+}
+
+.layout.control-tabs.oc-logo-transparent:not(.has-tabs),.flex-layout-column.oc-logo-transparent:not(.has-tabs),.layout-cell.oc-logo-transparent {
+    background-image:url(../images/headstart-logo.svg);
+}
+
+fancy-layout .control-tabs.master-tabs >div >div.tabs-container, .fancy-layout.control-tabs.master-tabs >div >div.tabs-container {
+    background:#910871 !important;
+}
+
+.control-filelist ul li.active >a:after {
+    background: #B23394 !important;
+}
+
+.bg-s {
+    background-color: #B23394 !important;
+}
+
+.fancy-layout .form-tabless-fields {
+    background: #B23394 !important;
+}
+
+.fancy-layout .form-tabless-fields .loading-indicator-container .loading-indicator {
+    background-color:#B23394 !important;
+}
+
+.fancy-layout .control-tabs.primary-tabs.master-area >div >ul.nav-tabs,.fancy-layout.control-tabs.primary-tabs.master-area >div >ul.nav-tabs {
+    background: #B23394 !important;
+}
+
+.fancy-layout .control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li.active a >span.title,.fancy-layout.control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li.active a >span.title {
+    background-color: #B23394 !important;
+}
+
+.fancy-layout .control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li.active a >span.title:before,.fancy-layout.control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li.active a >span.title:before {
+    background-color: #B23394 !important;
+}
+
+.fancy-layout .control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li.active a >span.title:after,.fancy-layout.control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li.active a >span.title:after {
+    background-color: #B23394 !important;
+}
+
+.fancy-layout .control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li a >span.title,.fancy-layout.control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li a >span.title {
+    background-color:#89086B
+}
+
+.fancy-layout .control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li a >span.title:before,.fancy-layout.control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li a >span.title:before,.fancy-layout .control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li a >span.title:after,.fancy-layout.control-tabs.master-tabs >div >div.tabs-container >ul.nav-tabs >li a >span.title:after {
+    background-color:#89086B
+}
+
+.fancy-layout .control-tabs.master-tabs > div > div.tabs-container > ul.nav-tabs > li a > span.title, .fancy-layout.control-tabs.master-tabs > div > div.tabs-container > ul.nav-tabs > li a > span.title, .fancy-layout .control-tabs.master-tabs > div > div.tabs-container > ul.nav-tabs > li a > span.title::before, .fancy-layout.control-tabs.master-tabs > div > div.tabs-container > ul.nav-tabs > li a > span.title::before, .fancy-layout .control-tabs.master-tabs > div > div.tabs-container > ul.nav-tabs > li a > span.title::after, .fancy-layout.control-tabs.master-tabs > div > div.tabs-container > ul.nav-tabs > li a > span.title::after {
+    background-color: #910871 !important;
+}
