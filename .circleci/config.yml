@@ -5,10 +5,10 @@ orbs:
 
 jobs:
     build-and-test:
-        docker:
-            - image: cimg/php:8.2
         machine: true
         working_directory: ~/project
+        docker:
+            -   image: cimg/php:8.2
         steps:
             - checkout
             - run:
@@ -26,20 +26,20 @@ jobs:
                 command: cd .infrastructure/ && docker-compose up --build -d
             - run:
                 name: composer install
-                command: rm -rf vendor && docker exec shredindex-backend-php composer install -n --prefer-dist
+                command: docker exec shredindex-backend-php composer install -n --prefer-dist
             - save_cache:
                 key: v2-composer-{{ checksum "composer.lock" }}
                 paths:
                     - vendor
             - run:
                 name: Waiting for MySQL to warm up
-                command: sleep 5
+                command: sleep 10
             - run:
                 name: Spin up October CMS
                 command: docker exec shredindex-backend-php php artisan october:migrate
             - run:
                 name: Running PHPUnit tests
-                command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts
+                command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts && docker exec -i shredindex-backend-php bash -c "cd ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
             - codecov/upload:
                 file: ./coverage/clover.xml
 
