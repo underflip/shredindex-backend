@@ -43,8 +43,6 @@ services:
         image: shredindex-backend-php  # Use the same image as your PHP service
         volumes:
             - ../:/var/www/html
-            - ./etc/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
-            - ./etc/php/conf.d/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
         depends_on:
           - mysql
         command: php artisan october:migrate
