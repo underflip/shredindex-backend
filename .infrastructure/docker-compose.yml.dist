@@ -44,5 +44,6 @@ services:
         volumes:
             - ../:/var/www/html
         depends_on:
-          - mysql
+            - php
+            - mysql
         command: php artisan october:migrate
