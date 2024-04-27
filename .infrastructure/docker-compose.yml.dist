@@ -45,5 +45,4 @@ services:
             - ../:/var/www/html
         depends_on:
             - php
-            - mysql
         command: php artisan october:migrate
