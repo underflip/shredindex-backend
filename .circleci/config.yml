@@ -24,7 +24,7 @@ jobs:
                 command: cd .infrastructure/ && docker-compose up -d
             - run:
                 name: composer install
-                command: docker exec shredindex-backend-php composer install -n --prefer-dist
+                command: docker exec shredindex-backend-php october:migrate -n --prefer-dist
             - save_cache:
                 key: v2-composer-{{ checksum "composer.lock" }}
                 paths:
