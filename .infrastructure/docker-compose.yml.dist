@@ -38,6 +38,7 @@ services:
             - php
         ports:
             - ${NGINX_PORT}
+        command: docker images
     migrations:
         container_name: shredindex-backend-migrations
         image: infrastructure-php
