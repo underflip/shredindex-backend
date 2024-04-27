@@ -1,3 +1,0 @@
-extend type Query {
-    hello: String! @component(alias: "__SELF__")
-}

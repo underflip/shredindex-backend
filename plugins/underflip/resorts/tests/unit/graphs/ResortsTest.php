@@ -348,19 +348,18 @@ class ResortsTest extends BaseTestCase
                  resorts(
                     first: 10
                     filter: {
-                        {groupedType: [
+                        groupedType: [
                             {
                                 type_name: "total_score",
                                 operator: ">",
                                 value: "25"
-                            }
+                            },
                             {
                                 type_name: "average_annual_snowfall",
                                 operator: "<",
                                 value: "7.5"
                             }
-                            ]
-                        }
+                        ]
                     }
                  ) {
                     data {
@@ -393,13 +392,13 @@ class ResortsTest extends BaseTestCase
             'Should return resorts with snowfall above 3m'
         );
 
-//         $this->assertSame(
-//             [
-//                 'bar-resort',
-//             ],
-//             $responseByScoreAndSnowFall->json("data.resorts.data.*.url_segment"),
-//             'Should return resorts with total score above 25 and snowfall below 7.5m'
-//         );
+        $this->assertSame(
+            [
+                'bar-resort',
+            ],
+            $responseByScoreAndSnowFall->json("data.resorts.data.*.url_segment"),
+            'Should return resorts with total score above 25 and snowfall below 7.5m'
+        );
     }
 
     /**

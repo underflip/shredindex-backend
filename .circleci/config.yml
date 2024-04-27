@@ -16,20 +16,16 @@ jobs:
                     mv .infrastructure/.env.dist .infrastructure/.env
                     mv .infrastructure/docker-compose.yml.dist .infrastructure/docker-compose.yml
                     mv .infrastructure/etc/nginx/conf.d/default.conf.dist .infrastructure/etc/nginx/conf.d/default.conf
+                    cp .env.dist .env
             - restore_cache:
                 keys:
                     - v2-composer-{{ checksum "composer.lock" }}
             - run:
                 name: docker-compose
-                command: cd .infrastructure/ && docker-compose up --build -d
+                command: cd .infrastructure/ && docker compose down && docker compose build --no-cache && docker compose up -d && docker compose version && docker compose ps
             - run:
                 name: composer install
-                command: rm -rf vendor && docker exec shredindex-backend-php composer install
-            - run:
-                name: Copy pluginsmodified plugin
-                command: |
-                 mkdir -p plugins/nocio/headstart
-                 cp -r pluginsmodified/nocio/headstart/* plugins/nocio/headstart/
+                command: docker exec shredindex-backend-php composer install -n --prefer-dist
             - save_cache:
                 key: v2-composer-{{ checksum "composer.lock" }}
                 paths:
@@ -38,11 +34,18 @@ jobs:
                 name: Waiting for MySQL to warm up
                 command: sleep 10
             - run:
+                name: Check environment
+                command:  |
+                    docker exec shredindex-backend-php php -v
+                    docker exec shredindex-backend-mysql mysql --version
+            - run:
                 name: Spin up October CMS
-                command: docker exec shredindex-backend-php php artisan october:migrate
+                command:  |
+                    docker exec shredindex-backend-php php artisan october:migrate
+                    docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; select * from underflip_resorts_resorts;'
             - run:
                 name: Running PHPUnit tests
-                command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts && docker exec -i shredindex-backend-php bash -c "cd ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
+                command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts
             - codecov/upload:
                 file: ./coverage/clover.xml
 
