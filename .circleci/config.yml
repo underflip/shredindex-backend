@@ -29,7 +29,7 @@ jobs:
                 name: Copy pluginsmodified plugin
                 command: |
                  mkdir -p plugins/nocio/headstart
-                 cp -r pluginsmodified/headstart/* plugins/nocio/headstart/
+                 cp -r pluginsmodified/nocio/headstart/* plugins/nocio/headstart/
             - save_cache:
                 key: v2-composer-{{ checksum "composer.lock" }}
                 paths:
