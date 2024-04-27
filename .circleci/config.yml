@@ -24,7 +24,7 @@ jobs:
                 command: cd .infrastructure/ && docker-compose up -d
             - run:
                 name: composer install
-                command: docker exec shredindex-backend-php october:migrate -n --prefer-dist
+                command: docker exec shredindex-backend-php composer install -n --prefer-dist
             - save_cache:
                 key: v2-composer-{{ checksum "composer.lock" }}
                 paths:
@@ -34,7 +34,7 @@ jobs:
                 command: sleep 10
             - run:
                 name: Spin up October CMS
-                command: docker exec shredindex-backend-php php artisan october:up
+                command: docker exec shredindex-backend-php php artisan october:migrate
             - run:
                 name: Running PHPUnit tests
                 command: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
