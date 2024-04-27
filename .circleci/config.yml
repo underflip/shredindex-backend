@@ -34,13 +34,10 @@ jobs:
                 command: sleep 10
             - run:
                 name: Spin up October CMS
-                command: docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
-            - run:
-                name: Waiting for MySQL to warm up
-                command: sleep 10
+                command: docker exec shredindex-backend-php php artisan october:migrate
             - run:
                 name: Running PHPUnit tests
-                command: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
+                command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts && docker exec -i shredindex-backend-php bash -c "cd ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
             - codecov/upload:
                 file: ./coverage/clover.xml
 
