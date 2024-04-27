@@ -38,3 +38,11 @@ services:
             - php
         ports:
             - ${NGINX_PORT}
+    migrations:
+        container_name: shredindex-backend-migrations
+        image: shredindex-backend-php  # Use the same image as your PHP service
+        volumes:
+          - ../:/var/www/html
+        depends_on:
+          - mysql
+        command: docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
