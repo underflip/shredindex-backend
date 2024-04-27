@@ -1,0 +1,10 @@
+1.0.1:
+  - Initialize plugin.
+1.2.0:
+  - Configurable schema directory, including the current theme folder
+  - Options to disable CMS frontend theme for headless use
+  - Full support of advanced Lighthouse features like custom directives etc.
+  - Source editor
+  - Boot callbacks and advanced templates
+1.2.1: Correct GraphiQL endpoint URL when October is installed in subdirectory
+1.2.2: Ensure that default graphql schema directory is created automatically
