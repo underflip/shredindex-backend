@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
     codecov: codecov/codecov@1.1.0
+    php: circleci/php@1.1.0
 
 jobs:
     build-and-test:
@@ -9,6 +10,8 @@ jobs:
         working_directory: ~/project
         steps:
             - checkout
+            - php/install-php:
+                version: '8.2'
             - run:
                 name: Preparing environment from repository
                 command: |
@@ -34,7 +37,7 @@ jobs:
                 command: sleep 5
             - run:
                 name: Spin up October CMS
-                command: docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
+                command: docker exec shredindex-backend-php php artisan october:migrate
             - run:
                 name: Running PHPUnit tests
                 command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts
