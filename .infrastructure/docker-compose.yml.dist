@@ -40,8 +40,10 @@ services:
             - ${NGINX_PORT}
     migrations:
         container_name: shredindex-backend-migrations
+        image: shredindex-backend-php
         volumes:
             - ../:/var/www/html
         depends_on:
+            - php
           - mysql
         command: php artisan october:migrate
