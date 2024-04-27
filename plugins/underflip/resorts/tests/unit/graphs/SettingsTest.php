@@ -144,11 +144,11 @@ class SettingsTest extends BaseTestCase
             'Should have description'
         );
 
-        $this->assertRegExp(
-            '/^(http|https):\/\/[\d\w.]+\/storage\/app\/uploads\/public\/[\d\w\/]+\/[\d\w]+.jpeg$/',
-            $response->json('data.supporters.0.image.path'),
-            'Should have path'
-        );
+         $this->assertRegExp(
+             '/^(http|https):\/\/([\d\w.]+|localhost:\d{2,5})\/storage\/app\/uploads\/public\/[\d\w\/]+\/[\d\w]+.jpeg$/',
+             $response->json('data.supporters.0.image.path'),
+             'Should have path'
+         );
     }
 
     public function testTeamMembers()
@@ -243,7 +243,7 @@ class SettingsTest extends BaseTestCase
         );
 
         $this->assertRegExp(
-            '/^(http|https):\/\/[\d\w.]+\/storage\/app\/uploads\/public\/[\d\w\/]+\/[\d\w]+.jpeg$/',
+            '/^(http|https):\/\/([\d\w.]+|localhost:\d{2,5})\/storage\/app\/uploads\/public\/[\d\w\/]+\/[\d\w]+.jpeg$/',
             $response->json('data.teamMembers.0.image.path'),
             'Should have path'
         );
