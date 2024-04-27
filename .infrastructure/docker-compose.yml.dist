@@ -40,7 +40,7 @@ services:
             - ${NGINX_PORT}
     migrations:
         container_name: shredindex-backend-migrations
-        image: shredindex-backend-php  # Use the same image as your PHP service
+        image: shredindex-backend-php:latest  # Use the same image as your PHP service
         volumes:
             - ../:/var/www/html
         depends_on:
