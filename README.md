@@ -19,7 +19,7 @@ A set of Docker platform is included for running the project.
 6. Copy `.env.dist` to `.env`
 7. Mac users with M-chip will need to change image: mariadb:10.6.15 in docker-compose.yml
 8. docker-compose up -d
-9. cd .. && cp .env.dist .env
+9. cd ..
 10. rm -rf vendor && docker exec shredindex-backend-php composer install
 11. docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
 12. docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function

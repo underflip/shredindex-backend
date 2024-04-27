@@ -139,15 +139,19 @@ SDL;
             // Setup builder
             $query = Resort::with(['ratings', 'numerics', 'generics']);
 
-            if (array_key_exists('filter', $args)) {
-                // Apply filters
-                $this->augmentForFilters($query, $args['filter']);
-            }
+            try {
+                if (array_key_exists('filter', $args)) {
+                    // Apply filters
+                    $this->augmentForFilters($query, $args['filter']);
+                }
 
-            if (!array_key_exists('orderBy', $args)) {
-                $this->orderByType($query, ['type_name' => 'total_score', 'direction' => 'desc']); // Assuming 'total_score' is the type_name
-            } else {
-                $this->orderByType($query, $args['orderBy']);
+                if (!array_key_exists('orderBy', $args)) {
+                    $this->orderByType($query, ['type_name' => 'total_score', 'direction' => 'desc']); // Assuming 'total_score' is the type_name
+                } else {
+                    $this->orderByType($query, $args['orderBy']);
+                }
+            } catch (InvalidFilterOperatorException | MissingTypeException | InvalidOrderByTypeException $e) {
+                reportGraphQLError($e->getMessage(), extensions: ['code' => $e->getCode()]);
             }
             // Pagination
             $pageArg = PaginationArgs::extractArgs(
