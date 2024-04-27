@@ -39,11 +39,4 @@ services:
         ports:
             - ${NGINX_PORT}
         command: docker images
-    migrations:
-        container_name: shredindex-backend-migrations
-        image: infrastructure-php
-        volumes:
-            - ../:/var/www/html
-        depends_on:
-            - php
-        command: php artisan october:migrate
+
