@@ -7,8 +7,6 @@ jobs:
     build-and-test:
         machine: true
         working_directory: ~/project
-        docker:
-            -   image: cimg/php:8.2
         steps:
             - checkout
             - run:
