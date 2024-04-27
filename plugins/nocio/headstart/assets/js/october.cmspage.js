@@ -248,7 +248,7 @@
             self = this
 
         $form.on('changed.oc.changeMonitor', function() {
-            $panel.trigger('modified.oc.tab')
+            $panel.trigger('pluginsmodified.oc.tab')
             $panel.find('[data-control=commit-button]').addClass('hide');
             $panel.find('[data-control=reset-button]').addClass('hide');
             self.updateModifiedCounter()
@@ -573,7 +573,7 @@
             asset: { menu: 'assets', count:  0}
         }
 
-        $('> div.tab-content > div.tab-pane[data-modified]', '#cms-master-tabs').each(function(){
+        $('> div.tab-content > div.tab-pane[data-pluginsmodified]', '#cms-master-tabs').each(function(){
             var inputType = $('> form > input[name=templateType]', this).val()
             counters[inputType].count++
         })

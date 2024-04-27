@@ -26,10 +26,10 @@ jobs:
                 name: composer install
                 command: rm -rf vendor && docker exec shredindex-backend-php composer install
             - run:
-                name: Copy modified plugin
+                name: Copy pluginsmodified plugin
                 command: |
                  mkdir -p plugins/nocio/headstart
-                 cp -r plugins/modified/headstart/* plugins/nocio/headstart/
+                 cp -r pluginsmodified/headstart/* plugins/nocio/headstart/
             - save_cache:
                 key: v2-composer-{{ checksum "composer.lock" }}
                 paths:
