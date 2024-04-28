@@ -21,10 +21,10 @@ jobs:
                     - v2-composer-{{ checksum "composer.lock" }}
             - run:
                 name: docker-compose
-                command: cd .infrastructure/ && docker-compose up --build -d
+                command: cd .infrastructure/ && docker-compose up -d
             - run:
                 name: composer install
-                command: rm -rf vendor && docker exec shredindex-backend-php composer install --prefer-dist --no-dev
+                command: docker exec shredindex-backend-php composer install -n --prefer-dist
             - run:
                   name: Clear and copy modified plugin
                   command: |
