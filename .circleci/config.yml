@@ -37,7 +37,7 @@ jobs:
                 command: docker exec shredindex-backend-php php artisan october:migrate
             - run:
                 name: Running PHPUnit tests
-                command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts --no-coverage && docker exec -i shredindex-backend-php bash -c "cd ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
+                command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts && docker exec -i shredindex-backend-php bash -c "cd ../../../vendor/bin/phpunit --no-coverage ../../../coverage/clover.xml"
             - codecov/upload:
                 file: ./coverage/clover.xml
 
