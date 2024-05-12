@@ -393,13 +393,16 @@ class ResortsTest extends BaseTestCase
             'Should return resorts with snowfall above 3m'
         );
 
-//         $this->assertSame(
-//             [
-//                 'bar-resort',
-//             ],
-//             $responseByScoreAndSnowFall->json("data.resorts.data.*.url_segment"),
-//             'Should return resorts with total score above 25 and snowfall below 7.5m'
-//         );
+    /*
+        $this->assertSame(
+            [
+                'bar-resort',
+            ],
+            $responseByScoreAndSnowFall->json("data.resorts.data.*.url_segment"),
+            'Should return resorts with total score above 25 and snowfall below 7.5m'
+        );
+    */
+
     }
 
     /**
