@@ -43,7 +43,6 @@ jobs:
                 command:  | 
                     docker exec shredindex-backend-php php artisan october:migrate 
                     docker exec shredindex-backend-php php artisan resorts:seed_test_data
-                    docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; select * from underflip_resorts_resorts;'
             - run:
                 name: Running PHPUnit tests
                 command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts
