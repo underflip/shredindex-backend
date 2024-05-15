@@ -21,7 +21,7 @@ jobs:
                     - v2-composer-{{ checksum "composer.lock" }}
             - run:
                 name: docker-compose
-                command: cd .infrastructure/ && docker-compose up -d
+                command: cd .infrastructure/ && docker-compose down && docker-compose build --no-cache && docker-compose up -d
             - run:
                 name: composer install
                 command: docker exec shredindex-backend-php composer install -n --prefer-dist
