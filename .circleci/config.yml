@@ -21,7 +21,7 @@ jobs:
                     - v2-composer-{{ checksum "composer.lock" }}
             - run:
                 name: docker-compose
-                command: cd .infrastructure/ && docker-compose down && docker-compose build --no-cache && docker-compose up -d && docker-compose version && docker-compose ps
+                command: cd .infrastructure/ && docker compose down && docker compose build --no-cache && docker compose up -d && docker compose version && docker compose ps
             - run:
                 name: composer install
                 command: docker exec shredindex-backend-php composer install -n --prefer-dist
@@ -32,6 +32,11 @@ jobs:
             - run:
                 name: Waiting for MySQL to warm up
                 command: sleep 10
+            - run:
+                name: Check environment
+                command: docker exec shredindex-backend-php php -v
+                command: docker exec shredindex-backend-mysql mysql --version
+                command: docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; select * from underflip_resorts_resorts;'
             - run:
                 name: Spin up October CMS
                 command: docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data
