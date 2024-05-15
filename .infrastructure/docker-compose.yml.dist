@@ -6,8 +6,6 @@ services:
             context: ./php
         ports:
             - 9000:9000
-        depends_on:
-            - mysql
         volumes:
             - ../:/var/www/html
             - ./etc/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
@@ -22,6 +20,8 @@ services:
         command: mysqld --default-authentication-plugin=mysql_native_password
         ports:
             - 3306:3306
+        depends_on:
+            - php
         environment:
             MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
             MYSQL_DATABASE: ${MYSQL_DATABASE}
