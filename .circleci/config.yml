@@ -16,6 +16,7 @@ jobs:
                     mv .infrastructure/.env.dist .infrastructure/.env
                     mv .infrastructure/docker-compose.yml.dist .infrastructure/docker-compose.yml
                     mv .infrastructure/etc/nginx/conf.d/default.conf.dist .infrastructure/etc/nginx/conf.d/default.conf
+                    cp .env.dist .env
             - restore_cache:
                 keys:
                     - v2-composer-{{ checksum "composer.lock" }}
