@@ -24,6 +24,8 @@ A set of Docker platform is included for running the project.
 11. docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
 12. docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
 
+
+### Preparation Command lines
 ````
 cp .infrastructure/docker-compose.yml.dist .infrastructure/docker-compose.yml
 cp .infrastructure/.env.dist .infrastructure/.env
