@@ -13,9 +13,9 @@ A set of Docker platform is included for running the project.
 
 1. Install Docker https://docs.docker.com/get-docker/
 2. If not installed with Docker Desktop, Docker Compose install https://docs.docker.com/compose/install/
-3. Copy `.infrastructre/docker-compose.yml.dist` to `.infrastructre/docker-compose.yml`
-4. Copy `.infrastructre/.env.dist` to `.infrastructre/.env`
-5. Copy `.infrastructre/etc/nginx/conf.d/default.conf.dist` to `.infrastructre/etc/nginx/conf.d/default.conf`
+3. Copy `.infrastructure/docker-compose.yml.dist` to `.infrastructure/docker-compose.yml`
+4. Copy `.infrastructure/.env.dist` to `.infrastructure/.env`
+5. Copy `.infrastructure/etc/nginx/conf.d/default.conf.dist` to `.infrastructure/etc/nginx/conf.d/default.conf`
 6. Copy `.env.dist` to `.env`
 7. Mac users with M-chip will need to change image: mariadb:10.6.15 in docker-compose.yml
 8. docker-compose up -d
@@ -23,6 +23,19 @@ A set of Docker platform is included for running the project.
 10. rm -rf vendor && docker exec shredindex-backend-php composer install
 11. docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
 12. docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
+
+````
+cp .infrastructure/docker-compose.yml.dist .infrastructure/docker-compose.yml
+cp .infrastructure/.env.dist .infrastructure/.env
+cp .infrastructure/etc/nginx/conf.d/default.conf.dist .infrastructure/etc/nginx/conf.d/default.conf
+cp .env.dist .env
+cd .infrastructure
+docker-compose up -d
+cd ..
+rm -rf vendor && docker exec shredindex-backend-php composer install
+docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
+docker exec shredindex-backend-php php artisan plugin:test underflip.resorts
+````
 
 Do not update Headstart Nocio Plugin as it has been customized to handle the latest lighthouse.
 
