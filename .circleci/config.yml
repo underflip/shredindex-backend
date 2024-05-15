@@ -21,7 +21,7 @@ jobs:
                     - v2-composer-{{ checksum "composer.lock" }}
             - run:
                 name: docker-compose
-                command: cd .infrastructure/ && docker-compose down && docker-compose build --no-cache && docker-compose up -d
+                command: cd .infrastructure/ && docker-compose down && docker-compose build --no-cache && docker-compose up -d && docker-compose version && docker-compose ps
             - run:
                 name: composer install
                 command: docker exec shredindex-backend-php composer install -n --prefer-dist
@@ -34,7 +34,7 @@ jobs:
                 command: sleep 10
             - run:
                 name: Spin up October CMS
-                command: docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
+                command: docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data
             - run:
                 name: Running PHPUnit tests
                 command: docker exec shredindex-backend-php php artisan plugin:test underflip.resorts
