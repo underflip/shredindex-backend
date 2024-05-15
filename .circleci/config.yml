@@ -42,12 +42,12 @@ jobs:
                 name: Spin up October CMS
                 command:  |
                     docker exec shredindex-backend-php php artisan october:migrate
-                    docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; select * from underflip_resorts_resorts;'
+            - codecov/upload:
+                file: ./coverage/clover.xml
             - run:
                 name: Running PHPUnit tests
                 command: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
-            - codecov/upload:
-                file: ./coverage/clover.xml
+            
 
 workflows:
     build-and-test:
