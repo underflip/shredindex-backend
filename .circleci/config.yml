@@ -34,9 +34,9 @@ jobs:
                 command: sleep 10
             - run:
                 name: Check environment
-                command: docker exec shredindex-backend-php php -v
-                command: docker exec shredindex-backend-mysql mysql --version
-                command: docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; select * from underflip_resorts_resorts;'
+                command:  |
+                    docker exec shredindex-backend-php php -v
+                    docker exec shredindex-backend-mysql mysql --version
             - run:
                 name: Spin up October CMS
                 command: docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data
