@@ -42,12 +42,18 @@ jobs:
                 name: Spin up October CMS
                 command:  |
                     docker exec shredindex-backend-php php artisan october:migrate
+            - run:
+                name: Check DB
+                command: |
                     echo "==== show tables ====="
                     docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; show tables;'
             - run:
                 name: Running PHPUnit tests
                 command:   | 
                     docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
+            - run:
+                name: Check DB
+                command: |
                     echo "==== show tables ====="
                     docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; show tables;'
                     
