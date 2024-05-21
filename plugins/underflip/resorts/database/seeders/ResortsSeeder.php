@@ -86,12 +86,10 @@ class ResortsSeeder extends Seeder implements Downable
             $location->resort_id = $resort->id;
             $location->save();
 
+            // Continents
             $country = Country::where('id', $location->country_id)->first();
-
             $continentCode = $this->continentService->getContinentCode($country->code);
-
-            // Associate the continent with the resort's location
-            $continent = Continent::where('code', $continentCode)->first();
+            $continent = Continent::where('code', $continentCode)->firstOrFail();
 
             $location->continent()->associate($continent);
             $location->save();

@@ -26,13 +26,8 @@ class ContinentsSeeder extends Seeder
         }
     }
 
-    public function down()
+public function down()
     {
-        foreach (Continent::all() as $continent) {
-            $continent->name()->delete();
-            $continent->code()->delete();
-        }
-
-        Continent::query()->truncate();
+        Continent::query()->truncate(); // Directly truncate the table
     }
 }
