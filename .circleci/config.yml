@@ -47,16 +47,15 @@ jobs:
                 command: |
                     echo "==== show tables ====="
                     docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; show tables;'
-            - run:
-                name: Running PHPUnit tests
-                command:   | 
-                    docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
+            -   run:
+                    name: Running PHPUnit tests
+                    command: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
             - run:
                 name: Check DB again
                 command: |
                     echo "==== show tables ====="
                     docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; show tables;'
-                    
+
             - codecov/upload:
                 file: ./coverage/clover.xml
 
