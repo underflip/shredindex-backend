@@ -7,9 +7,9 @@ use Config;
 use Cms\Classes\Controller;
 use Cms\Classes\CmsException;
 use Cms\Classes\ComponentManager;
+use Lang;
 
-
-class GraphController// extends Controller
+class GraphController extends Controller
 {
 
     protected $graph;

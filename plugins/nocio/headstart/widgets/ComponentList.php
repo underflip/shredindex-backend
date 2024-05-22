@@ -8,8 +8,6 @@ use Lang;
 use Input;
 use System\Classes\PluginManager;
 use Nocio\Headstart\Classes\ComponentHelpers;
-use Cms\Widgets\ComponentList as CmsComponentList;
-
 
 class ComponentList extends CmsComponentList
 {

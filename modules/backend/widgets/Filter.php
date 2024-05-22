@@ -1,46 +1,54 @@
 <?php namespace Backend\Widgets;
 
-use Db;
-use Str;
 use Lang;
-use Backend;
 use DbDongle;
-use Carbon\Carbon;
 use Backend\Classes\WidgetBase;
+use October\Rain\Element\ElementHolder;
+use October\Contracts\Element\FilterElement;
 use Backend\Classes\FilterScope;
 use ApplicationException;
-use BackendAuth;
+use SystemException;
 
 /**
- * Filter Widget
- * Renders a container used for filtering things.
+ * Filter Widget renders a container used for filtering things
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-class Filter extends WidgetBase
+class Filter extends WidgetBase implements FilterElement
 {
-    const DEFAULT_AFTER_DATE = '0001-01-01 00:00:00';
-
-    const DEFAULT_BEFORE_DATE = '2999-12-31 23:59:59';
+    use \Backend\Widgets\Filter\IsFilterElement;
+    use \Backend\Widgets\Filter\ScopeProcessor;
+    use \Backend\Widgets\Filter\HasFilterWidgets;
+    use \Backend\Widgets\Filter\HasLegacyDefinitions;
 
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
-     * @var array Scope definition configuration.
+     * @var array scopes defined by configuration
      */
     public $scopes;
 
     /**
-     * @var string The context of this filter, scopes that do not belong
+     * @var Model model associated to the filtering, optional
+     */
+    public $model;
+
+    /**
+     * @var string context of this filter, scopes that do not belong
      * to this context will not be shown.
      */
     public $context;
 
+    /**
+     * @var string customPageName will be reset when a filter is applied, shared with the list widget
+     */
+    public $customPageName = 'page';
+
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
@@ -49,486 +57,87 @@ class Filter extends WidgetBase
     protected $defaultAlias = 'filter';
 
     /**
-     * @var boolean Determines if scope definitions have been created.
+     * @var boolean scopesDefined determines if scope definitions have been created.
      */
     protected $scopesDefined = false;
 
     /**
-     * @var array Collection of all scopes used in this filter.
+     * @var array allScopes used in this filter.
      */
     protected $allScopes = [];
 
     /**
-     * @var array Collection of all scopes models used in this filter.
+     * @var array scopeModels used in this filter.
      */
     protected $scopeModels = [];
 
     /**
-     * @var array List of CSS classes to apply to the filter container element
+     * @var array cssClasses to apply to the filter container element
      */
     public $cssClasses = [];
 
     /**
-     * Initialize the widget, called by the constructor and free from its parameters.
+     * init the widget, called by the constructor and free from its parameters.
      */
     public function init()
     {
         $this->fillFromConfig([
             'scopes',
+            'model',
             'context',
+            'customPageName',
         ]);
+
+        if (!$this->customPageName) {
+            $this->customPageName = '_page';
+        }
+
+        $this->initFilterWidgetsConcern();
     }
 
     /**
-     * Renders the widget.
+     * bindToController ensures scopes are defined and filter widgets are registered so they
+     * can also be bound to the controller this allows their AJAX features to operate.
+     * @return void
+     */
+    public function bindToController()
+    {
+        $this->defineFilterScopes();
+        parent::bindToController();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function loadAssets()
+    {
+        $this->addJs('js/october.filter.js');
+    }
+
+    /**
+     * render the widget.
      */
     public function render()
     {
+        $this->defineFilterScopes();
+        $this->applyFiltersFromModel();
         $this->prepareVars();
+
         return $this->makePartial('filter');
     }
 
     /**
-     * Prepares the view data
+     * prepareVars for display
      */
     public function prepareVars()
     {
-        $this->defineFilterScopes();
         $this->vars['cssClasses'] = implode(' ', $this->cssClasses);
         $this->vars['scopes'] = $this->allScopes;
+        $this->vars['pageName'] = $this->customPageName;
     }
 
     /**
-     * Renders the HTML element for a scope
-     */
-    public function renderScopeElement($scope)
-    {
-        $params = ['scope' => $scope];
-
-        switch ($scope->type) {
-            case 'date':
-                if ($scope->value && $scope->value instanceof Carbon) {
-                    $params['dateStr'] = Backend::dateTime($scope->value, ['formatAlias' => 'dateMin']);
-                    $params['date']    = $scope->value->format('Y-m-d H:i:s');
-                }
-
-                break;
-            case 'daterange':
-                if ($scope->value && is_array($scope->value) && count($scope->value) === 2 &&
-                    $scope->value[0] && $scope->value[0] instanceof Carbon &&
-                    $scope->value[1] && $scope->value[1] instanceof Carbon
-                ) {
-                    $after = $scope->value[0]->format('Y-m-d H:i:s');
-                    $before = $scope->value[1]->format('Y-m-d H:i:s');
-
-                    if (strcasecmp($after, self::DEFAULT_AFTER_DATE) > 0) {
-                        $params['afterStr'] = Backend::dateTime($scope->value[0], ['formatAlias' => 'dateMin']);
-                        $params['after']    = $after;
-                    }
-                    else {
-                        $params['afterStr'] = '∞';
-                        $params['after']    = null;
-                    }
-
-                    if (strcasecmp($before, self::DEFAULT_BEFORE_DATE) < 0) {
-                        $params['beforeStr'] = Backend::dateTime($scope->value[1], ['formatAlias' => 'dateMin']);
-                        $params['before']    = $before;
-                    }
-                    else {
-                        $params['beforeStr'] = '∞';
-                        $params['before']    = null;
-                    }
-                }
-
-                break;
-            case 'number':
-                if (is_numeric($scope->value)) {
-                    $params['number'] = $scope->value;
-                }
-
-                break;
-
-            case 'numberrange':
-                if (
-                    $scope->value
-                    && (is_array($scope->value) && count($scope->value) === 2)
-                    && (isset($scope->value[0]) || isset($scope->value[1]))
-                ) {
-                    $min = $scope->value[0];
-                    $max = $scope->value[1];
-
-                    $params['minStr'] = $min ?? '-∞';
-                    $params['min'] = $min ?? null;
-
-                    $params['maxStr'] = $max ?? '∞';
-                    $params['max'] = $max ?? null;
-                }
-
-                break;
-
-            case 'text':
-                $params['value'] = $scope->value;
-                $params['size'] = array_get($scope->config, 'size', 10);
-
-                break;
-        }
-
-        return $this->makePartial('scope_'.$scope->type, $params);
-    }
-
-    /**
-     * Returns a HTML encoded value containing the other scopes this scope depends on
-     * @param  \Backend\Classes\FilterScope $scope
-     * @return string
-     */
-    protected function getScopeDepends($scope)
-    {
-        if (!$scope->dependsOn) {
-            return '';
-        }
-
-        $dependsOn = is_array($scope->dependsOn) ? $scope->dependsOn : [$scope->dependsOn];
-        $dependsOn = htmlspecialchars(json_encode($dependsOn), ENT_QUOTES, 'UTF-8');
-        return $dependsOn;
-    }
-
-    //
-    // AJAX
-    //
-
-    /**
-     * Update a filter scope value.
-     * @return array
-     */
-    public function onFilterUpdate()
-    {
-        $this->defineFilterScopes();
-
-        if (!$scope = post('scopeName')) {
-            return;
-        }
-
-        $scope = $this->getScope($scope);
-
-        switch ($scope->type) {
-            case 'group':
-                $data = json_decode(post('options'), true);
-                $active = $this->optionsFromAjax($data ?: null);
-                $this->setScopeValue($scope, $active);
-                break;
-
-            case 'checkbox':
-                $checked = post('value') == 'true';
-                $this->setScopeValue($scope, $checked);
-                break;
-
-            case 'switch':
-                $value = post('value');
-                $this->setScopeValue($scope, $value);
-                break;
-
-            case 'date':
-                $data = json_decode(post('options'), true);
-                $dates = $this->datesFromAjax($data['dates'] ?? null);
-
-                if (!empty($dates)) {
-                    list($date) = $dates;
-                }
-                else {
-                    $date = null;
-                }
-
-                $this->setScopeValue($scope, $date);
-                break;
-
-            case 'daterange':
-                $data = json_decode(post('options'), true);
-                $dates = $this->datesFromAjax($data['dates'] ?? null);
-
-                if (!empty($dates)) {
-                    list($after, $before) = $dates;
-
-                    $dates = [$after, $before];
-                }
-                else {
-                    $dates = null;
-                }
-
-                $this->setScopeValue($scope, $dates);
-                break;
-
-            case 'number':
-                $data = json_decode(post('options'), true);
-                $numbers = $this->numbersFromAjax($data['numbers'] ?? null);
-
-                if (!empty($numbers)) {
-                    list($number) = $numbers;
-                }
-                else {
-                    $number = null;
-                }
-
-                $this->setScopeValue($scope, $number);
-                break;
-
-            case 'numberrange':
-                $data = json_decode(post('options'), true);
-                $numbers = $this->numbersFromAjax($data['numbers'] ?? null);
-
-                if (!empty($numbers)) {
-                    list($min, $max) = $numbers;
-
-                    $numbers = [$min, $max];
-                }
-                else {
-                    $numbers = null;
-                }
-
-                $this->setScopeValue($scope, $numbers);
-                break;
-
-            case 'text':
-                $value = post('options.value.' . $scope->scopeName) ?: null;
-                $this->setScopeValue($scope, $value);
-                break;
-        }
-
-        /*
-         * Trigger class event, merge results as viewable array
-         */
-        $params = func_get_args();
-
-        $result = $this->fireEvent('filter.update', [$params]);
-
-        if ($result && is_array($result)) {
-            return call_user_func_array('array_merge', $result);
-        }
-    }
-
-    /**
-     * Returns available options for group scope type.
-     * @return array
-     */
-    public function onFilterGetOptions()
-    {
-        $this->defineFilterScopes();
-
-        $searchQuery = post('search');
-        if (!$scopeName = post('scopeName')) {
-            return;
-        }
-
-        $scope = $this->getScope($scopeName);
-        $activeKeys = $scope->value ? array_keys($scope->value) : [];
-        $available = $this->getAvailableOptions($scope, $searchQuery);
-        $active = $searchQuery ? [] : $this->filterActiveOptions($activeKeys, $available);
-
-        return [
-            'scopeName' => $scopeName,
-            'options' => [
-                'available' => $this->optionsToAjax($available),
-                'active'    => $this->optionsToAjax($active),
-            ]
-        ];
-    }
-
-    //
-    // Internals
-    //
-
-    /**
-     * Returns the available options a scope can use, either from the
-     * model relation or from a supplied array. Optionally apply a search
-     * constraint to the options.
-     * @param  string $scope
-     * @param  string $searchQuery
-     * @return array
-     */
-    protected function getAvailableOptions($scope, $searchQuery = null)
-    {
-        if ($scope->options) {
-            return $this->getOptionsFromArray($scope, $searchQuery);
-        }
-
-        $available = [];
-        $nameColumn = $this->getScopeNameFrom($scope);
-        $options = $this->getOptionsFromModel($scope, $searchQuery);
-        foreach ($options as $option) {
-            $available[$option->getKey()] = $option->{$nameColumn};
-        }
-
-        return $available;
-    }
-
-    /**
-     * Removes any already selected options from the available options, returns
-     * a newly built array.
-     * @param  array  $activeKeys
-     * @param  array  $availableOptions
-     * @return array
-     */
-    protected function filterActiveOptions(array $activeKeys, array &$availableOptions)
-    {
-        $active = [];
-        foreach ($availableOptions as $id => $option) {
-            if (!in_array($id, $activeKeys)) {
-                continue;
-            }
-
-            $active[$id] = $option;
-            unset($availableOptions[$id]);
-        }
-
-        return $active;
-    }
-
-    /**
-     * Looks at the model for defined scope items.
-     * @return Collection
-     */
-    protected function getOptionsFromModel($scope, $searchQuery = null)
-    {
-        $model = $this->scopeModels[$scope->scopeName];
-
-        $query = $model->newQuery();
-
-        $query->limit(200);
-
-        /**
-         * @event backend.filter.extendQuery
-         * Provides an opportunity to extend the query of the list of options
-         *
-         * Example usage:
-         *
-         *     Event::listen('backend.filter.extendQuery', function ((\Backend\Widgets\Filter) $filterWidget, $query, (\Backend\Classes\FilterScope) $scope) {
-         *         if ($scope->scopeName == 'status') {
-         *             $query->where('status', '<>', 'all');
-         *         }
-         *     });
-         *
-         * Or
-         *
-         *     $listWidget->bindEvent('filter.extendQuery', function ($query, (\Backend\Classes\FilterScope) $scope) {
-         *         if ($scope->scopeName == 'status') {
-         *             $query->where('status', '<>', 'all');
-         *         }
-         *     });
-         *
-         */
-        $this->fireSystemEvent('backend.filter.extendQuery', [$query, $scope]);
-
-        if (!$searchQuery) {
-            // If scope has active filter(s) run additional query and merge it with base query
-            if ($scope->value) {
-                $modelIds = array_keys($scope->value);
-                $activeOptions = $model::findMany($modelIds);
-            }
-
-            $modelOptions = isset($activeOptions)
-                ? $query->get()->merge($activeOptions)
-                : $query->get();
-
-            return $modelOptions;
-        }
-
-        $searchFields = [$model->getKeyName(), $this->getScopeNameFrom($scope)];
-        return $query->searchWhere($searchQuery, $searchFields)->get();
-    }
-
-    /**
-     * Look at the defined set of options for scope items, or the model method.
-     * @return array
-     */
-    protected function getOptionsFromArray($scope, $searchQuery = null)
-    {
-        /*
-         * Load the data
-         */
-        $options = $scope->options;
-
-        if (is_scalar($options)) {
-            $model = $this->scopeModels[$scope->scopeName];
-            $methodName = $options;
-
-            if (!$model->methodExists($methodName)) {
-                throw new ApplicationException(Lang::get('backend::lang.filter.options_method_not_exists', [
-                    'model'  => get_class($model),
-                    'method' => $methodName,
-                    'filter' => $scope->scopeName
-                ]));
-            }
-
-            if (!empty($scope->dependsOn)) {
-                $options = $model->$methodName($this->getScopes());
-            } else {
-                $options = $model->$methodName();
-            }
-        }
-        elseif (!is_array($options)) {
-            $options = [];
-        }
-
-        /*
-         * Apply the search
-         */
-        $searchQuery = Str::lower($searchQuery);
-        if (strlen($searchQuery)) {
-            $options = $this->filterOptionsBySearch($options, $searchQuery);
-        }
-
-        return $options;
-    }
-
-    /**
-     * Filters an array of options by a search term.
-     * @param array $options
-     * @param string $query
-     * @return array
-     */
-    protected function filterOptionsBySearch($options, $query)
-    {
-        $filteredOptions = [];
-
-        $optionMatchesSearch = function ($words, $option) {
-            foreach ($words as $word) {
-                $word = trim($word);
-                if (!strlen($word)) {
-                    continue;
-                }
-
-                if (!Str::contains(Str::lower($option), $word)) {
-                    return false;
-                }
-            }
-
-            return true;
-        };
-
-        /*
-         * Exact
-         */
-        foreach ($options as $index => $option) {
-            if (Str::is(Str::lower($option), $query)) {
-                $filteredOptions[$index] = $option;
-                unset($options[$index]);
-            }
-        }
-
-        /*
-         * Fuzzy
-         */
-        $words = explode(' ', $query);
-        foreach ($options as $index => $option) {
-            if ($optionMatchesSearch($words, $option)) {
-                $filteredOptions[$index] = $option;
-            }
-        }
-
-        return $filteredOptions;
-    }
-
-    /**
-     * Creates a flat array of filter scopes from the configuration.
+     * defineFilterScopes creates an array of filter scopes from the configuration
      */
     protected function defineFilterScopes()
     {
@@ -555,14 +164,17 @@ class Filter extends WidgetBase
          */
         $this->fireSystemEvent('backend.filter.extendScopesBefore');
 
-        /*
-         * All scopes
-         */
+        // All scopes
         if (!isset($this->scopes) || !is_array($this->scopes)) {
             $this->scopes = [];
         }
 
-        $this->addScopes($this->scopes);
+        if ($this->scopes) {
+            $this->addScopes($this->scopes);
+        }
+        else {
+            $this->addScopesFromModel();
+        }
 
         /**
          * @event backend.filter.extendScopes
@@ -587,28 +199,31 @@ class Filter extends WidgetBase
          */
         $this->fireSystemEvent('backend.filter.extendScopes');
 
+        // Apply post processing
+        $this->processLegacyDefinitions($this->allScopes);
+        $this->processScopeModels($this->allScopes);
+        $this->processPermissionCheck($this->allScopes);
+        $this->processAutoOrder($this->allScopes);
+        $this->processFilterWidgetScopes($this->allScopes);
+        $this->processFieldOptionValues($this->allScopes);
+
+        // Set scope values from data source
+        foreach ($this->allScopes as $scope) {
+            $scope->setScopeValue($this->getScopeValue($scope));
+        }
+
         $this->scopesDefined = true;
     }
 
     /**
-     * Programatically add scopes, used internally and for extensibility.
+     * addScopes programmatically, used internally and for extensibility.
      */
     public function addScopes(array $scopes)
     {
         foreach ($scopes as $name => $config) {
-            /*
-             * Check if user has permissions to show this filter
-             */
-            $permissions = array_get($config, 'permissions');
-            if (!empty($permissions) && !BackendAuth::getUser()->hasAccess($permissions, false)) {
-                continue;
-            }
+            $scopeObj = $this->makeFilterScope($name, (array) $config);
 
-            $scopeObj = $this->makeFilterScope($name, $config);
-
-            /*
-             * Check that the filter scope matches the active context
-             */
+            // Check that the filter scope matches the active context
             if ($scopeObj->context !== null) {
                 $context = is_array($scopeObj->context) ? $scopeObj->context : [$scopeObj->context];
                 if (!in_array($this->getContext(), $context)) {
@@ -616,48 +231,30 @@ class Filter extends WidgetBase
                 }
             }
 
-            /*
-             * Validate scope model
-             */
-            if (isset($config['modelClass'])) {
-                $class = $config['modelClass'];
-                $model = new $class;
-                $this->scopeModels[$name] = $model;
-            }
+            // Scope name without @context suffix
+            $scopeName = $scopeObj->scopeName;
 
-            /*
-             * Ensure scope type options are set
-             */
-            $scopeProperties = [];
-            switch ($scopeObj->type) {
-                case 'date':
-                case 'daterange':
-                    $scopeProperties = [
-                        'minDate'   => '2000-01-01',
-                        'maxDate'   => '2099-12-31',
-                        'firstDay'  => 0,
-                        'yearRange' => 10,
-                        'ignoreTimezone' => false,
-                    ];
-
-                    break;
-            }
-
-            foreach ($scopeProperties as $property => $value) {
-                if (isset($config[$property])) {
-                    $value = $config[$property];
-                }
-
-                $scopeObj->{$property} = $value;
-            }
-
-            $this->allScopes[$name] = $scopeObj;
+            $this->allScopes[$scopeName] = $scopeObj;
         }
     }
 
     /**
-     * Programatically remove a scope, used for extensibility.
-     * @param string $scopeName Scope name
+     * addScopesFromModel from the model
+     */
+    protected function addScopesFromModel(): void
+    {
+        if (!$this->model) {
+            return;
+        }
+
+        if (method_exists($this->model, 'defineFilterScopes')) {
+            $this->model->defineFilterScopes($this);
+        }
+    }
+
+    /**
+     * removeScope programmatically, used for extensibility.
+     * @param string $scopeName
      */
     public function removeScope($scopeName)
     {
@@ -667,31 +264,30 @@ class Filter extends WidgetBase
     }
 
     /**
-     * Creates a filter scope object from name and configuration.
+     * makeFilterScope creates a filter scope object from name and configuration.
      */
     protected function makeFilterScope($name, $config)
     {
-        $label = $config['label'] ?? null;
         $scopeType = $config['type'] ?? null;
+        [$scopeName, $scopeContext] = $this->evalScopeName($name);
 
-        $scope = new FilterScope($name, $label);
-        $scope->displayAs($scopeType, $config);
-        $scope->idPrefix = $this->alias;
+        $scope = new FilterScope(['scopeName' => $scopeName]);
+        $scope->useConfig($config);
+        $scope->idPrefix($this->getId());
 
-        /*
-         * Set scope value
-         */
-        $scope->value = $this->getScopeValue($scope, @$config['default']);
+        if ($scopeContext) {
+            $scope->context($scopeContext);
+        }
+
+        if ($scopeType) {
+            $scope->displayAs($scopeType);
+        }
 
         return $scope;
     }
 
-    //
-    // Filter query logic
-    //
-
     /**
-     * Applies all scopes to a DB query.
+     * applyAllScopesToQuery applies all scopes to a DB query.
      * @param  Builder $query
      * @return Builder
      */
@@ -700,15 +296,6 @@ class Filter extends WidgetBase
         $this->defineFilterScopes();
 
         foreach ($this->allScopes as $scope) {
-            // Ensure that only valid values are set scopes of type: group
-            if ($scope->type === 'group') {
-                $activeKeys = $scope->value ? array_keys($scope->value) : [];
-                $available = $this->getAvailableOptions($scope);
-                $active = $this->filterActiveOptions($activeKeys, $available);
-                $value = !empty($active) ? $active : null;
-                $this->setScopeValue($scope, $value);
-            }
-
             $this->applyScopeToQuery($scope, $query);
         }
 
@@ -716,7 +303,7 @@ class Filter extends WidgetBase
     }
 
     /**
-     * Applies a filter scope constraints to a DB query.
+     * applyScopeToQuery applies a filter scope constraints to a DB query.
      * @param  string $scope
      * @param  Builder $query
      * @return Builder
@@ -727,203 +314,234 @@ class Filter extends WidgetBase
             $scope = $this->getScope($scope);
         }
 
-        if (!$scope->value) {
-            return;
-        }
-
         switch ($scope->type) {
-            case 'date':
-                if ($scope->value instanceof Carbon) {
-                    $value = $scope->value;
-
-                    /*
-                     * Condition
-                     */
-                    if ($scopeConditions = $scope->conditions) {
-                        $query->whereRaw(DbDongle::parse(strtr($scopeConditions, [
-                            ':filtered' => $value->format('Y-m-d'),
-                            ':after'    => $value->format('Y-m-d H:i:s'),
-                            ':before'   => $value->copy()->addDay()->addMinutes(-1)->format('Y-m-d H:i:s')
-                        ])));
-                    }
-                    /*
-                     * Scope
-                     */
-                    elseif ($scopeMethod = $scope->scope) {
-                        $query->$scopeMethod($value);
-                    }
-                }
-
+            case 'checkbox':
+            case 'switch':
+                $this->applyCheckboxScopeToQuery($query, $scope);
                 break;
 
-            case 'daterange':
-                if (is_array($scope->value) && count($scope->value) > 1) {
-                    list($after, $before) = array_values($scope->value);
-
-                    if ($after && $after instanceof Carbon && $before && $before instanceof Carbon) {
-                        /*
-                         * Condition
-                         */
-                        if ($scopeConditions = $scope->conditions) {
-                            $query->whereRaw(DbDongle::parse(strtr($scopeConditions, [
-                                ':afterDate'  => $after->format('Y-m-d'),
-                                ':after'      => $after->format('Y-m-d H:i:s'),
-                                ':beforeDate' => $before->format('Y-m-d'),
-                                ':before'     => $before->format('Y-m-d H:i:s')
-                            ])));
-                        }
-                        /*
-                         * Scope
-                         */
-                        elseif ($scopeMethod = $scope->scope) {
-                            $query->$scopeMethod($after, $before);
-                        }
-                    }
-                }
-
+            case 'dropdown':
+                $this->applyDropdownScopeToQuery($query, $scope);
                 break;
 
-            case 'number':
-                if (is_numeric($scope->value)) {
-                    /*
-                     * Condition
-                     */
-                    if ($scopeConditions = $scope->conditions) {
-                        $query->whereRaw(DbDongle::parse(strtr($scopeConditions, [
-                            ':filtered' => $scope->value,
-                        ])));
-                    }
-                    /*
-                     * Scope
-                     */
-                    elseif ($scopeMethod = $scope->scope) {
-                        $query->$scopeMethod($scope->value);
-                    }
-                }
-
-                break;
-
-            case 'numberrange':
-                if (is_array($scope->value) && count($scope->value) > 1) {
-                    list($min, $max) = array_values($scope->value);
-
-                    if (isset($min) || isset($max)) {
-                        /*
-                         * Condition
-                         */
-                        if ($scopeConditions = $scope->conditions) {
-                            $query->whereRaw(DbDongle::parse(strtr($scopeConditions, [
-                                ':min'  => $min === null ? -2147483647 : $min,
-                                ':max'  => $max === null ? 2147483647 : $max
-                            ])));
-                        }
-                        /*
-                         * Scope
-                         */
-                        elseif ($scopeMethod = $scope->scope) {
-                            $query->$scopeMethod($min, $max);
-                        }
-                    }
-                }
-
-                break;
-
-            case 'text':
-                /*
-                 * Condition
-                 */
-                if ($scopeConditions = $scope->conditions) {
-                    $query->whereRaw(DbDongle::parse(strtr($scopeConditions, [
-                        ':value' => Db::getPdo()->quote($scope->value),
-                    ])));
-                }
-
-                /*
-                 * Scope
-                 */
-                elseif ($scopeMethod = $scope->scope) {
-                    $query->$scopeMethod($scope->value);
-                }
-
-                break;
-
-            default:
-                $value = is_array($scope->value) ? array_keys($scope->value) : $scope->value;
-
-                if (empty($value)) {
-                    break;
-                }
-
-                /*
-                 * Condition
-                 */
-                if ($scopeConditions = $scope->conditions) {
-                    /*
-                     * Switch scope: multiple conditions, value either 1 or 2
-                     */
-                    if (is_array($scopeConditions)) {
-                        $conditionNum = is_array($value) ? 0 : $value - 1;
-                        list($scopeConditions) = array_slice($scopeConditions, $conditionNum);
-                    }
-
-                    if (is_array($value)) {
-                        $filtered = implode(',', array_build($value, function ($key, $_value) {
-                            return [$key, Db::getPdo()->quote($_value)];
-                        }));
-                    }
-                    else {
-                        $filtered = Db::getPdo()->quote($value);
-                    }
-
-                    $query->whereRaw(DbDongle::parse(strtr($scopeConditions, [':filtered' => $filtered])));
-                }
-                /*
-                 * Scope
-                 */
-                elseif ($scopeMethod = $scope->scope) {
-                    $query->$scopeMethod($value);
-                }
-
+            case 'widget':
+                $this->applyWidgetScopeToQuery($query, $scope);
                 break;
         }
 
         return $query;
     }
 
-    //
-    // Access layer
-    //
+    /**
+     * applyWidgetScopeToQuery
+     */
+    public function applyWidgetScopeToQuery($query, $scope)
+    {
+        if (!$scope->scopeValue) {
+            return;
+        }
+
+        $this->makeFilterScopeWidget($scope)->applyScopeToQuery($query);
+    }
 
     /**
-     * Returns a scope value for this widget instance.
+     * applyCheckboxScopeToQuery
      */
-    public function getScopeValue($scope, $default = null)
+    public function applyCheckboxScopeToQuery($query, $scope)
+    {
+        // Check true value
+        $scopeValue = $scope->scopeValue !== null ? $scope->value : null;
+        if (!$scopeValue) {
+            return;
+        }
+
+        // Scope
+        if ($scope->modelScope) {
+            $scope->applyScopeMethodToQuery($query);
+            return;
+        }
+
+        // Condition
+        $scopeConditions = $scope->conditions;
+        if ($scopeConditions) {
+            // Switch scope: multiple conditions, value either 1 or 2
+            if (is_array($scopeConditions)) {
+                $conditionNum = ((int) $scopeValue) - 1;
+                [$scopeConditions] = array_slice($scopeConditions, $conditionNum);
+            }
+
+            $query->whereRaw(DbDongle::parse($scopeConditions));
+            return;
+        }
+
+        if ($scope->type === 'switch') {
+            $scopeValue = (int) $scopeValue === 2;
+        }
+
+        $query->where($scope->valueFrom ?: $scope->scopeName, $scopeValue);
+    }
+
+    /**
+     * applyDropdownScopeToQuery
+     */
+    public function applyDropdownScopeToQuery($query, $scope)
+    {
+        // Check true value
+        $scopeValue = $scope->scopeValue !== null ? $scope->value : null;
+        if ($scopeValue === null || $scopeValue === '') {
+            return;
+        }
+
+        // Scope
+        if ($scope->modelScope) {
+            $scope->applyScopeMethodToQuery($query);
+            return;
+        }
+
+        // Condition
+        $sqlCondition = $scope->conditions;
+        if (is_string($sqlCondition)) {
+            // @deprecated adapt legacy format
+            $sqlCondition = str_replace(["':value'", "':filtered'", ':filtered'], ':value', $sqlCondition);
+
+            $query->whereRaw(DbDongle::parse($sqlCondition, [
+                'value' => $scopeValue
+            ]));
+            return;
+        }
+
+        $query->where($scope->valueFrom ?: $scope->scopeName, $scopeValue);
+    }
+
+    /**
+     * renderScopeElement for a scope
+     */
+    public function renderScopeElement($scope)
+    {
+        if (is_string($scope)) {
+            if (!isset($this->allScopes[$scope])) {
+                throw new SystemException(Lang::get(
+                    'backend::lang.form.missing_definition',
+                    compact('scope')
+                ));
+            }
+
+            $scope = $this->allScopes[$scope];
+        }
+
+        return $this->makePartial('scope_' . $scope->type, [
+            'scope' => $scope,
+        ]);
+    }
+
+    /**
+     * renderScopeFormElement
+     */
+    public function renderScopeFormElement($scope)
+    {
+        if (is_string($scope)) {
+            if (!isset($this->allScopes[$scope])) {
+                throw new SystemException(Lang::get(
+                    'backend::lang.form.missing_definition',
+                    compact('scope')
+                ));
+            }
+
+            $scope = $this->allScopes[$scope];
+        }
+
+        return $this->makePartial('form_' . $scope->type, [
+            'scope' => $scope,
+        ]);
+    }
+
+    /**
+     * evalScopeName parses a scopes's name for embedded context
+     * with a result of scopeName@context to [scopeName, context]
+     */
+    protected function evalScopeName(string $scope): array
+    {
+        if (strpos($scope, '@') === false) {
+            return [$scope, null];
+        }
+
+        return explode('@', $scope);
+    }
+
+    /**
+     * getHeaderValue looks up the scope header
+     */
+    public function getHeaderValue($scope)
+    {
+        if ($scope->shortLabel !== null) {
+            $value = Lang::get($scope->shortLabel);
+        }
+        else {
+            $value = Lang::get($scope->label);
+        }
+
+        /**
+         * @event backend.filter.overrideHeaderValue
+         * Overrides the scope header value in a filter widget.
+         *
+         * If a value is returned from this event, it will be used as the value for the provided scope.
+         * `$value` is passed by reference so modifying the variable in place is also supported. Example usage:
+         *
+         *     Event::listen('backend.filter.overrideHeaderValue', function ($filterWidget, $scope, &$value) {
+         *         $value .= '-modified';
+         *     });
+         *
+         * Or
+         *
+         *     $filterWidget->bindEvent('filter.overrideHeaderValue', function ($scope, $value) {
+         *         return 'Custom header value';
+         *     });
+         *
+         */
+        if ($response = $this->fireSystemEvent('backend.filter.overrideHeaderValue', [$scope, &$value])) {
+            $value = $response;
+        }
+
+        return $value;
+    }
+
+    /**
+     * getScopeValue returns a scope value for this widget instance.
+     */
+    public function getScopeValue($scope)
     {
         if (is_string($scope)) {
             $scope = $this->getScope($scope);
         }
 
         $cacheKey = 'scope-'.$scope->scopeName;
-        return $this->getSession($cacheKey, $default);
+        return $this->getSession($cacheKey, $scope->getDefaultScopeValue());
     }
 
     /**
-     * Sets an scope value for this widget instance.
+     * putScopeValue sets an scope value for this widget instance.
      */
-    public function setScopeValue($scope, $value)
+    public function putScopeValue($scope, $value)
     {
         if (is_string($scope)) {
             $scope = $this->getScope($scope);
         }
 
+        // Set in session
         $cacheKey = 'scope-'.$scope->scopeName;
         $this->putSession($cacheKey, $value);
 
-        $scope->value = $value;
+        // Set in memory
+        $scope->setScopeValue($value);
+
+        // Set in widget memory
+        if ($scope->type === 'widget' && ($widget = $this->makeFilterScopeWidget($scope))) {
+            $widget->getFilterScope()->setScopeValue($value);
+        }
     }
 
     /**
-     * Get all the registered scopes for the instance.
+     * getScopes gets all the registered scopes for the instance.
      * @return array
      */
     public function getScopes()
@@ -932,35 +550,55 @@ class Filter extends WidgetBase
     }
 
     /**
-     * Get a specified scope object
+     * getScope gets a specified scope object
      * @param  string $scope
      * @return mixed
      */
     public function getScope($scope)
     {
         if (!isset($this->allScopes[$scope])) {
-            throw new ApplicationException('No definition for scope ' . $scope);
+            throw new ApplicationException("No definition for scope [{$scope}] found");
         }
 
         return $this->allScopes[$scope];
     }
 
     /**
-     * Returns the display name column for a scope.
-     * @param  string $scope
-     * @return string
+     * getDependScopes
      */
-    public function getScopeNameFrom($scope)
+    protected function getDependScopes($parentScope): array
     {
-        if (is_string($scope)) {
-            $scope = $this->getScope($scope);
+        $dependScopes = [];
+        foreach ($this->getScopes() as $scope) {
+            if ($scope->scopeName === $parentScope->scopeName) {
+                continue;
+            }
+
+            if (!$scope->dependsOn) {
+                continue;
+            }
+
+            foreach ((array) $scope->dependsOn as $scopeName) {
+                if ($scopeName === $parentScope->scopeName) {
+                    $dependScopes[] = $scope;
+                }
+            }
         }
 
-        return $scope->nameFrom;
+        return $dependScopes;
     }
 
     /**
-     * Returns the active context for displaying the filter.
+     * getModel returns the active model for this form.
+     * @return \Model|null
+     */
+    public function getModel()
+    {
+        return $this->model;
+    }
+
+    /**
+     * getContext returns the active context for displaying the form.
      * @return string
      */
     public function getContext()
@@ -968,123 +606,227 @@ class Filter extends WidgetBase
         return $this->context;
     }
 
-    //
-    // Helpers
-    //
-
     /**
-     * Convert a key/pair array to a named array {id: 1, name: 'Foobar'}
-     * @param  array $options
-     * @return array
+     * onLoadFilterForm
      */
-    protected function optionsToAjax($options)
+    public function onLoadFilterForm()
     {
-        $processed = [];
-        foreach ($options as $id => $result) {
-            $processed[] = ['id' => $id, 'name' => trans($result)];
+        $this->defineFilterScopes();
+
+        if (!$scope = post('scopeName')) {
+            return;
         }
-        return $processed;
+
+        return $this->renderScopeFormElement($scope);
     }
 
     /**
-     * Convert a named array to a key/pair array
-     * @param  array $options
+     * onFilterUpdate updates a filter scope value.
      * @return array
      */
-    protected function optionsFromAjax($options)
+    public function onFilterUpdate()
     {
-        $processed = [];
-        if (!is_array($options)) {
-            return $processed;
+        if (post('preload')) {
+            return $this->onPreloadContent();
         }
 
-        foreach ($options as $option) {
-            $id = array_get($option, 'id');
-            if ($id === null) {
+        $updateScopePartial = false;
+        $this->defineFilterScopes();
+
+        if (!$scope = post('scopeName')) {
+            return;
+        }
+
+        $scope = $this->getScope($scope);
+
+        switch ($scope->type) {
+            case 'checkbox':
+                $checked = post('value');
+                $this->putScopeValue($scope, ['value' => $checked]);
+                break;
+
+            case 'dropdown':
+            case 'switch':
+                $value = post('value');
+                $this->putScopeValue($scope, ['value' => $value]);
+                break;
+
+            case 'widget':
+                $widget = $this->makeFilterScopeWidget($scope);
+                $this->putScopeValue($scope, $widget->getActiveValue());
+                $updateScopePartial = true;
+                break;
+        }
+
+        // Apply model filters to scopes
+        $this->applyFiltersFromModel();
+
+        // Build response
+        $result = [];
+        if ($updateScopePartial) {
+            $result['#' . $scope->getId('group')] = $this->makePartial('scope', ['scope' => $scope]);
+        }
+
+        // Reset dependant scopes
+        if ($dependScopes = $this->getDependScopes($scope)) {
+            foreach ($dependScopes as $dScope) {
+                $this->putScopeValue($dScope, null);
+                $result['#' . $dScope->getId('group')] = $this->makePartial('scope', ['scope' => $dScope]);
+            }
+        }
+
+        $result = $this->extendScopeUpdateResponse($result, func_get_args());
+
+        return $result;
+    }
+
+    /**
+     * onPreloadContent
+     */
+    public function onPreloadContent()
+    {
+        $this->defineFilterScopes();
+
+        $result = [];
+
+        foreach ($this->getScopes() as $scope) {
+            $hasNoForm = in_array($scope->type, ['checkbox', 'switch', 'dropdown']);
+            if ($hasNoForm) {
                 continue;
             }
-            $processed[$id] = array_get($option, 'name');
+
+            $result[$scope->scopeName] = $this->renderScopeFormElement($scope);
         }
-        return $processed;
+
+        return ['popoverContent' => $result];
     }
 
     /**
-     * Convert an array from the posted dates
-     *
-     * @param  array $dates
-     *
-     * @return array
+     * onFilterClearAll
      */
-    protected function datesFromAjax($ajaxDates)
+    public function onFilterClearAll()
     {
-        $dates = [];
-        $dateRegex = '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/';
+        $this->prepareVars();
 
-        if (null !== $ajaxDates) {
-            if (!is_array($ajaxDates)) {
-                if (preg_match($dateRegex, $ajaxDates)) {
-                    $dates = [$ajaxDates];
-                }
-            } else {
-                foreach ($ajaxDates as $i => $date) {
-                    if (preg_match($dateRegex, $date)) {
-                        $dates[] = Carbon::createFromFormat('Y-m-d H:i:s', $date);
-                    } elseif (empty($date)) {
-                        if ($i == 0) {
-                            $dates[] = Carbon::createFromFormat('Y-m-d H:i:s', self::DEFAULT_AFTER_DATE);
-                        } else {
-                            $dates[] = Carbon::createFromFormat('Y-m-d H:i:s', self::DEFAULT_BEFORE_DATE);
-                        }
-                    } else {
-                        $dates = [];
-                        break;
-                    }
-                }
-            }
-        }
-        return $dates;
-    }
+        foreach ($this->getScopes() as $scope) {
+            $scope->setScopeValue($scope->getDefaultScopeValue());
 
-    /**
-     * Convert an array from the posted numbers
-     *
-     * @param  array $dates
-     *
-     * @return array
-     */
-    protected function numbersFromAjax($ajaxNumbers)
-    {
-        $numbers = [];
-        $numberRegex = '/\d/';
-
-        if (!empty($ajaxNumbers)) {
-            if (!is_array($ajaxNumbers) && preg_match($numberRegex, $ajaxNumbers)) {
-                $numbers = [$ajaxNumbers];
-            } else {
-                foreach ($ajaxNumbers as $i => $number) {
-                    if (preg_match($numberRegex, $number)) {
-                        $numbers[] = $number;
-                    } else {
-                        $numbers[] = null;
-                    }
-                }
+            if ($scope->type === 'widget' && ($widget = $this->makeFilterScopeWidget($scope))) {
+                $widget->getFilterScope()->setScopeValue($scope->getDefaultScopeValue());
             }
         }
 
-        return $numbers;
+        $this->resetSession();
+
+        // Return response
+        $result = [
+            '#' . $this->getId() => $this->makePartial('filter-container')
+        ];
+
+        $result = $this->extendScopeUpdateResponse($result, func_get_args());
+
+        return $result;
     }
 
     /**
-     * @param mixed $scope
-     *
-     * @return string
+     * applyFiltersFromModel allows the model to filter scopes
      */
-    protected function getFilterDateFormat($scope)
+    protected function applyFiltersFromModel()
     {
-        if (isset($scope->date_format)) {
-            return $scope->date_format;
+        if (!$this->model) {
+            return;
         }
 
-        return trans('backend::lang.filter.date.format');
+        $targetModel = clone $this->model;
+
+        // For passing to events
+        $holder = new ElementHolder($this->allScopes);
+
+        // Standard usage
+        if (method_exists($targetModel, 'filterScopes')) {
+            $targetModel->filterScopes($holder, $this->getContext());
+        }
+
+        // Advanced usage
+        if (method_exists($targetModel, 'fireEvent')) {
+            /**
+             * @event model.filter.filterScopes
+             * Called after the filter is initialized
+             *
+             * Example usage:
+             *
+             *     $model->bindEvent('model.filter.filterScopes', function ((\Backend\Widgets\Filter) $filterWidget, (stdClass) $scopes, (string) $context) use (\October\Rain\Database\Model $model) {
+             *         if ($someCondition) {
+             *             $scopes->roles->hidden = false;
+             *         }
+             *     });
+             *
+             */
+            $targetModel->fireEvent('model.filter.filterScopes', [$this, $holder, $this->getContext()]);
+        }
+    }
+
+    /**
+     * extendScopeUpdateResponse
+     */
+    public function extendScopeUpdateResponse($result, $params)
+    {
+        /**
+         * @event backend.filter.update
+         * Called after the filter is updated, should return an array of additional result parameters.
+         *
+         * Example usage:
+         *
+         *     Event::listen('backend.filter.update', function ((\Backend\Widgets\Filter) $filterWidget, (array) $params) {
+         *         return ['#my-partial-id' => $filterWidget->makePartial(...)];
+         *     });
+         *
+         * Or
+         *
+         *     $filterWidget->bindEvent('filter.update', function ((array) $params) use ((\Backend\Widgets\Filter $filterWidget)) {
+         *         return ['#my-partial-id' => $filterWidget->makePartial(...)];
+         *     });
+         *
+         */
+        $eventResults = $this->fireSystemEvent('backend.filter.update', [$params], false);
+
+        foreach ($eventResults as $eventResult) {
+            if (!is_array($eventResult)) {
+                continue;
+            }
+
+            $result = $eventResult + $result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * extendScopeModelQuery
+     */
+    public function extendScopeModelQuery($scope, $query)
+    {
+        /**
+         * @event backend.filter.extendQuery
+         * Provides an opportunity to extend the query of the list of options
+         *
+         * Example usage:
+         *
+         *     Event::listen('backend.filter.extendQuery', function ((\Backend\Widgets\Filter) $filterWidget, $query, (\Backend\Classes\FilterScope) $scope) {
+         *         if ($scope->scopeName == 'status') {
+         *             $query->where('status', '<>', 'all');
+         *         }
+         *     });
+         *
+         * Or
+         *
+         *     $listWidget->bindEvent('filter.extendQuery', function ($query, (\Backend\Classes\FilterScope) $scope) {
+         *         if ($scope->scopeName == 'status') {
+         *             $query->where('status', '<>', 'all');
+         *         }
+         *     });
+         *
+         */
+        $this->fireSystemEvent('backend.filter.extendQuery', [$query, $scope]);
     }
 }

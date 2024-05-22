@@ -3,60 +3,63 @@
 use October\Rain\Html\Helper as HtmlHelper;
 
 /**
- * Form Widget base class
- * Widgets used specifically for forms
+ * FormWidgetBase class contains widgets used specifically for forms
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
 abstract class FormWidgetBase extends WidgetBase
 {
-
     //
-    // Configurable properties
+    // Configurable Properties
     //
 
     /**
-     * @var \October\Rain\Database\Model Form model object.
+     * @var \October\Rain\Database\Model model object for the form.
      */
     public $model;
 
     /**
-     * @var array Dataset containing field values, if none supplied model should be used.
+     * @var array data containing field values, if none supplied model should be used.
      */
     public $data;
 
     /**
-     * @var string Active session key, used for editing forms and deferred bindings.
+     * @var string sessionKey for the active session, used for editing forms and deferred bindings.
      */
     public $sessionKey;
 
     /**
-     * @var bool Render this form with uneditable preview data.
+     * @var string sessionKeySuffix adds some extra uniqueness to the session key.
+     */
+    public $sessionKeySuffix;
+
+    /**
+     * @var bool previewMode renders this form with uneditable preview data.
      */
     public $previewMode = false;
 
     /**
-     * @var bool Determines if this form field should display comments and labels.
+     * @var bool showLabels determines if this form field should display comments and labels.
      */
     public $showLabels = true;
 
     //
-    // Object properties
+    // Object Properties
     //
 
     /**
-     * @var FormField Object containing general form field information.
+     * @var FormField formField object containing general form field information.
      */
     protected $formField;
 
     /**
-     * @var Backend\Widgets\Form The parent form that contains this field
+     * @var \Backend\Widgets\Form The parent form that contains this field
      */
     protected $parentForm = null;
 
     /**
-     * @var string Form field name.
+     * @var string fieldName
      */
     protected $fieldName;
 
@@ -66,16 +69,16 @@ abstract class FormWidgetBase extends WidgetBase
     protected $valueFrom;
 
     /**
-     * Constructor
-     * @param $controller Controller Active controller object.
-     * @param $formField FormField Object containing general form field information.
-     * @param $configuration array Configuration the relates to this widget.
+     * __construct
+     * @param Controller $controller
+     * @param FormField $formField
+     * @param array $configuration
      */
     public function __construct($controller, $formField, $configuration = [])
     {
         $this->formField = $formField;
         $this->fieldName = $formField->fieldName;
-        $this->valueFrom = $formField->valueFrom;
+        $this->valueFrom = $formField->valueFrom ?: $this->fieldName;
 
         $this->config = $this->makeConfig($configuration);
 
@@ -83,6 +86,7 @@ abstract class FormWidgetBase extends WidgetBase
             'model',
             'data',
             'sessionKey',
+            'sessionKeySuffix',
             'previewMode',
             'showLabels',
             'parentForm',
@@ -92,9 +96,8 @@ abstract class FormWidgetBase extends WidgetBase
     }
 
     /**
-     * Retrieve the parent form for this formwidget
-     *
-     * @return Backend\Widgets\Form|null
+     * getParentForm retrieves the parent form for this formwidget
+     * @return \Backend\Widgets\Form|null
      */
     public function getParentForm()
     {
@@ -102,8 +105,8 @@ abstract class FormWidgetBase extends WidgetBase
     }
 
     /**
-     * Returns the HTML element field name for this widget, used for capturing
-     * user input, passed back to the getSaveValue method when saving.
+     * getFieldName returns the HTML element field name for this widget, used for
+     * capturing user input, passed back to the getSaveValue method when saving.
      * @return string HTML element name
      */
     public function getFieldName()
@@ -112,7 +115,7 @@ abstract class FormWidgetBase extends WidgetBase
     }
 
     /**
-     * Returns a unique ID for this widget. Useful in creating HTML markup.
+     * getId returns a unique ID for this widget. Useful in creating HTML markup.
      */
     public function getId($suffix = null)
     {
@@ -122,8 +125,8 @@ abstract class FormWidgetBase extends WidgetBase
     }
 
     /**
-     * Process the postback value for this widget. If the value is omitted from
-     * postback data, it will be NULL, otherwise it will be an empty string.
+     * getSaveValue processes the postback value for this widget. If the value is omitted from
+     * postback data, the form widget will be skipped.
      * @param mixed $value The existing value for this widget.
      * @return string The new value for this widget.
      */
@@ -133,7 +136,7 @@ abstract class FormWidgetBase extends WidgetBase
     }
 
     /**
-     * Returns the value for this form field,
+     * getLoadValue returns the value for this form field,
      * supports nesting via HTML array.
      * @return string
      */
@@ -143,10 +146,27 @@ abstract class FormWidgetBase extends WidgetBase
             return $this->formField->value;
         }
 
-        $defaultValue = !$this->model->exists
+        $defaultValue = $this->model && !$this->model->exists
             ? $this->formField->getDefaultFromData($this->data ?: $this->model)
             : null;
 
         return $this->formField->getValueFromData($this->data ?: $this->model, $defaultValue);
+    }
+
+    /**
+     * resetFormValue from the form field, triggered by the parent form calling `setFormValues`
+     * and the new value is in the formField object `value` property.
+     */
+    public function resetFormValue()
+    {
+    }
+
+    /**
+     * getSessionKey returns the active session key, including suffix.
+     * @return string
+     */
+    public function getSessionKey()
+    {
+        return $this->sessionKey . $this->sessionKeySuffix;
     }
 }

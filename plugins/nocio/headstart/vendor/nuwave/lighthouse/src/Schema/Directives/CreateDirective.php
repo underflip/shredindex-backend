@@ -1,81 +1,37 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Model;
-use GraphQL\Type\Definition\ResolveInfo;
-use Illuminate\Database\DatabaseManager;
-use Nuwave\Lighthouse\Schema\Values\FieldValue;
-use Nuwave\Lighthouse\Execution\MutationExecutor;
-use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
-use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Nuwave\Lighthouse\Execution\Arguments\SaveModel;
 
-class CreateDirective extends BaseDirective implements FieldResolver, DefinedDirective
+class CreateDirective extends MutationExecutorDirective
 {
-    /**
-     * @var \Illuminate\Database\DatabaseManager
-     */
-    protected $databaseManager;
-
-    /**
-     * @param  \Illuminate\Database\DatabaseManager  $databaseManager
-     * @return void
-     */
-    public function __construct(DatabaseManager $databaseManager)
-    {
-        $this->databaseManager = $databaseManager;
-    }
-
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'create';
-    }
-
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
 Create a new Eloquent model with the given arguments.
 """
-directive @create(  
+directive @create(
   """
   Specify the class name of the model to use.
-  This is only needed when the default model resolution does not work.
+  This is only needed when the default model detection does not work.
   """
   model: String
-) on FIELD_DEFINITION
-SDL;
+
+  """
+  Specify the name of the relation on the parent model.
+  This is only needed when using this directive as a nested arg
+  resolver and if the name of the relation is not the arg name.
+  """
+  relation: String
+) on FIELD_DEFINITION | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
+GRAPHQL;
     }
 
-    /**
-     * Resolve the field directive.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\Values\FieldValue  $fieldValue
-     * @return \Nuwave\Lighthouse\Schema\Values\FieldValue
-     */
-    public function resolveField(FieldValue $fieldValue): FieldValue
+    protected function makeExecutionFunction(?Relation $parentRelation = null): callable
     {
-        return $fieldValue->setResolver(
-            function ($root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo): Model {
-                $modelClassName = $this->getModelClass();
-                /** @var \Illuminate\Database\Eloquent\Model $model */
-                $model = new $modelClassName;
-
-                $executeMutation = function () use ($model, $args): Model {
-                    return MutationExecutor::executeCreate($model, new Collection($args))->refresh();
-                };
-
-                return config('lighthouse.transactional_mutations', true)
-                    ? $this->databaseManager->connection($model->getConnectionName())->transaction($executeMutation)
-                    : $executeMutation();
-            }
-        );
+        return new SaveModel($parentRelation);
     }
 }

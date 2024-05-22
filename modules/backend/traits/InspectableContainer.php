@@ -1,40 +1,42 @@
 <?php namespace Backend\Traits;
 
 use Lang;
-use Request;
 use ApplicationException;
 
 /**
- * Inspectable Container Trait
- * Extension for controllers that can host inspectable widgets (Components, etc.)
+ * InspectableContainer is an extension for controllers that can host
+ * inspectable widgets (Components, etc.)
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-
 trait InspectableContainer
 {
+    /**
+     * onInspectableGetOptions
+     */
     public function onInspectableGetOptions()
     {
         // Disable asset broadcasting
         $this->flushAssets();
 
-        $property = trim(Request::input('inspectorProperty'));
+        $property = trim(post('inspectorProperty'));
         if (!$property) {
             throw new ApplicationException('The property name is not specified.');
         }
 
-        $className = trim(Request::input('inspectorClassName'));
-        if (!$className) {
+        $className = trim(post('inspectorClassName'));
+        if (!$className || $className === 'undefined') {
             throw new ApplicationException('The inspectable class name is not specified.');
         }
 
-        $traitFound = in_array('System\Traits\PropertyContainer', class_uses_recursive($className));
+        $traitFound = in_array(\System\Traits\PropertyContainer::class, class_uses_recursive($className));
         if (!$traitFound) {
-            throw new ApplicationException('The options cannot be loaded for the specified class.');
+            throw new ApplicationException('Dynamic Inspector control options cannot be loaded for the specified class.');
         }
 
         $obj = new $className(null);
+        $obj->setProperties(post());
 
         // Nested properties have names like object.property.
         // Convert them to Object.Property.
@@ -58,9 +60,7 @@ trait InspectableContainer
             $options = $obj->getPropertyOptions($property);
         }
 
-        /*
-         * Convert to array to retain the sort order in JavaScript
-         */
+        // Convert to array to retain the sort order in JavaScript
         $optionsArray = [];
         foreach ((array) $options as $value => $title) {
             $optionsArray[] = ['value' => $value, 'title' => Lang::get($title)];

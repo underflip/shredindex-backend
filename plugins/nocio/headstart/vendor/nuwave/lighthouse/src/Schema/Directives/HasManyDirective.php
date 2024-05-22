@@ -1,26 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
 use Nuwave\Lighthouse\Support\Contracts\FieldManipulator;
 
-class HasManyDirective extends RelationDirective implements FieldResolver, FieldManipulator, DefinedDirective
+class HasManyDirective extends RelationDirective implements FieldManipulator
 {
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'hasMany';
-    }
-
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
 Corresponds to [the Eloquent relationship HasMany](https://laravel.com/docs/eloquent-relationships#one-to-many).
 """
@@ -30,30 +18,31 @@ directive @hasMany(
   if it is named different from the field in the schema.
   """
   relation: String
-  
+
   """
   Apply scopes to the underlying query.
   """
   scopes: [String!]
 
   """
-  ALlows to resolve the relation as a paginated list.
-  Allowed values: paginator, connection.
+  Allows to resolve the relation as a paginated list.
   """
-  type: String
+  type: HasManyType
 
   """
-  Specify the default quantity of elements to be returned.
-  Only applies when using pagination.
+  Allow clients to query paginated lists without specifying the amount of items.
+  Overrules the `pagination.default_count` setting from `lighthouse.php`.
+  Setting this to `null` means clients have to explicitly ask for the count.
   """
   defaultCount: Int
-  
+
   """
-  Specify the maximum quantity of elements to be returned.
-  Only applies when using pagination.
+  Limit the maximum amount of items that clients can request from paginated lists.
+  Overrules the `pagination.max_count` setting from `lighthouse.php`.
+  Setting this to `null` means the count is unrestricted.
   """
   maxCount: Int
-  
+
   """
   Specify a custom type that implements the Edge interface
   to extend edge object.
@@ -61,6 +50,26 @@ directive @hasMany(
   """
   edgeType: String
 ) on FIELD_DEFINITION
-SDL;
+
+"""
+Options for the `type` argument of `@hasMany`.
+"""
+enum HasManyType {
+    """
+    Offset-based pagination, similar to the Laravel default.
+    """
+    PAGINATOR
+
+    """
+    Offset-based pagination like the Laravel "Simple Pagination", which does not count the total number of records.
+    """
+    SIMPLE
+
+    """
+    Cursor-based pagination, compatible with the Relay specification.
+    """
+    CONNECTION
+}
+GRAPHQL;
     }
 }

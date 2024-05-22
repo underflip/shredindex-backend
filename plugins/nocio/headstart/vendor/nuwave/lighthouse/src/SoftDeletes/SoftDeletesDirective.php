@@ -1,55 +1,37 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\SoftDeletes;
 
-use Nuwave\Lighthouse\Schema\AST\ASTHelper;
 use GraphQL\Language\AST\FieldDefinitionNode;
-use Nuwave\Lighthouse\Schema\AST\DocumentAST;
-use Nuwave\Lighthouse\Schema\AST\PartialParser;
+use GraphQL\Language\AST\InterfaceTypeDefinitionNode;
 use GraphQL\Language\AST\ObjectTypeDefinitionNode;
+use GraphQL\Language\Parser;
+use Nuwave\Lighthouse\Schema\AST\DocumentAST;
 use Nuwave\Lighthouse\Schema\Directives\BaseDirective;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
 use Nuwave\Lighthouse\Support\Contracts\FieldManipulator;
 
-class SoftDeletesDirective extends BaseDirective implements FieldManipulator, DefinedDirective
+class SoftDeletesDirective extends BaseDirective implements FieldManipulator
 {
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'softDeletes';
-    }
-
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
 Allows to filter if trashed elements should be fetched.
 This manipulates the schema by adding the argument
 `trashed: Trashed @trashed` to the field.
 """
 directive @softDeletes on FIELD_DEFINITION
-SDL;
+GRAPHQL;
     }
 
-    /**
-     * @param  \Nuwave\Lighthouse\Schema\AST\DocumentAST  $documentAST
-     * @param  \GraphQL\Language\AST\FieldDefinitionNode  $fieldDefinition
-     * @param  \GraphQL\Language\AST\ObjectTypeDefinitionNode  $parentType
-     * @return void
-     */
-    public function manipulateFieldDefinition(DocumentAST &$documentAST, FieldDefinitionNode &$fieldDefinition, ObjectTypeDefinitionNode &$parentType): void
+    public function manipulateFieldDefinition(DocumentAST &$documentAST, FieldDefinitionNode &$fieldDefinition, ObjectTypeDefinitionNode|InterfaceTypeDefinitionNode &$parentType): void
     {
-        $softDeletesArgument = PartialParser::inputValueDefinition(/* @lang GraphQL */ <<<'SDL'
+        $fieldDefinition->arguments[] = Parser::inputValueDefinition(/** @lang GraphQL */ <<<'GRAPHQL'
 """
 Allows to filter if trashed elements should be fetched.
 """
 trashed: Trashed @trashed
-SDL
+GRAPHQL
         );
-        $fieldDefinition->arguments = ASTHelper::mergeNodeList($fieldDefinition->arguments, [$softDeletesArgument]);
     }
 }

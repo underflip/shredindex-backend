@@ -3,15 +3,14 @@
 use October\Rain\Database\Schema\Blueprint;
 use October\Rain\Database\Updates\Migration;
 
-class DbCmsThemeData extends Migration
+return new class extends Migration
 {
     public function up()
     {
         Schema::create('cms_theme_data', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
             $table->increments('id');
             $table->string('theme')->nullable()->index();
-            $table->mediumtext('data')->nullable();
+            $table->mediumText('data')->nullable();
             $table->timestamps();
         });
     }
@@ -20,4 +19,4 @@ class DbCmsThemeData extends Migration
     {
         Schema::dropIfExists('cms_theme_data');
     }
-}
+};

@@ -1,70 +1,77 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\SoftDeletes;
 
-use Laravel\Scout\Builder as ScoutBuilder;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use GraphQL\Error\Error;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Nuwave\Lighthouse\Exceptions\DefinitionException;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Laravel\Scout\Builder as ScoutBuilder;
 use Nuwave\Lighthouse\Schema\Directives\BaseDirective;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
+use Nuwave\Lighthouse\Scout\ScoutBuilderDirective;
 use Nuwave\Lighthouse\Support\Contracts\ArgBuilderDirective;
 
-class TrashedDirective extends BaseDirective implements ArgBuilderDirective, DefinedDirective
+class TrashedDirective extends BaseDirective implements ArgBuilderDirective, ScoutBuilderDirective
 {
-    const MODEL_MUST_USE_SOFT_DELETES = 'Use @trashed only for Model classes that use the SoftDeletes trait.';
-
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'trashed';
-    }
+    public const MODEL_MUST_USE_SOFT_DELETES = 'Use @trashed only for Model classes that use the SoftDeletes trait.';
 
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
 Allows to filter if trashed elements should be fetched.
 """
 directive @trashed on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
-SDL;
+GRAPHQL;
     }
 
-    /**
-     * Apply withTrashed, onlyTrashed or withoutTrashed to given $builder if needed.
-     *
-     * @param \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder $builder
-     * @param string|null $value "with", "without" or "only"
-     *
-     * @return \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder
-     */
-    public function handleBuilder($builder, $value)
+    public function handleBuilder(QueryBuilder|EloquentBuilder|Relation $builder, $value): QueryBuilder|EloquentBuilder|Relation
     {
-        if ($builder instanceof Relation) {
-            $model = $builder->getRelated();
-        } elseif ($builder instanceof ScoutBuilder) {
-            $model = $builder->model;
-        } else {
-            $model = $builder->getModel();
+        if (! $builder instanceof EloquentBuilder) {
+            $notEloquentBuilder = $builder::class;
+            throw new \Exception("Can not get model from builder of class: {$notEloquentBuilder}");
         }
 
-        if (! in_array(SoftDeletes::class, class_uses_recursive($model))) {
-            throw new DefinitionException(
-                self::MODEL_MUST_USE_SOFT_DELETES
-            );
-        }
+        $model = $builder->getModel();
+        $this->assertModelUsesSoftDeletes($model);
 
-        if (! isset($value)) {
+        if ($value === null) {
             return $builder;
         }
 
-        $trashedModificationMethod = "{$value}Trashed";
-        $builder->{$trashedModificationMethod}();
+        return match ($value) {
+            // @phpstan-ignore-next-line mixin not understood
+            'with' => $builder->withTrashed(),
+            // @phpstan-ignore-next-line mixin not understood
+            'only' => $builder->onlyTrashed(),
+            // @phpstan-ignore-next-line mixin not understood
+            'without' => $builder->withoutTrashed(),
+            default => throw new Error("Unexpected value for Trashed filter: {$value}"),
+        };
+    }
 
-        return $builder;
+    public function handleScoutBuilder(ScoutBuilder $builder, mixed $value): ScoutBuilder
+    {
+        $model = $builder->model;
+        $this->assertModelUsesSoftDeletes($model);
+
+        if ($value === null) {
+            return $builder;
+        }
+
+        return match ($value) {
+            'with' => $builder->withTrashed(),
+            'only' => $builder->onlyTrashed(),
+            default => throw new Error("Unexpected value for Trashed filter: {$value}"),
+        };
+    }
+
+    protected function assertModelUsesSoftDeletes(Model $model): void
+    {
+        SoftDeletesServiceProvider::assertModelUsesSoftDeletes(
+            $model::class,
+            self::MODEL_MUST_USE_SOFT_DELETES,
+        );
     }
 }

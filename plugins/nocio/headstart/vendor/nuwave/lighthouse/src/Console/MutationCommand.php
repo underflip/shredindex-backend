@@ -1,48 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Console;
 
-class MutationCommand extends LighthouseGeneratorCommand
+use Nuwave\Lighthouse\Schema\RootType;
+
+class MutationCommand extends FieldGeneratorCommand
 {
-    /**
-     * The name of the console command.
-     *
-     * @var string
-     */
     protected $name = 'lighthouse:mutation';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a class for a single field on the root Mutation type.';
+    protected $description = 'Create a resolver class for a single field on the root Mutation type.';
 
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
-    protected $type = 'Mutation';
+    protected $type = RootType::MUTATION;
 
-    /**
-     * Get the default namespace for the class.
-     *
-     * @param  string  $rootNamespace
-     * @return string
-     */
-    protected function getDefaultNamespace($rootNamespace): string
+    protected function namespaceConfigKey(): string
     {
-        return config('lighthouse.namespaces.mutations');
-    }
-
-    /**
-     * Get the stub file for the generator.
-     *
-     * @return string
-     */
-    protected function getStub(): string
-    {
-        return __DIR__.'/stubs/field.stub';
+        return 'mutations';
     }
 }

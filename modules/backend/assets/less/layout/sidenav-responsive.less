@@ -1,0 +1,101 @@
+.layout-sidenav.sidenav-responsive {
+    position: static;
+    height: 60px;
+
+    ul {
+        padding: 13px 20px 0 20px;
+        overflow: visible;
+
+        > li.mainmenu-item {
+            display: inline-block;
+            margin: 0 10px 0 0;
+
+            > a span.counter {
+                position: relative;
+                top: 0;
+                right: 0;
+            }
+
+            &.divider {
+                height: 60px;
+                width: 1.4px;
+                margin: -13px 10px 0 0;
+                border-left: 1px solid @border-color;
+
+                + .section-title {
+                    margin-left: -10px;
+                }
+            }
+
+            &.sidebar-button {
+                margin-bottom: 0;
+                margin-right: 25px;
+
+                > a {
+                    margin: 0;
+                    height: 34px;
+                    padding: 7px 33px 0 13px;
+
+                    .nav-icon {
+                        top: 0;
+                    }
+                }
+            }
+        }
+
+        > li.mainmenu-item:not(.sidebar-button) {
+            > a {
+                border-radius: 20px;
+                padding: 7px 10px 7px 41px;
+
+                .nav-icon {
+                    left: 15px;
+                }
+            }
+
+            &.active {
+                > a {
+                    border-left: none;
+                }
+            }
+        }
+    }
+}
+
+.responsive-sidebar-toolbar {
+    background: @sidebar-bg;
+
+    &:before, &:after {
+        display: none !important;
+    }
+}
+
+.secondary-nav > .control-toolbar {
+    padding-bottom: 0;
+}
+
+.secondary-nav {
+    display: none;
+}
+
+body:not(.drag) {
+    .layout-sidenav.sidenav-responsive {
+        ul > li.mainmenu-item:not(.sidebar-button) > a:hover {
+            background: @sidebar-hover-bg;
+        }
+    }
+}
+
+body.sidenav-responsive,
+html.user-touch {
+    // Touch devices use responsive secondary nav
+    .secondary-nav {
+        display: block;
+    }
+}
+
+@media (max-width: @screen-xs-max) {
+    .secondary-nav {
+        display: block;
+    }
+}

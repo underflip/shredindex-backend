@@ -21,4 +21,30 @@ class Partial extends CmsCompoundObject
     {
         return PartialCode::class;
     }
+
+    /**
+     * validateRequestName checks to see if a partial name is valid from user input.
+     */
+    public static function validateRequestName(string $name): bool
+    {
+        if (!preg_match('/^(?:\w+\:{2}|@)?[a-z0-9\_\-\.\/]+$/i', $name)) {
+            return false;
+        }
+
+        if (strpos($name, '..') !== false) {
+            return false;
+        }
+
+        if (strpos($name, './') !== false || strpos($name, '//') !== false) {
+            return false;
+        }
+
+        $maxNesting = (new self)->getMaxNesting();
+        $segments = explode('/', $name);
+        if ($maxNesting !== null && count($segments) > $maxNesting) {
+            return false;
+        }
+
+        return true;
+    }
 }

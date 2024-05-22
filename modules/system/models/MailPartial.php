@@ -5,8 +5,8 @@ use Model;
 use System\Classes\MailManager;
 use October\Rain\Mail\MailParser;
 use ApplicationException;
-use Exception;
 use File as FileHelper;
+use Exception;
 
 /**
  * Mail partial
@@ -19,7 +19,7 @@ class MailPartial extends Model
     use \October\Rain\Database\Traits\Validation;
 
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'system_mail_partials';
 
@@ -37,28 +37,28 @@ class MailPartial extends Model
      * @var array Validation rules
      */
     public $rules = [
-        'code'                  => 'required|unique:system_mail_partials',
-        'name'                  => 'required',
-        'content_html'          => 'required',
+        'code' => 'required|unique:system_mail_partials',
+        'name' => 'required',
+        'content_html' => 'required',
     ];
 
     /**
-     * Fired after the model has been fetched.
-     *
-     * @return void
+     * afterFetch
      */
     public function afterFetch()
     {
         if (!$this->is_custom) {
-            $this->fillFromCode();
+            try {
+                $this->fillFromCode();
+            }
+            catch (Exception $ex) {
+                return null;
+            }
         }
     }
 
     /**
-     * Find a MailPartial instance by code or create a new instance from a view file.
-     *
-     * @param string $code
-     * @return MailTemplate
+     * findOrMakePartial
      */
     public static function findOrMakePartial($code)
     {
@@ -77,31 +77,20 @@ class MailPartial extends Model
     }
 
     /**
-     * Loops over each mail layout and ensures the system has a layout,
+     * createPartials loops over each mail layout and ensures the system has a layout,
      * if the layout does not exist, it will create one.
-     *
      * @return void
      */
     public static function createPartials()
     {
-        $partials = MailManager::instance()->listRegisteredPartials();
-        $dbPartials = self::lists('is_custom', 'code');
-        $newPartials = array_diff_key($partials, $dbPartials);
+        $dbPartials = self::lists('code', 'code');
 
-        /*
-         * Clean up non-customized partials
-         */
-        foreach ($dbPartials as $code => $isCustom) {
-            if ($isCustom) {
+        $definitions = MailManager::instance()->listRegisteredPartials();
+        foreach ($definitions as $code => $path) {
+            if (array_key_exists($code, $dbPartials)) {
                 continue;
             }
 
-            if (!array_key_exists($code, $partials)) {
-                self::whereCode($code)->delete();
-            }
-        }
-
-        foreach ($newPartials as $code => $path) {
             $partial = new static;
             $partial->code = $code;
             $partial->is_custom = 0;
@@ -111,10 +100,7 @@ class MailPartial extends Model
     }
 
     /**
-     * Fill model using a view file retrieved by code.
-     *
-     * @param string|null $code
-     * @return void
+     * fillFromCode
      */
     public function fillFromCode($code = null)
     {
@@ -132,10 +118,7 @@ class MailPartial extends Model
     }
 
     /**
-     * Fill model using a view file retrieved by path.
-     *
-     * @param string $path
-     * @return void
+     * fillFromView
      */
     public function fillFromView($path)
     {
@@ -147,17 +130,10 @@ class MailPartial extends Model
     }
 
     /**
-     * Get section array from a view file retrieved by code.
-     *
-     * @param string $code
-     * @return array|null
+     * getTemplateSections
      */
     protected static function getTemplateSections($code)
     {
-        if (!View::exists($code)) {
-            return null;
-        }
-        $view = View::make($code);
-        return MailParser::parse(FileHelper::get($view->getPath()));
+        return MailParser::parse(FileHelper::get(View::make($code)->getPath()));
     }
 }

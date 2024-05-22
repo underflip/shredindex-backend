@@ -10,7 +10,7 @@ use Backend\Classes\Controller;
 use Exception;
 
 /**
- * Theme customization controller
+ * ThemeOptions customization controller
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
@@ -19,35 +19,46 @@ use Exception;
 class ThemeOptions extends Controller
 {
     /**
-     * @var array Extensions implemented by this controller.
+     * @var array implement extensions for this controller
      */
     public $implement = [
         \Backend\Behaviors\FormController::class
     ];
 
     /**
-     * @var array `FormController` configuration.
+     * @var array formConfig `FormController` configuration.
      */
     public $formConfig = 'config_form.yaml';
 
     /**
-     * @var array Permissions required to view this page.
+     * @var array requiredPermissions to view this page
      */
-    public $requiredPermissions = ['cms.manage_themes', 'cms.manage_theme_options'];
+    public $requiredPermissions = ['cms.theme_customize'];
 
     /**
-     * Constructor.
+     * __construct
      */
     public function __construct()
     {
         parent::__construct();
 
-        $this->pageTitle = 'cms::lang.theme.settings_menu';
+        $this->pageTitle = 'Frontend Theme';
 
         BackendMenu::setContext('October.System', 'system', 'settings');
         SettingsManager::setContext('October.Cms', 'theme');
     }
 
+    /**
+     * formCreateModelObject
+     */
+    public function formCreateModelObject()
+    {
+        return ThemeData::createThemeDataModel();
+    }
+
+    /**
+     * update
+     */
     public function update($dirName = null)
     {
         $dirName = $this->getDirName($dirName);
@@ -64,6 +75,9 @@ class ThemeOptions extends Controller
         }
     }
 
+    /**
+     * update_onSave
+     */
     public function update_onSave($dirName = null)
     {
         $model = $this->getThemeData($this->getDirName($dirName));
@@ -71,13 +85,16 @@ class ThemeOptions extends Controller
 
         // Redirect close requests to the settings index when user doesn't have access
         // to go back to the theme selection page
-        if (!$this->user->hasAccess('cms.manage_themes') && input('close')) {
+        if (!$this->user->hasAccess('cms.themes') && input('close')) {
             $result = Backend::redirect('system/settings');
         }
 
         return $result;
     }
 
+    /**
+     * update_onResetDefault
+     */
     public function update_onResetDefault($dirName = null)
     {
         $model = $this->getThemeData($this->getDirName($dirName));
@@ -87,7 +104,7 @@ class ThemeOptions extends Controller
     }
 
     /**
-     * Add form fields defined in theme.yaml
+     * formExtendFieldsBefore will add form fields defined in theme.yaml
      */
     public function formExtendFieldsBefore($form)
     {
@@ -102,17 +119,12 @@ class ThemeOptions extends Controller
     //
 
     /**
-     * Default to the active theme if user doesn't have access to manage all themes
-     *
-     * @param string $dirName
-     * @return string
+     * getDirName defaults to the active theme if user doesn't have access to manage all themes
      */
-    protected function getDirName(string $dirName = null)
+    protected function getDirName($dirName = null)
     {
-        /*
-         * Only the active theme can be managed without this permission
-         */
-        if ($dirName && !$this->user->hasAccess('cms.manage_themes')) {
+        // Only the active theme can be managed without this permission
+        if ($dirName && !$this->user->hasAccess('cms.themes')) {
             $dirName = null;
         }
 
@@ -123,17 +135,27 @@ class ThemeOptions extends Controller
         return $dirName;
     }
 
+    /**
+     * hasThemeData
+     */
     protected function hasThemeData($dirName)
     {
         return $this->findThemeObject($dirName)->hasCustomData();
     }
 
+    /**
+     * getThemeData
+     */
     protected function getThemeData($dirName)
     {
         $theme = $this->findThemeObject($dirName);
+
         return ThemeData::forTheme($theme);
     }
 
+    /**
+     * findThemeObject
+     */
     protected function findThemeObject($name = null)
     {
         if ($name === null) {
@@ -141,7 +163,7 @@ class ThemeOptions extends Controller
         }
 
         if (!$name || (!$theme = CmsTheme::load($name))) {
-            throw new ApplicationException(trans('cms::lang.theme.not_found_name', ['name' => $name]));
+            throw new ApplicationException(__("The theme ':name' is not found.", ['name' => $name]));
         }
 
         return $theme;

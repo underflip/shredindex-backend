@@ -6,10 +6,11 @@ use BackendMenu;
 use Backend\Classes\Controller;
 use System\Models\MailTemplate;
 use System\Classes\SettingsManager;
-use Exception;
+use ApplicationException;
+use Throwable;
 
 /**
- * Mail templates controller
+ * MailTemplates controller
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
@@ -17,7 +18,7 @@ use Exception;
 class MailTemplates extends Controller
 {
     /**
-     * @var array Extensions implemented by this controller.
+     * @var array implement extensions by this controller.
      */
     public $implement = [
         \Backend\Behaviors\FormController::class,
@@ -39,12 +40,12 @@ class MailTemplates extends Controller
     ];
 
     /**
-     * @var array Permissions required to view this page.
+     * @var array requiredPermissions to view this page.
      */
-    public $requiredPermissions = ['system.manage_mail_templates'];
+    public $requiredPermissions = ['mail.templates'];
 
     /**
-     * Constructor.
+     * __construct
      */
     public function __construct()
     {
@@ -54,6 +55,9 @@ class MailTemplates extends Controller
         SettingsManager::setContext('October.System', 'mail_templates');
     }
 
+    /**
+     * index
+     */
     public function index($tab = null)
     {
         MailTemplate::syncAll();
@@ -63,11 +67,17 @@ class MailTemplates extends Controller
         $this->vars['activeTab'] = $tab ?: 'templates';
     }
 
+    /**
+     * formBeforeSave
+     */
     public function formBeforeSave($model)
     {
         $model->is_custom = 1;
     }
 
+    /**
+     * onTest
+     */
     public function onTest($recordId)
     {
         try {
@@ -76,10 +86,10 @@ class MailTemplates extends Controller
 
             Mail::sendTo([$user->email => $user->full_name], $model->code);
 
-            Flash::success(trans('system::lang.mail_templates.test_success'));
+            Flash::success(__("Test message sent."));
         }
-        catch (Exception $ex) {
-            Flash::error($ex->getMessage());
+        catch (Throwable $ex) {
+            throw new ApplicationException($ex->getMessage());
         }
     }
 }

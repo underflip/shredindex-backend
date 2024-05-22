@@ -1,6 +1,6 @@
 <?php namespace System\Twig;
 
-use App;
+use View;
 use File;
 use Twig\Source as TwigSource;
 use Twig\Loader\LoaderInterface as TwigLoaderInterface;
@@ -15,11 +15,6 @@ use Exception;
 class Loader implements TwigLoaderInterface
 {
     /**
-     * @var bool Allow any local file
-     */
-    public static $allowInclude = false;
-
-    /**
      * @var array Cache
      */
     protected $cache = [];
@@ -29,43 +24,60 @@ class Loader implements TwigLoaderInterface
      * @param  string $name
      * @return string
      */
-    protected function findTemplate($name)
+    protected function findTemplate(string $name): string
     {
-        $finder = App::make('view')->getFinder();
-
         if (isset($this->cache[$name])) {
             return $this->cache[$name];
         }
 
-        if (static::$allowInclude === true && File::isFile($name)) {
-            return $this->cache[$name] = $name;
-        }
-
-        $path = $finder->find($name);
-        return $this->cache[$name] = $path;
+        return $this->cache[$name] = View::getFinder()->find($name);
     }
 
-    public function getSourceContext($name)
+    /**
+     * addCache adds a specific item to cache.
+     */
+    public function addCacheItem(string $name): void
+    {
+        $this->cache[$name] = $name;
+    }
+
+    /**
+     * Returns the Twig content string.
+     * This step is cached internally by Twig.
+     */
+    public function getSourceContext(string $name): TwigSource
     {
         return new TwigSource(File::get($this->findTemplate($name)), $name);
     }
 
-    public function getCacheKey($name)
+    /**
+     * Returns the Twig cache key.
+     */
+    public function getCacheKey(string $name): string
     {
         return $this->findTemplate($name);
     }
 
-    public function isFresh($name, $time)
+    /**
+     * Determines if the content is fresh.
+     */
+    public function isFresh(string $name, int $time): bool
     {
         return File::lastModified($this->findTemplate($name)) <= $time;
     }
 
+    /**
+     * Returns the file name of the loaded template.
+     */
     public function getFilename($name)
     {
         return $this->findTemplate($name);
     }
 
-    public function exists($name)
+    /**
+     * Checks that the template exists.
+     */
+    public function exists(string $name)
     {
         try {
             $this->findTemplate($name);

@@ -17,22 +17,23 @@ class TeamMembersSeeder extends Seeder implements Downable
             'url' => 'https://thomasandrewhansen.com',
         ]);
 
-        $tom->image()->create([
-            'data' => base_path() .
-                DIRECTORY_SEPARATOR .
-                'plugins/underflip/resorts/updates/assets/teammembers/t-hansen.png',
-        ]);
+        $tom->image()->createFromFile( base_path() .
+            DIRECTORY_SEPARATOR .
+            'plugins/underflip/resorts/updates/assets/teammembers/t-hansen.png',
+            ['file_name' => 't-hansen.png', 'content_type' => 'image/png']
+        );
+
 
         $jd = TeamMember::create([
             'name' => 'jakxnz',
             'url' => 'https://github.com/jakxnz',
         ]);
 
-        $jd->image()->create([
-            'data' => base_path() .
-                DIRECTORY_SEPARATOR .
-                'plugins/underflip/resorts/updates/assets/teammembers/jakxnz.png',
-        ]);
+        $jd->image()->createFromFile( base_path() .
+            DIRECTORY_SEPARATOR .
+            'plugins/underflip/resorts/updates/assets/teammembers/jakxnz.png',
+            ['file_name' => 'jakxnz.png', 'content_type' => 'image/png']
+        );
     }
 
     public function down()

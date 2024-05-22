@@ -16,12 +16,13 @@ jobs:
                     mv .infrastructure/.env.dist .infrastructure/.env
                     mv .infrastructure/docker-compose.yml.dist .infrastructure/docker-compose.yml
                     mv .infrastructure/etc/nginx/conf.d/default.conf.dist .infrastructure/etc/nginx/conf.d/default.conf
+                    cp .env.dist .env
             - restore_cache:
                 keys:
                     - v2-composer-{{ checksum "composer.lock" }}
             - run:
                 name: docker-compose
-                command: cd .infrastructure/ && docker-compose up -d
+                command: cd .infrastructure/ && docker compose down && docker compose build --no-cache && docker compose up -d && docker compose version && docker compose ps
             - run:
                 name: composer install
                 command: docker exec shredindex-backend-php composer install -n --prefer-dist
@@ -33,11 +34,28 @@ jobs:
                 name: Waiting for MySQL to warm up
                 command: sleep 10
             - run:
-                name: Spin up October CMS
-                command: docker exec shredindex-backend-php php artisan october:up
+                name: Check environment
+                command:  |
+                    docker exec shredindex-backend-php php -v
+                    docker exec shredindex-backend-mysql mysql --version
             - run:
-                name: Running PHPUnit tests
-                command: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
+                name: Spin up October CMS
+                command:  |
+                    docker exec shredindex-backend-php php artisan october:migrate
+            - run:
+                name: Check DB
+                command: |
+                    echo "==== show tables ====="
+                    docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; show tables;'
+            -   run:
+                    name: Running PHPUnit tests
+                    command: docker exec -i shredindex-backend-php bash -c "cd plugins/underflip/resorts && ../../../vendor/bin/phpunit --coverage-clover ../../../coverage/clover.xml"
+            - run:
+                name: Check DB again
+                command: |
+                    echo "==== show tables ====="
+                    docker exec shredindex-backend-mysql mysql -u user -ppass -e 'use shredindex; show tables;'
+
             - codecov/upload:
                 file: ./coverage/clover.xml
 

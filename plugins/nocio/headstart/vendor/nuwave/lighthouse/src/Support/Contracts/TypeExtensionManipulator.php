@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Support\Contracts;
 
@@ -7,12 +7,6 @@ use Nuwave\Lighthouse\Schema\AST\DocumentAST;
 
 interface TypeExtensionManipulator extends Directive
 {
-    /**
-     * Apply manipulations from a type definition node.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\AST\DocumentAST  $documentAST
-     * @param  \GraphQL\Language\AST\TypeExtensionNode  $typeExtension
-     * @return void
-     */
-    public function manipulateTypeExtension(DocumentAST &$documentAST, TypeExtensionNode &$typeExtension);
+    /** Apply manipulations from a type extension node. */
+    public function manipulateTypeExtension(DocumentAST &$documentAST, TypeExtensionNode &$typeExtension): void;
 }

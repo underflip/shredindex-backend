@@ -3,11 +3,11 @@
 .field-codeeditor {
     width: 100%;
     position: relative;
-    border: 2px solid @color-form-field-border;
+    border: 2px solid @input-border;
     .border-radius(@border-radius-base);
-    textarea { .opacity(0); }
+    textarea { opacity: 0; }
 
-    &.editor-focus { border: 2px solid @color-form-field-border-focus; }
+    &.editor-focus { border: 2px solid @input-border-focus; }
 
     &.size-tiny { min-height: @size-tiny; }
     &.size-small { min-height: @size-small; }
@@ -48,6 +48,12 @@
         background: rgba(0,0,0,.8);
         border-radius: 5px;
 
+        // Conflict with easymde
+        border: none;
+        &:before {
+            display: none;
+        }
+
         > ul, ul > li { list-style-type: none; padding: 0; margin: 0; }
         > ul > li {
             float: left;
@@ -71,7 +77,7 @@
                 .text-hide();
             }
             > i {
-                .opacity(1);
+                opacity: 1;
                 display: block;
                 &:before {
                     font-size: 15px;
@@ -79,7 +85,7 @@
             }
             &:hover, &:focus {
                 > i {
-                    .opacity(1);
+                    opacity: 1;
                     color: #fff;
                 }
             }

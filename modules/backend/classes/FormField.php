@@ -1,18 +1,41 @@
 <?php namespace Backend\Classes;
 
 use Str;
+use Site;
 use Html;
+use Lang;
 use October\Rain\Database\Model;
 use October\Rain\Html\Helper as HtmlHelper;
+use October\Rain\Element\Form\FieldDefinition;
+use Illuminate\Support\Collection;
+use SystemException;
+use Exception;
 
 /**
- * Form Field definition
- * A translation of the form field configuration
+ * FormField definition is a translation of the form field configuration
+ *
+ * @method FormField arrayName(string $arrayName) arrayName if the field element names should be contained in an array.
+ * @method FormField idPrefix(string $idPrefix) idPrefix to the field identifier so it can be totally unique.
+ * @method FormField context(string $context) Specifies contextual visibility of this form field.
+ * @method FormField required(bool $required) Specifies if this field is mandatory.
+ * @method FormField translatable(bool $translatable) Specifies if this field supports translated values.
+ * @method FormField stretch(bool $stretch) Specifies if this field stretch to fit the page height.
+ * @method FormField attributes(array $attributes) Contains a list of attributes specified in the field configuration.
+ * @method FormField containerAttributes(array $containerAttributes) Contains a list of attributes for the field container.
+ * @method FormField cssClass(string $cssClass) Specifies a CSS class to attach to the field container.
+ * @method FormField path(string $path) Specifies a path for partial-type fields.
+ * @method FormField dependsOn(array $dependsOn) Other field names this field depends on, when the other fields are modified, this field will update.
+ * @method FormField changeHandler(string $changeHandler) AJAX handler for the change event.
+ * @method FormField trigger(array $trigger) Other field names this field can be triggered by, see the Trigger API documentation.
+ * @method FormField preset(array $preset) Other field names text is converted in to a URL, slug or file name value in this field.
+ * @method FormField permissions(array $permissions) permissions needed to view this field
+ * @method FormField commentTooltip(string $commentTooltip) commentTooltip allows a more verbose comment behind a tooltip, must be used in combination with a comment
+ * @method FormField valueTrans(bool $valueTrans) valueTrans determines if display values (model attributes) should be translated
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-class FormField
+class FormField extends FieldDefinition
 {
     /**
      * @var int Value returned when the form field should not contribute any save data.
@@ -25,342 +48,44 @@ class FormField
     const HIERARCHY_UP = '^';
 
     /**
-     * @var string Form field name.
+     * @var string Field contexts
      */
-    public $fieldName;
+    const CONTEXT_CREATE = 'create';
+    const CONTEXT_UPDATE = 'update';
+    const CONTEXT_PREVIEW = 'preview';
+    const CONTEXT_REFRESH = 'refresh';
 
     /**
-     * @var string If the field element names should be contained in an array. Eg:
-     *
-     *     <input name="nameArray[fieldName]" />
+     * __construct using old and new interface
      */
-    public $arrayName;
-
-    /**
-     * @var string A prefix to the field identifier so it can be totally unique.
-     */
-    public $idPrefix;
-
-    /**
-     * @var string Form field label.
-     */
-    public $label;
-
-    /**
-     * @var string Form field value.
-     */
-    public $value;
-
-    /**
-     * @var string Model attribute to use for the display value.
-     */
-    public $valueFrom;
-
-    /**
-     * @var string Specifies a default value for supported fields.
-     */
-    public $defaults;
-
-    /**
-     * @var string Model attribute to use for the default value.
-     */
-    public $defaultFrom;
-
-    /**
-     * @var string Specifies if this field belongs to a tab.
-     */
-    public $tab;
-
-    /**
-     * @var string Display mode. Text, textarea
-     */
-    public $type = 'text';
-
-    /**
-     * @var string Field options.
-     */
-    public $options;
-
-    /**
-     * @var string Specifies a side. Possible values: auto, left, right, full.
-     */
-    public $span = 'full';
-
-    /**
-     * @var string Specifies a size. Possible values: tiny, small, large, huge, giant.
-     */
-    public $size = 'large';
-
-    /**
-     * @var string Specifies contextual visibility of this form field.
-     */
-    public $context;
-
-    /**
-     * @var bool Specifies if this field is mandatory.
-     */
-    public $required;
-
-    /**
-     * @var bool Specify if the field is read-only or not.
-     */
-    public $readOnly = false;
-
-    /**
-     * @var bool Specify if the field is disabled or not.
-     */
-    public $disabled = false;
-
-    /**
-     * @var bool Specify if the field is hidden. Hiddens fields are not included in postbacks.
-     */
-    public $hidden = false;
-
-    /**
-     * @var bool Specifies if this field stretch to fit the page height.
-     */
-    public $stretch = false;
-
-    /**
-     * @var string Specifies a comment to accompany the field
-     */
-    public $comment = '';
-
-    /**
-     * @var string Specifies the comment position.
-     */
-    public $commentPosition = 'below';
-
-    /**
-     * @var string Specifies if the comment is in HTML format.
-     */
-    public $commentHtml = false;
-
-    /**
-     * @var string Specifies a message to display when there is no value supplied (placeholder).
-     */
-    public $placeholder = '';
-
-    /**
-     * @var array Contains a list of attributes specified in the field configuration.
-     */
-    public $attributes;
-
-    /**
-     * @var string Specifies a CSS class to attach to the field container.
-     */
-    public $cssClass;
-
-    /**
-     * @var string Specifies a path for partial-type fields.
-     */
-    public $path;
-
-    /**
-     * @var array Raw field configuration.
-     */
-    public $config;
-
-    /**
-     * @var array Other field names this field depends on, when the other fields are modified, this field will update.
-     */
-    public $dependsOn;
-
-    /**
-     * @var array Other field names this field can be triggered by, see the Trigger API documentation.
-     */
-    public $trigger;
-
-    /**
-     * @var array Other field names text is converted in to a URL, slug or file name value in this field.
-     */
-    public $preset;
-
-    /**
-     * Constructor.
-     * @param string $fieldName The name of the field
-     * @param string $label The label of the field
-     */
-    public function __construct($fieldName, $label)
+    public function __construct($config = [], $label = null)
     {
-        $this->fieldName = $fieldName;
-        $this->label = $label;
+        // @deprecated old API
+        if (!is_array($config)) {
+            return parent::__construct([
+                'fieldName' => $config,
+                'label' => $label
+            ]);
+        }
+
+        parent::__construct($config);
     }
 
     /**
-     * If this field belongs to a tab.
+     * initDefaultValues for this field
      */
-    public function tab($value)
+    protected function initDefaultValues()
     {
-        $this->tab = $value;
-        return $this;
+        parent::initDefaultValues();
+
+        $this
+            ->valueTrans(true)
+            ->attributes([])
+        ;
     }
 
     /**
-     * Sets a side of the field on a form.
-     * @param string $value Specifies a side. Possible values: left, right, full
-     */
-    public function span($value = 'full')
-    {
-        $this->span = $value;
-        return $this;
-    }
-
-    /**
-     * Sets a side of the field on a form.
-     * @param string $value Specifies a size. Possible values: tiny, small, large, huge, giant
-     */
-    public function size($value = 'large')
-    {
-        $this->size = $value;
-        return $this;
-    }
-
-    /**
-     * Sets field options, for dropdowns, radio lists and checkbox lists.
-     * @param  array $value
-     * @return self
-     */
-    public function options($value = null)
-    {
-        if ($value === null) {
-            if (is_array($this->options)) {
-                return $this->options;
-            }
-            elseif (is_callable($this->options)) {
-                $callable = $this->options;
-                return $callable();
-            }
-
-            return [];
-        }
-
-        $this->options = $value;
-
-        return $this;
-    }
-
-    /**
-     * Specifies a field control rendering mode. Supported modes are:
-     * - text - creates a text field. Default for varchar column types.
-     * - textarea - creates a textarea control. Default for text column types.
-     * - dropdown - creates a drop-down list. Default for reference-based columns.
-     * - radio - creates a set of radio buttons.
-     * - checkbox - creates a single checkbox.
-     * - checkboxlist - creates a checkbox list.
-     * - switch - creates a switch field.
-     * @param string $type Specifies a render mode as described above
-     * @param array $config A list of render mode specific config.
-     */
-    public function displayAs($type, $config = [])
-    {
-        $this->type = strtolower($type) ?: $this->type;
-        $this->config = $this->evalConfig($config);
-
-        return $this;
-    }
-
-    /**
-     * Process options and apply them to this object.
-     * @param array $config
-     * @return array
-     */
-    protected function evalConfig($config)
-    {
-        if ($config === null) {
-            $config = [];
-        }
-
-        /*
-         * Standard config:property values
-         */
-        $applyConfigValues = [
-            'commentHtml',
-            'placeholder',
-            'dependsOn',
-            'required',
-            'readOnly',
-            'disabled',
-            'cssClass',
-            'stretch',
-            'context',
-            'hidden',
-            'trigger',
-            'preset',
-            'path',
-        ];
-
-        foreach ($applyConfigValues as $value) {
-            if (array_key_exists($value, $config)) {
-                $this->{$value} = $config[$value];
-            }
-        }
-
-        /*
-         * Custom applicators
-         */
-        if (isset($config['options'])) {
-            $this->options($config['options']);
-        }
-        if (isset($config['span'])) {
-            $this->span($config['span']);
-        }
-        if (isset($config['size'])) {
-            $this->size($config['size']);
-        }
-        if (isset($config['tab'])) {
-            $this->tab($config['tab']);
-        }
-        if (isset($config['commentAbove'])) {
-            $this->comment($config['commentAbove'], 'above');
-        }
-        if (isset($config['comment'])) {
-            $this->comment($config['comment']);
-        }
-        if (isset($config['default'])) {
-            $this->defaults = $config['default'];
-        }
-        if (isset($config['defaultFrom'])) {
-            $this->defaultFrom = $config['defaultFrom'];
-        }
-        if (isset($config['attributes'])) {
-            $this->attributes($config['attributes']);
-        }
-        if (isset($config['containerAttributes'])) {
-            $this->attributes($config['containerAttributes'], 'container');
-        }
-
-        if (isset($config['valueFrom'])) {
-            $this->valueFrom = $config['valueFrom'];
-        }
-        else {
-            $this->valueFrom = $this->fieldName;
-        }
-
-        return $config;
-    }
-
-    /**
-     * Adds a text comment above or below the field.
-     * @param string $text Specifies a comment text.
-     * @param string $position Specifies a comment position.
-     * @param bool $isHtml Set to true if you use HTML formatting in the comment
-     * Supported values are 'below' and 'above'
-     */
-    public function comment($text, $position = 'below', $isHtml = null)
-    {
-        $this->comment = $text;
-        $this->commentPosition = $position;
-
-        if ($isHtml !== null) {
-            $this->commentHtml = $isHtml;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Determine if the provided value matches this field's value.
+     * isSelected determines if the provided value matches this field's value.
      * @param string $value
      * @return bool
      */
@@ -374,71 +99,39 @@ class FormField
     }
 
     /**
-     * Sets the attributes for this field in a given position.
-     * - field: Attributes are added to the form field element (input, select, textarea, etc)
-     * - container: Attributes are added to the form field container (div.form-group)
-     * @param  array $items
-     * @param  string $position
-     * @return void
-     */
-    public function attributes($items, $position = 'field')
-    {
-        if (!is_array($items)) {
-            return;
-        }
-
-        $multiArray = array_filter($items, 'is_array');
-        if (!$multiArray) {
-            $this->attributes[$position] = $items;
-            return;
-        }
-
-        foreach ($items as $_position => $_items) {
-            $this->attributes($_items, $_position);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Checks if the field has the supplied [unfiltered] attribute.
+     * hasAttribute checks if the field has the supplied [unfiltered] attribute.
      * @param  string $name
      * @param  string $position
      * @return bool
      */
     public function hasAttribute($name, $position = 'field')
     {
-        if (!isset($this->attributes[$position])) {
+        $posKey = $position === 'container' ? 'containerAttributes' : 'attributes';
+
+        if (!isset($this->config[$posKey])) {
             return false;
         }
 
-        return array_key_exists($name, $this->attributes[$position]);
+        return array_key_exists($name, $this->config[$posKey]);
     }
 
     /**
-     * Returns the attributes for this field at a given position.
+     * getAttributes returns the attributes for this field at a given position.
      * @param  string $position
      * @return array
      */
     public function getAttributes($position = 'field', $htmlBuild = true)
     {
-        $result = array_get($this->attributes, $position, []);
-        $result = $this->filterAttributes($result, $position);
+        $posKey = $position === 'container' ? 'containerAttributes' : 'attributes';
 
-        // Field is required, so add the "required" attribute
-        if ($position === 'field' && $this->required && (!isset($result['required']) || $result['required'])) {
-            $result['required'] = '';
-        }
-        // The "required" attribute is set and falsy, so unset it
-        elseif ($position === 'field' && isset($result['required']) && !$result['required']) {
-            unset($result['required']);
-        }
+        $result = $this->config[$posKey] ?? [];
+        $result = $this->filterAttributes($result, $position);
 
         return $htmlBuild ? Html::attributes($result) : $result;
     }
 
     /**
-     * Adds any circumstantial attributes to the field based on other
+     * filterAttributes adds any circumstantial attributes to the field based on other
      * settings, such as the 'disabled' option.
      * @param  array $attributes
      * @param  string $position
@@ -451,14 +144,18 @@ class FormField
         $attributes = $this->filterTriggerAttributes($attributes, $position);
         $attributes = $this->filterPresetAttributes($attributes, $position);
 
-        if ($position == 'field' && $this->disabled) {
+        if ($position === 'field' && $this->disabled) {
             $attributes = $attributes + ['disabled' => 'disabled'];
         }
 
-        if ($position == 'field' && $this->readOnly) {
+        if ($position === 'field' && $this->autoFocus) {
+            $attributes = $attributes + ['autofocus' => 'autofocus'];
+        }
+
+        if ($position === 'field' && $this->readOnly) {
             $attributes = $attributes + ['readonly' => 'readonly'];
 
-            if ($this->type == 'checkbox' || $this->type == 'switch') {
+            if ($this->type === 'checkbox' || $this->type === 'switch') {
                 $attributes = $attributes + ['onclick' => 'return false;'];
             }
         }
@@ -467,7 +164,7 @@ class FormField
     }
 
     /**
-     * Adds attributes used specifically by the Trigger API
+     * filterTriggerAttributes adds attributes used specifically by the Trigger API
      * @param  array $attributes
      * @param  string $position
      * @return array
@@ -485,12 +182,12 @@ class FormField
         $triggerMulti = '';
 
         // Apply these to container
-        if (in_array($triggerAction, ['hide', 'show']) && $position != 'container') {
+        if (in_array($triggerAction, ['hide', 'show']) && $position !== 'container') {
             return $attributes;
         }
 
         // Apply these to field/input
-        if (in_array($triggerAction, ['enable', 'disable', 'empty']) && $position != 'field') {
+        if (in_array($triggerAction, ['enable', 'disable', 'empty']) && $position !== 'field') {
             return $attributes;
         }
 
@@ -527,14 +224,14 @@ class FormField
     }
 
     /**
-     * Adds attributes used specifically by the Input Preset API
+     * filterPresetAttributes adds attributes used specifically by the Input Preset API
      * @param  array $attributes
      * @param  string $position
      * @return array
      */
     protected function filterPresetAttributes($attributes, $position = 'field')
     {
-        if (!$this->preset || $position != 'field') {
+        if (!$this->preset || $position !== 'field') {
             return $attributes;
         }
 
@@ -566,7 +263,7 @@ class FormField
     }
 
     /**
-     * Returns a value suitable for the field name property.
+     * getName returns a value suitable for the field name property.
      * @param  string $arrayName Specify a custom array name
      * @return string
      */
@@ -584,7 +281,7 @@ class FormField
     }
 
     /**
-     * Returns a value suitable for the field id property.
+     * getId returns a value suitable for the field id property.
      * @param  string $suffix Specify a suffix string
      * @return string
      */
@@ -609,18 +306,32 @@ class FormField
     }
 
     /**
-     * Returns a raw config item value.
-     * @param  string $value
-     * @param  string $default
-     * @return mixed
+     * getDisplayValue checks to see if display values (model attributes) should be translated,
+     * and also escapes the value
      */
-    public function getConfig($value, $default = null)
+    public function getDisplayValue($value)
     {
-        return array_get($this->config, $value, $default);
+        if ($this->valueTrans) {
+            return e(__($value));
+        }
+
+        return e($value);
     }
 
     /**
-     * Returns this fields value from a supplied data set, which can be
+     * getTranslatableMessage
+     */
+    public function getTranslatableMessage(): string
+    {
+        if ($editSite = Site::getEditSite()) {
+            return e($editSite->name);
+        }
+
+        return '';
+    }
+
+    /**
+     * getValueFromData returns this fields value from a supplied data set, which can be
      * an array or a model or another generic collection.
      * @param mixed $data
      * @param mixed $default
@@ -633,7 +344,7 @@ class FormField
     }
 
     /**
-     * Returns the default value for this field, the supplied data is used
+     * getDefaultFromData returns the default value for this field, the supplied data is used
      * to source data when defaultFrom is specified.
      * @param mixed $data
      * @return mixed
@@ -652,15 +363,40 @@ class FormField
     }
 
     /**
-     * Returns the final model and attribute name of a nested attribute. Eg:
+     * resolveModelAttribute returns the final model and attribute name of a nested attribute. Eg:
      *
-     *     list($model, $attribute) = $this->resolveAttribute('person[phone]');
+     *     [$model, $attribute] = $this->resolveAttribute('person[phone]');
      *
-     * @param  string $attribute.
+     * @param  string $attribute
      * @return array
      */
     public function resolveModelAttribute($model, $attribute = null)
     {
+        return $this->resolveModelAttributeInternal($model, $attribute);
+    }
+
+    /**
+     * nearestModelAttribute returns the nearest model and attribute name of a nested attribute,
+     * which is useful for checking if an attribute is jsonable or a relation.
+     */
+    public function nearestModelAttribute($model, $attribute = null)
+    {
+        return $this->resolveModelAttributeInternal($model, $attribute, [
+            'nearMatch' => true,
+            'objectOnly' => true
+        ]);
+    }
+
+    /**
+     * resolveModelAttributeInternal is an internal method resolver for resolveModelAttribute
+     */
+    protected function resolveModelAttributeInternal($model, $attribute = null, $options = [])
+    {
+        extract(array_merge([
+            'objectOnly' => false,
+            'nearMatch' => false
+        ], $options));
+
         if ($attribute === null) {
             $attribute = $this->valueFrom ?: $this->fieldName;
         }
@@ -669,6 +405,14 @@ class FormField
         $last = array_pop($parts);
 
         foreach ($parts as $part) {
+            if ($objectOnly && !is_object($model->{$part})) {
+                if ($nearMatch) {
+                    return [$model, $part];
+                }
+
+                continue;
+            }
+
             $model = $model->{$part};
         }
 
@@ -676,7 +420,8 @@ class FormField
     }
 
     /**
-     * Internal method to extract the value of a field name from a data set.
+     * getFieldNameFromData is an internal method to extract the value of a field name
+     * from a data set.
      * @param string $fieldName
      * @param mixed $data
      * @param mixed $default
@@ -684,22 +429,18 @@ class FormField
      */
     protected function getFieldNameFromData($fieldName, $data, $default = null)
     {
-        /*
-         * Array field name, eg: field[key][key2][key3]
-         */
+        // Array field name, eg: field[key][key2][key3]
         $keyParts = HtmlHelper::nameToArray($fieldName);
         $lastField = end($keyParts);
         $result = $data;
 
-        /*
-         * Loop the field key parts and build a value.
-         * To support relations only the last field should return the
-         * relation value, all others will look up the relation object as normal.
-         */
+        // Loop the field key parts and build a value.
+        // To support relations only the last field should return the
+        // relation value, all others will look up the relation object as normal.
         foreach ($keyParts as $key) {
             if ($result instanceof Model && $result->hasRelation($key)) {
-                if ($key == $lastField) {
-                    $result = $result->getRelationValue($key) ?: $default;
+                if ($key === $lastField) {
+                    $result = $result->getRelationSimpleValue($key) ?: $default;
                 }
                 else {
                     $result = $result->{$key};
@@ -720,5 +461,120 @@ class FormField
         }
 
         return $result;
+    }
+
+    /**
+     * getOptionsFromModel looks at the model for defined options.
+     */
+    public function getOptionsFromModel($model, $fieldOptions, $data)
+    {
+        // Preset
+        if (is_string($fieldOptions) && str_starts_with($fieldOptions, 'preset:')) {
+            $fieldOptions = \System\Classes\PresetManager::instance()->getPreset($fieldOptions);
+        }
+        // Method name
+        elseif (is_string($fieldOptions)) {
+            $fieldOptions = $this->getOptionsFromModelAsString($model, $fieldOptions, $data);
+        }
+        // Default collection
+        elseif ($fieldOptions === null || $fieldOptions === true) {
+            $fieldOptions = $this->getOptionsFromModelAsDefault($model, $data);
+        }
+
+        // Cast collections to array
+        if ($fieldOptions instanceof Collection) {
+            $fieldOptions = $fieldOptions->all();
+        }
+
+        return $fieldOptions;
+    }
+
+    /**
+     * getOptionsFromModelAsString where options are an explicit method reference
+     */
+    protected function getOptionsFromModelAsString($model, string $methodName, $data)
+    {
+        // Calling via ClassName::method
+        if (
+            is_string($methodName) &&
+            count($staticMethod = explode('::', $methodName)) === 2 &&
+            is_callable($staticMethod)
+        ) {
+            $fieldOptions = $staticMethod($model, $this);
+
+            if (!is_array($fieldOptions)) {
+                throw new SystemException(Lang::get('backend::lang.field.options_static_method_invalid_value', [
+                    'class' => $staticMethod[0],
+                    'method' => $staticMethod[1]
+                ]));
+            }
+        }
+        // Calling via $model->method
+        else {
+            if (!$this->objectMethodExists($model, $methodName)) {
+                throw new SystemException(Lang::get('backend::lang.field.options_method_not_exists', [
+                    'model' => get_class($model),
+                    'method' => $methodName,
+                    'field' => $this->fieldName
+                ]));
+            }
+
+            $fieldOptions = $model->$methodName($this->value, $this->fieldName, $data);
+        }
+
+        return $fieldOptions;
+    }
+
+    /**
+     * getOptionsFromModelAsDefault refers to the model method or any of its behaviors
+     */
+    protected function getOptionsFromModelAsDefault($model, $data)
+    {
+        try {
+            [$model, $attribute] = $this->resolveModelAttributeInternal($model, $this->fieldName, ['objectOnly' => true]);
+        }
+        catch (Exception $ex) {
+            throw new SystemException(Lang::get('backend::lang.field.options_method_invalid_model', [
+                'model' => get_class($model),
+                'field' => $this->fieldName
+            ]));
+        }
+
+        $methodName = 'get'.studly_case($attribute).'Options';
+        if (
+            !$this->objectMethodExists($model, $methodName) &&
+            !$this->objectMethodExists($model, 'getDropdownOptions')
+        ) {
+            throw new SystemException(Lang::get('backend::lang.field.options_method_not_exists', [
+                'model' => get_class($model),
+                'method' => $methodName,
+                'field' => $this->fieldName
+            ]));
+        }
+
+        if ($this->objectMethodExists($model, $methodName)) {
+            $fieldOptions = $model->$methodName($this->value, $data);
+        }
+        else {
+            $fieldOptions = $model->getDropdownOptions($attribute, $this->value, $data);
+        }
+
+        return $fieldOptions;
+    }
+
+    /**
+     * objectMethodExists is an internal helper for method existence checks.
+     *
+     * @param  object $object
+     * @param  string $method
+     * @return boolean
+     */
+    protected function objectMethodExists($object, $method)
+    {
+        if (method_exists($object, 'methodExists')) {
+            return $object->methodExists($method);
+        }
+
+        return method_exists($object, $method);
     }
 }

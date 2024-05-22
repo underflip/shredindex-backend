@@ -7,8 +7,10 @@ use Faker\Factory;
 use RainLab\Location\Models\Country;
 use RainLab\Location\Models\State;
 use Seeder;
+use DB;
 use Underflip\Resorts\Models\Comment;
 use Underflip\Resorts\Models\Location;
+use Underflip\Resorts\Models\Continent;
 use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Numeric;
@@ -16,12 +18,21 @@ use Underflip\Resorts\Models\Unit;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\ResortImage;
 use Underflip\Resorts\Models\Type;
+use Underflip\Resorts\Classes\ContinentService;
+use Illuminate\Support\Facades\App;
 
 /**
  * @codeCoverageIgnore
  */
 class ResortsSeeder extends Seeder implements Downable
 {
+    protected ContinentService $continentService;
+
+    public function __construct()
+    {
+        $this->continentService = new ContinentService(); // Instantiate manually
+    }
+
     /**
      * @throws Exception
      */
@@ -73,6 +84,14 @@ class ResortsSeeder extends Seeder implements Downable
             $location->longitude = $faker->longitude;
             $location->vicinity = $faker->state;
             $location->resort_id = $resort->id;
+            $location->save();
+
+            // Continents
+            $country = Country::where('id', $location->country_id)->first();
+            $continentCode = $this->continentService->getContinentCode($country->code);
+            $continent = Continent::where('code', $continentCode)->firstOrFail();
+
+            $location->continent()->associate($continent);
             $location->save();
 
             // Ratings
@@ -155,6 +174,8 @@ class ResortsSeeder extends Seeder implements Downable
 
             if ($hasImages) {
                 shuffle($images);
+                $name = str_replace('.', '', uniqid('', true));
+                $diskName = $name.'.png';
 
                 for ($x = 0; $x < $imagesCount; $x += 1) {
                     // Create a resort image
@@ -163,12 +184,11 @@ class ResortsSeeder extends Seeder implements Downable
                     $image->alt = $faker->words(3, true);
                     $resort->resort_images()->add($image);
 
-                    // Hook it up with a file
-                    $image->image()->create([
-                        'data' => base_path() .
-                            DIRECTORY_SEPARATOR .
-                            $images[$x],
-                    ]);
+                    $image->image()->createFromFile(base_path() .
+                        DIRECTORY_SEPARATOR .
+                        $images[$x],
+                        ['file_name' => $image->name.'.png', 'content_type' => 'image/png']
+                    );
                 }
             }
 
@@ -196,6 +216,7 @@ class ResortsSeeder extends Seeder implements Downable
         Numeric::query()->truncate();
         Generic::query()->truncate();
         Location::query()->truncate();
+        Continent::query()->truncate();
 
         foreach (ResortImage::all() as $resortImage) {
             if ($resortImage->image) {

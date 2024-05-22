@@ -63,13 +63,12 @@ class SettingsTest extends BaseTestCase
             'sort_order' => 1,
         ]);
 
-        $supporter->image()->create([
-            'title' => 'Foo Bar Baz',
-            'description' => 'foo.bar = baz;',
-            'data' => base_path() .
-                DIRECTORY_SEPARATOR .
-                'plugins/underflip/resorts/tests/fixtures/assets/foo-bar-baz.jpeg',
-        ]);
+        $supporter->image()->createFromFile( base_path() .
+            DIRECTORY_SEPARATOR .
+            'plugins/underflip/resorts/tests/fixtures/assets/foo-bar-baz.jpeg',
+            ['file_name' => 'foo-bar-baz.jpeg', 'content_type' => 'image/jpeg','title' => 'Foo Bar Baz',
+                'description' => 'foo.bar = baz;' ]
+        );
 
         Model::reguard();
 
@@ -162,13 +161,12 @@ class SettingsTest extends BaseTestCase
             'sort_order' => 1,
         ]);
 
-        $member->image()->create([
-            'title' => 'Foo Bar Baz',
-            'description' => 'foo.bar = baz;',
-            'data' => base_path() .
-                DIRECTORY_SEPARATOR .
-                'plugins/underflip/resorts/tests/fixtures/assets/foo-bar-baz.jpeg',
-        ]);
+        $member->image()->createFromFile( base_path() .
+            DIRECTORY_SEPARATOR .
+            'plugins/underflip/resorts/tests/fixtures/assets/foo-bar-baz.jpeg',
+            ['file_name' => 'foo-bar-baz.jpeg', 'content_type' => 'image/jpeg','title' => 'Foo Bar Baz',
+                'description' => 'foo.bar = baz;' ]
+        );
 
         Model::reguard();
 

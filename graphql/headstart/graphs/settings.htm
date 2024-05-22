@@ -1,10 +1,11 @@
 title = "Settings"
 description = "Global settings for Shredindex"
 ==
+
 extend type Query {
     settings: Settings! @first(model: "Underflip\\Resorts\\Models\\Settings"),
-    supporters: [Supporter!]! @all(model: "Underflip\\Resorts\\Models\\Supporter") @orderBy(column: "sort_order", direction: "ASC")
-    teamMembers: [TeamMember!]! @all(model: "Underflip\\Resorts\\Models\\TeamMember") @orderBy(column: "sort_order", direction: "ASC")
+    supporters: [Supporter!]! @all(model: "Underflip\\Resorts\\Models\\Supporter"),
+    teamMembers: [TeamMember!]! @all(model: "Underflip\\Resorts\\Models\\TeamMember")
 }
 
 type Settings {

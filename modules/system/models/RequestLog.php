@@ -13,7 +13,7 @@ use Request;
 class RequestLog extends Model
 {
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'system_request_logs';
 
@@ -23,7 +23,7 @@ class RequestLog extends Model
     protected $guarded = [];
 
     /**
-     * @var array List of attribute names which are json encoded and decoded from the database.
+     * @var array jsonable attribute names that are json encoded and decoded from the database
      */
     protected $jsonable = ['referer'];
 

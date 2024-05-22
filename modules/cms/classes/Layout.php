@@ -1,13 +1,15 @@
 <?php namespace Cms\Classes;
 
 /**
- * The CMS layout class.
+ * Layout template class
  *
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
  */
 class Layout extends CmsCompoundObject
 {
+    use \Cms\Traits\ParsableAttributes;
+
     /**
      * Fallback layout name.
      */
@@ -17,6 +19,33 @@ class Layout extends CmsCompoundObject
      * @var string The container name associated with the model, eg: pages.
      */
     protected $dirName = 'layouts';
+
+    /**
+     * @var array The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'description',
+        'is_priority',
+        'markup',
+        'settings',
+        'code'
+    ];
+
+    /**
+     * @var array parsable attributes support using parsed variables.
+     */
+    protected $parsable = [];
+
+    /**
+     * beforeValidate applies custom validation rules
+     */
+    public function beforeValidate()
+    {
+        // Wipe priority attribute from page settings
+        if (!$this->getAttribute('is_priority')) {
+            unset($this->attributes['is_priority']);
+        }
+    }
 
     /**
      * Initializes the fallback layout.
@@ -32,12 +61,21 @@ class Layout extends CmsCompoundObject
     }
 
     /**
-     * Returns true if the layout is a fallback layout
-     * @return boolean
+     * isFallBack returns true if the layout is a fallback layout
+     * @return bool
      */
     public function isFallBack()
     {
         return $this->fileName === self::FALLBACK_FILE_NAME;
+    }
+
+    /**
+     * isPriority returns true if the layout should take priority in the load order
+     * @return bool
+     */
+    public function isPriority(): bool
+    {
+        return (bool) $this->is_priority;
     }
 
     /**

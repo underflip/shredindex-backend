@@ -1,15 +1,15 @@
 <?php namespace System\Controllers;
 
-use App;
 use Lang;
 use Flash;
+use System;
 use BackendMenu;
 use Backend\Classes\Controller;
 use System\Classes\SettingsManager;
 use System\Models\EventLog;
 
 /**
- * Event Logs controller
+ * EventLogs controller
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
@@ -17,7 +17,7 @@ use System\Models\EventLog;
 class EventLogs extends Controller
 {
     /**
-     * @var array Extensions implemented by this controller.
+     * @var array implement extensions in this controller
      */
     public $implement = [
         \Backend\Behaviors\FormController::class,
@@ -25,22 +25,22 @@ class EventLogs extends Controller
     ];
 
     /**
-     * @var array `FormController` configuration.
+     * @var array formConfig `FormController` configuration.
      */
     public $formConfig = 'config_form.yaml';
 
     /**
-     * @var array `ListController` configuration.
+     * @var array listConfig `ListController` configuration.
      */
     public $listConfig = 'config_list.yaml';
 
     /**
-     * @var array Permissions required to view this page.
+     * @var array requiredPermissions to view this page
      */
-    public $requiredPermissions = ['system.access_logs'];
+    public $requiredPermissions = ['utilities.logs'];
 
     /**
-     * Constructor.
+     * __construct
      */
     public function __construct()
     {
@@ -50,18 +50,27 @@ class EventLogs extends Controller
         SettingsManager::setContext('October.System', 'event_logs');
     }
 
+    /**
+     * index_onRefresh
+     */
     public function index_onRefresh()
     {
         return $this->listRefresh();
     }
 
+    /**
+     * index_onEmptyLog
+     */
     public function index_onEmptyLog()
     {
         EventLog::truncate();
-        Flash::success(Lang::get('system::lang.event_log.empty_success'));
+        Flash::success(__("Event log emptied"));
         return $this->listRefresh();
     }
 
+    /**
+     * index_onDelete
+     */
     public function index_onDelete()
     {
         if (($checkedIds = post('checked')) && is_array($checkedIds) && count($checkedIds)) {
@@ -82,16 +91,15 @@ class EventLogs extends Controller
     }
 
     /**
-     * Preview page action
-     * @return void
+     * preview page action
      */
     public function preview($id)
     {
-        $this->addCss('/modules/system/assets/css/eventlogs/exception-beautifier.css', 'core');
-        $this->addJs('/modules/system/assets/js/eventlogs/exception-beautifier.js', 'core');
+        $this->addCss('/modules/system/assets/css/pages/eventlogs.css');
+        $this->addJs('/modules/system/assets/js/pages/eventlogs.beautifier.js');
 
-        if (in_array(App::environment(), ['dev', 'local'])) {
-            $this->addJs('/modules/system/assets/js/eventlogs/exception-beautifier.links.js', 'core');
+        if (System::checkDebugMode()) {
+            $this->addJs('/modules/system/assets/js/pages/eventlogs.beautifier.links.js');
         }
 
         return $this->asExtension('FormController')->preview($id);

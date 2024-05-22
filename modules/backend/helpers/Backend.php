@@ -1,15 +1,14 @@
 <?php namespace Backend\Helpers;
 
 use Url;
-use File;
 use Html;
 use Config;
+use System;
 use Request;
 use Redirect;
 use October\Rain\Router\Helper as RouterHelper;
 use System\Helpers\DateTime as DateTimeHelper;
 use Backend\Classes\Skin;
-use Backend\Helpers\Exception\DecompileException;
 use Exception;
 
 /**
@@ -22,15 +21,24 @@ use Exception;
 class Backend
 {
     /**
-     * Returns the backend URI segment.
+     * assetVersion returns a unique identifier to cache bust backend assets. A salted
+     * hash is used to prevent guessing of the current build number
      */
-    public function uri()
+    public function assetVersion(): string
     {
-        return Config::get('cms.backendUri', 'backend');
+        return hash('crc32', filemtime(base_path('vendor/autoload.php')) . System::VERSION);
     }
 
     /**
-     * Returns a URL in context of the Backend
+     * uri returns the backend URI segment
+     */
+    public function uri(): string
+    {
+        return ltrim(Config::get('backend.uri', Config::get('cms.backendUri', 'backend')), '/');
+    }
+
+    /**
+     * url returns a URL in context of the backend
      */
     public function url($path = null, $parameters = [], $secure = null)
     {
@@ -38,7 +46,7 @@ class Backend
     }
 
     /**
-     * Returns the base backend URL
+     * baseUrl returns the base backend URL
      */
     public function baseUrl($path = null)
     {
@@ -54,7 +62,7 @@ class Backend
     }
 
     /**
-     * Returns a URL in context of the active Backend skin
+     * skinAsset returns a URL in context of the active Backend skin
      */
     public function skinAsset($path = null)
     {
@@ -63,7 +71,7 @@ class Backend
     }
 
     /**
-     * Create a new redirect response to a given backend path.
+     * redirect creates a new redirect response to a given backend path
      */
     public function redirect($path, $status = 302, $headers = [], $secure = null)
     {
@@ -71,7 +79,7 @@ class Backend
     }
 
     /**
-     * Create a new backend redirect response, while putting the current URL in the session.
+     * redirectGuest creates a new backend redirect response, placing current URL in the session
      */
     public function redirectGuest($path, $status = 302, $headers = [], $secure = null)
     {
@@ -79,7 +87,7 @@ class Backend
     }
 
     /**
-     * Create a new redirect response to the previously intended backend location.
+     * redirectIntended creates a new redirect response to the previously intended backend location
      */
     public function redirectIntended($path, $status = 302, $headers = [], $secure = null)
     {
@@ -107,7 +115,7 @@ class Backend
     }
 
     /**
-     * Proxy method for dateTime() using "date" format alias.
+     * date is a proxy method for dateTime() using "date" format alias
      * @return string
      */
     public function date($dateTime, $options = [])
@@ -116,7 +124,8 @@ class Backend
     }
 
     /**
-     * Returns the HTML for a date formatted in the backend.
+     * dateTime returns the HTML for a date formatted in the backend
+     *
      * Supported for formatAlias:
      *   time             -> 6:28 AM
      *   timeLong         -> 6:28:01 AM
@@ -139,8 +148,15 @@ class Backend
             'jsFormat' => null,
             'timeTense' => false,
             'timeSince' => false,
+            'useTimezone' => true,
+            // @deprecated API
             'ignoreTimezone' => false,
         ], $options));
+
+        // @deprecated API
+        if ($ignoreTimezone) {
+            $useTimezone = false;
+        }
 
         if (!$dateTime) {
             return '';
@@ -160,7 +176,7 @@ class Backend
             'data-datetime-control' => 1,
         ];
 
-        if ($ignoreTimezone) {
+        if (!$useTimezone) {
             $attributes['data-ignore-timezone'] = true;
         }
 
@@ -181,76 +197,29 @@ class Backend
     }
 
     /**
-     * Decompiles the compilation asset files
-     *
-     * This is used to load each individual asset file, as opposed to using the compilation assets. This is useful only
-     * for development, to allow developers to test changes without having to re-compile assets.
-     *
-     * @param string $file The compilation asset file to decompile
-     * @param boolean $skinAsset If true, will load decompiled assets from the "skins" directory.
-     * @throws DecompileException If the compilation file cannot be decompiled
-     * @return array
+     * sizeToPixels converts a size name, e.g. large, small to a pixel size
      */
-    public function decompileAsset(string $file, bool $skinAsset = false)
+    public function sizeToPixels($size): int
     {
-        $assets = $this->parseAsset($file, $skinAsset);
-
-        return array_map(function ($asset) use ($skinAsset) {
-            // Resolve relative asset paths
-            if ($skinAsset) {
-                $assetPath = base_path(substr(Skin::getActive()->getPath($asset, true), 1));
-            } else {
-                $assetPath = base_path($asset);
-            }
-            $relativePath = File::localToPublic(realpath($assetPath));
-
-            return Url::asset($relativePath);
-        }, $assets);
-    }
-
-    /**
-     * Parse the provided asset file to get the files that it includes
-     *
-     * @param string $file The compilation asset file to parse
-     * @param boolean $skinAsset If true, will load decompiled assets from the "skins" directory.
-     * @return array
-     */
-    protected function parseAsset($file, $skinAsset)
-    {
-        if ($skinAsset) {
-            $assetFile = base_path(substr(Skin::getActive()->getPath($file, true), 1));
-        } else {
-            $assetFile = base_path($file);
+        if (is_numeric($size)) {
+            return (int) $size;
         }
 
-        $results = [$file];
-
-        if (!file_exists($assetFile)) {
-            throw new DecompileException('File ' . $file . ' does not exist to be decompiled.');
-        }
-        if (!is_readable($assetFile)) {
-            throw new DecompileException('File ' . $file . ' cannot be decompiled. Please allow read access to the file.');
-        }
-
-        $contents = file_get_contents($assetFile);
-
-        // Find all assets that are compiled in this file
-        preg_match_all('/^=require\s+([A-z0-9-_+\.\/]+)[\n|\r\n|$]/m', $contents, $matches, PREG_SET_ORDER);
-
-        // Determine correct asset path
-        $directory = str_replace(basename($file), '', $file);
-
-        if (count($matches)) {
-            $results = array_map(function ($match) use ($directory) {
-                return str_replace('/', DIRECTORY_SEPARATOR, $directory . $match[1]);
-            }, $matches);
-
-            foreach ($results as $i => $result) {
-                $nested = $this->parseAsset($result, $skinAsset);
-                array_splice($results, $i, 1, $nested);
-            }
+        switch ($size) {
+            case 'tiny':
+                return 400;
+            case 'small':
+                return 500;
+            case 'medium':
+                return 600;
+            case 'large':
+                return 750;
+            case 'huge':
+                return 950;
+            case 'giant':
+                return 1200;
         }
 
-        return $results;
+        return 0;
     }
 }

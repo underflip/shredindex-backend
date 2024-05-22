@@ -1,12 +1,16 @@
 <?php namespace System\Console;
 
+use System;
 use Illuminate\Console\Command;
 use System\Classes\UpdateManager;
+use System\Helpers\Cache as CacheHelper;
+use October\Rain\Composer\Manager as ComposerManager;
 use Symfony\Component\Console\Input\InputArgument;
-use System\Classes\PluginManager;
+use Symfony\Component\Console\Input\InputOption;
+use Exception;
 
 /**
- * Console command to install a new plugin.
+ * PluginInstall installs a new plugin.
  *
  * This adds a new plugin by requesting it from the October marketplace.
  *
@@ -15,62 +19,149 @@ use System\Classes\PluginManager;
  */
 class PluginInstall extends Command
 {
-
     /**
-     * The console command name.
-     * @var string
+     * @var string name of console command
      */
     protected $name = 'plugin:install';
 
     /**
-     * The console command description.
-     * @var string
+     * @var string description of the console command
      */
-    protected $description = 'Install a plugin from the October marketplace.';
+    protected $description = 'Install a plugin from the October marketplace or custom source.';
 
     /**
-     * Execute the console command.
-     * @return void
+     * handle executes the console command
      */
     public function handle()
     {
-        $pluginName = $this->argument('name');
-        $manager = UpdateManager::instance()->setNotesOutput($this->output);
+        $name = $this->argument('name');
 
-        $pluginDetails = $manager->requestPluginDetails($pluginName);
+        $this->line("Installing Plugin: {$name}");
 
-        $code = array_get($pluginDetails, 'code');
-        $hash = array_get($pluginDetails, 'hash');
+        if ($src = $this->option('from')) {
+            $this->info("Added Repo: {$src}");
+            $composerCode = System::octoberToComposerCode(
+                $name,
+                'plugin',
+                (bool) $this->option('oc')
+            );
+            $composerVersion = '*';
 
-        $this->output->writeln(sprintf('<info>Downloading plugin: %s</info>', $code));
-        $manager->downloadPlugin($code, $hash, true);
+            $this->addRepoFromSource($composerCode, $src);
+        }
+        else {
+            $info = UpdateManager::instance()->requestPluginDetails($name);
+            $composerCode = array_get($info, 'composer_code');
+            $composerVersion = '^'.array_get($info, 'composer_version');
+        }
 
-        $this->output->writeln(sprintf('<info>Unpacking plugin: %s</info>', $code));
-        $manager->extractPlugin($code, $hash);
+        // Splice in version
+        if ($requireVersion = $this->option('want')) {
+            $composerVersion = $requireVersion;
+        }
 
-        /*
-         * Make sure plugin is registered
-         */
-        $pluginManager = PluginManager::instance();
-        $pluginManager->loadPlugins();
-        $plugin = $pluginManager->findByIdentifier($code);
-        $pluginManager->registerPlugin($plugin, $code);
+        // Composer require
+        $this->comment("Executing: composer require {$composerCode} {$composerVersion}");
+        $this->line('');
 
-        /*
-         * Migrate plugin
-         */
-        $this->output->writeln(sprintf('<info>Migrating plugin...</info>', $code));
-        $manager->updatePlugin($code);
+        $composer = ComposerManager::instance();
+        $composer->setOutputCommand($this, $this->input);
+
+        try {
+            if ($this->option('no-update')) {
+                $composer->addPackages([$composerCode => $composerVersion]);
+            }
+            else {
+                $composer->require([$composerCode => $composerVersion]);
+            }
+        }
+        catch (Exception $ex) {
+            if ($src = $this->option('from')) {
+                $this->info("Reverted repo change");
+                $this->removeRepoFromSource($composerCode);
+            }
+            throw $ex;
+        }
+
+        // Clear meta cache
+        CacheHelper::instance()->clearMeta();
+
+        // Run migrations
+        if (!$this->option('no-migrate')) {
+            $this->comment("Executing: php artisan october:migrate");
+            $this->line('');
+
+            // Migrate database
+            $errCode = null;
+            static::passthruArtisan('october:migrate', $errCode);
+            $this->line('');
+
+            if ($errCode !== 0) {
+                $this->output->error('Migration failed. Check output above');
+                exit(1);
+            }
+        }
+
+        $this->output->success("Plugin '{$name}' installed");
     }
 
     /**
-     * Get the console command arguments.
-     * @return array
+     * addRepoFromSource adds a plugin to composer's repositories
+     */
+    protected function addRepoFromSource($composerCode, $src)
+    {
+        if (file_exists(base_path($src))) {
+            if (file_exists(base_path($src . '/.git'))) {
+                $srcType = 'git';
+            }
+            else {
+                $srcType = 'path';
+            }
+        }
+        else {
+            $srcType = 'git';
+        }
+
+        ComposerManager::instance()->addRepository($composerCode, $srcType, $src);
+    }
+
+    /**
+     * removeRepoFromSource removes a plugin from composer's repo
+     */
+    protected function removeRepoFromSource($composerCode)
+    {
+        ComposerManager::instance()->removeRepository($composerCode);
+    }
+
+    /**
+     * getArguments get the console command arguments
      */
     protected function getArguments()
     {
         return [
             ['name', InputArgument::REQUIRED, 'The name of the plugin. Eg: AuthorName.PluginName'],
         ];
+    }
+
+    /**
+     * getOptions get the console command options
+     */
+    protected function getOptions()
+    {
+        return [
+            ['oc', null, InputOption::VALUE_NONE, 'Package uses the oc- prefix.'],
+            ['from', 'f', InputOption::VALUE_REQUIRED, 'Provide a custom source.'],
+            ['want', 'w', InputOption::VALUE_REQUIRED, 'Provide a custom version.'],
+            ['no-migrate', null, InputOption::VALUE_NONE, 'Do not run migration after install.'],
+            ['no-update', null, InputOption::VALUE_NONE, 'Do not run composer update after install.'],
+        ];
+    }
+
+    /**
+     * passthruArtisan
+     */
+    protected static function passthruArtisan($command, &$errCode = null)
+    {
+        passthru('"'.PHP_BINARY.'" artisan ' .$command, $errCode);
     }
 }

@@ -2,145 +2,109 @@
 // Layout for "Outside" pages, such as the Login screen
 //
 
+html body.outer {
+    background: white;
+}
+
 body.outer {
-    background: @color-outer-bg;
+    .outer-form-cell {
+        width: 350px;
+        padding: @padding-standard * 2;
+        border-right: 1px solid #ECF0F1;
+        vertical-align: top;
+    }
 
-    .layout {
-        > .layout-row {
-            &.layout-head {
-                text-align: center;
-                background: @color-outer-header;
+    .outer-theme-cell {
+        background-color: #FEF6EB;
+        vertical-align: middle;
+        text-align: center;
+        overflow: hidden;
 
-                > .layout-cell {
-                    height: 40%;
-                    padding: 50px 0;
-                    .box-sizing(border-box);
-                    vertical-align: middle;
-                    position: relative;
-
-                    &:after {
-                        .triangle(down, 56px, 20px, @color-outer-header);
-                        position: absolute;
-                        bottom: -20px;
-                        left: 50%;
-                        margin-left: -28px;
-                    }
-
-                    h1.oc-logo {
-                        .hide-text();
-                        display: inline-block;
-                        width: 100%;
-                        max-width: 450px;
-                        height: 170px;
-                        min-height: 72px;
-                    }
-                }
-            }
-
-            > .layout-cell {
-                vertical-align: top;
-
-                .outer-form-container {
-                    margin: 0 auto;
-                    width: 436px;
-                    padding: (@padding-standard * 2) 0;
-
-                    h2 {
-                        font-size: 18px;
-                        margin: 20px 0;
-                        color: @color-outer-heading;
-                    }
-
-                    .horizontal-form {
-                        font-size: 0;
-                        .flex-display();
-
-                        input {
-                            vertical-align: top;
-                            margin-right: 9px;
-                            display: inline-block;
-                            border: none;
-                            .border-radius(2px);
-                        }
-
-                        button {
-                            background: @link-color;
-                            text-align: center;
-                            font-size: 13px;
-                            font-weight: 600;
-                            height: 40px;
-                            vertical-align: top;
-                            .box-sizing(border-box);
-                        }
-                    }
-
-                    .remember {
-                        label {
-                            color: @color-outer-muted-text;
-                        }
-                        input#remember {
-                            display: none;
-                        }
-                    }
-
-                    .forgot-password {
-                        margin-top: 30px;
-                        font-size: 13px;
-                        top: 8px;
-
-                        a {
-                            color: @color-outer-muted-text;
-                        }
-
-                        &:before {
-                            color: @color-outer-muted-text;
-                            font-size: 14px;
-                            position: relative;
-                            margin-right: 5px;
-                        }
-                    }
-                }
-            }
+        img {
+            display: inline-block;
+            margin: 0 auto;
         }
     }
-}
 
-html.csstransitions {
-    body.outer {
-        .outer-form-container {
-           .transition(all 0.5s ease-out);
-            .scaleAxes(1, 1);
-        }
+    h1 {
+        margin: 0 0 20px 0;
+        padding: 0;
+        text-align: center;
+        .hide-text();
 
-        &.preload {
-            .outer-form-container {
-                .scaleAxes(0.2, 0.2);
-            }
+        img {
+            max-width: 180px;
+            width: 100%;
+            display: inline-block;
+            border-radius: 6px;
         }
     }
-}
 
-@media (max-width: @screen-sm) {
-    body.outer .layout > .layout-row {
-        &.layout-head {
-            > .layout-cell {
-                padding: 50px @padding-standard;
-            }
+    .outer-form-container {
+        margin: 0 auto;
+
+        p {
+            color: @color-grey-7;
         }
 
-        > .layout-cell .outer-form-container {
-            width: auto;
-            padding: @padding-standard * 2;
+        h2 {
+            font-size: 22px;
+            font-family: @font-family-serif;
+            margin: 0;
+            padding: 10px 0 30px 0;
+            color: @color-grey-7;
+            text-align: center;
 
-            .horizontal-form {
+            &:empty {
+                padding: 0;
+            }
+
+            &:after {
+                content: '';
                 display: block;
-
-                input {
-                    display: block;
-                    width: 100% !important;
-                    margin-bottom: @padding-standard;
-                }
+                height: 2px;
+                width: 60px;
+                margin: 30px auto 20px;
+                background: @color-text-grey-1;
             }
+        }
+
+        .forgot-password {
+            margin-top: 8px;
+
+            a {
+                color: @color-text-grey-1;
+                text-decoration: underline;
+            }
+        }
+
+        // Fix for some third-party plugins
+        //
+        .horizontal-form {
+            input.form-control {
+                margin-bottom: 20px;
+            }
+
+            + .pull-right.forgot-password {
+                margin-top: -47px;
+                position: relative;
+            }
+        }
+    }
+}
+
+body.outer.setup .outer-form-cell {
+    width: 500px;
+}
+
+@media (max-width: @screen-xs) {
+    body.outer {
+        .outer-form-cell {
+            width: 100% !important;
+        }
+
+        .outer-theme-cell {
+            display: none;
         }
     }
 }

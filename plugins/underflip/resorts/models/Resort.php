@@ -45,6 +45,7 @@ class Resort extends Model
      */
     public $hasOne = [
         'location' => Location::class,
+        'continent' => Continent::class,
         'total_score' => TotalScore::class,
     ];
 
@@ -58,6 +59,18 @@ class Resort extends Model
         'resort_images' => ResortImage::class,
         'comments' => Comment::class,
     ];
+
+    public function continent()
+    {
+        return $this->hasOneThrough(
+            Continent::class,
+            Location::class,
+            'resort_id', // Foreign key on Location table referencing Resort
+            'id', // Primary key on Continents table
+            'id', // Local key on Resort table (primary key)
+            'country_id' // Foreign key on the pivot table referencing Location's country_id
+        );
+    }
 
     /**
      * The resort's URL

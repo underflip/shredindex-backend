@@ -1,154 +1,112 @@
 <?php namespace Backend\Classes;
 
+use Arr;
+use Lang;
 use October\Rain\Html\Helper as HtmlHelper;
+use October\Rain\Element\Filter\ScopeDefinition;
+use Illuminate\Support\Collection;
+use SystemException;
 
 /**
- * Filter scope definition
- * A translation of the filter scope configuration
+ * FilterScope is a translation of the filter scope configuration
+ *
+ * @method ScopeDefinition idPrefix(string $prefix) idPrefix to the field identifier so it can be totally unique.
  *
  * @package october\backend
  * @author Alexey Bobkov, Samuel Georges
  */
-class FilterScope
+class FilterScope extends ScopeDefinition
 {
     /**
-     * @var string Scope name.
+     * getOptionsFromModel looks at the model for defined options.
      */
-    public $scopeName;
-
-    /**
-     * @var string A prefix to the field identifier so it can be totally unique.
-     */
-    public $idPrefix;
-
-    /**
-     * @var string Column to display for the display name
-     */
-    public $nameFrom = 'name';
-
-    /**
-     * @var string Column to display for the description (optional)
-     */
-    public $descriptionFrom;
-
-    /**
-     * @var string Filter scope label.
-     */
-    public $label;
-
-    /**
-     * @var string Filter scope value.
-     */
-    public $value;
-
-    /**
-     * @var string Filter mode.
-     */
-    public $type = 'group';
-
-    /**
-     * @var string Filter options.
-     */
-    public $options;
-
-    /**
-     * @var array Other scope names this scope depends on, when the other scopes are modified, this scope will update.
-     */
-    public $dependsOn;
-
-    /**
-     * @var string Specifies contextual visibility of this form scope.
-     */
-    public $context;
-
-    /**
-     * @var bool Specify if the scope is disabled or not.
-     */
-    public $disabled = false;
-
-    /**
-     * @var string Specifies a default value for supported scopes.
-     */
-    public $defaults;
-
-    /**
-     * @var string Raw SQL conditions to use when applying this scope.
-     */
-    public $conditions;
-
-    /**
-     * @var string Model scope method to use when applying this filter scope.
-     */
-    public $scope;
-
-    /**
-     * @var string Specifies a CSS class to attach to the scope container.
-     */
-    public $cssClass;
-
-    /**
-     * @var array Raw scope configuration.
-     */
-    public $config;
-
-    public function __construct($scopeName, $label)
+    public function getOptionsFromModel($model, $scopeOptions)
     {
-        $this->scopeName = $scopeName;
-        $this->label = $label;
-    }
-
-    /**
-     * Specifies a scope control rendering mode. Supported modes are:
-     * - group - filter by a group of IDs. Default.
-     * - checkbox - filter by a simple toggle switch.
-     * @param string $type Specifies a render mode as described above
-     * @param array $config A list of render mode specific config.
-     */
-    public function displayAs($type, $config = [])
-    {
-        $this->type = strtolower($type) ?: $this->type;
-        $this->config = $this->evalConfig($config);
-        return $this;
-    }
-
-    /**
-     * Process options and apply them to this object.
-     * @param array $config
-     * @return array
-     */
-    protected function evalConfig($config)
-    {
-        if ($config === null) {
-            $config = [];
+        // Method name
+        if (is_string($scopeOptions)) {
+            $scopeOptions = $this->getOptionsFromModelAsString($model, $scopeOptions);
         }
 
-        /*
-         * Standard config:property values
-         */
-        $applyConfigValues = [
-            'options',
-            'dependsOn',
-            'context',
-            'default',
-            'conditions',
-            'scope',
-            'cssClass',
-            'nameFrom',
-            'descriptionFrom',
-            'disabled',
-        ];
+        // Cast collections to array
+        if ($scopeOptions instanceof Collection) {
+            $scopeOptions = $scopeOptions->all();
+        }
 
-        foreach ($applyConfigValues as $value) {
-            if (array_key_exists($value, $config)) {
-                $this->{$value} = $config[$value];
+        // Always be an array
+        if ($scopeOptions === null) {
+            return $scopeOptions = [];
+        }
+
+        return $scopeOptions;
+    }
+
+    /**
+     * getOptionsFromModelAsString where options are an explicit method reference
+     */
+    protected function getOptionsFromModelAsString($model, string $methodName)
+    {
+        // Calling via ClassName::method
+        if (
+            strpos($methodName, '::') !== false &&
+            ($staticMethod = explode('::', $methodName)) &&
+            count($staticMethod) === 2 &&
+            is_callable($staticMethod)
+        ) {
+            $scopeOptions = $staticMethod($model, $this);
+
+            if (!is_array($scopeOptions)) {
+                throw new SystemException(Lang::get('backend::lang.field.options_static_method_invalid_value', [
+                    'class' => $staticMethod[0],
+                    'method' => $staticMethod[1]
+                ]));
             }
         }
+        // Calling via $model->method
+        else {
+            if (!$this->objectMethodExists($model, $methodName)) {
+                throw new SystemException(Lang::get('backend::lang.filter.options_method_not_exists', [
+                    'model' => get_class($model),
+                    'method' => $methodName,
+                    'filter' => $this->fieldName
+                ]));
+            }
 
-        return $config;
+            $scopeOptions = $model->$methodName($this);
+        }
+
+        return $scopeOptions;
     }
 
     /**
-     * Returns a value suitable for the scope id property.
+     * applyScopeMethodToQuery
+     */
+    public function applyScopeMethodToQuery($query)
+    {
+        $methodName = $this->modelScope;
+
+        // Calling via ClassName::method
+        if (
+            is_string($methodName) &&
+            strpos($methodName, '::') !== false &&
+            ($staticMethod = explode('::', $methodName)) &&
+            count($staticMethod) === 2 &&
+            is_callable($staticMethod)
+        ) {
+            $methodName = $staticMethod;
+        }
+
+        // Calling via query builder
+        if (is_string($methodName)) {
+            $query->$methodName($this);
+        }
+        // Calling via callable
+        else {
+            $methodName($query, $this);
+        }
+    }
+
+    /**
+     * getId returns a value suitable for the scope id property.
      */
     public function getId($suffix = null)
     {
@@ -164,5 +122,48 @@ class FilterScope
         }
 
         return HtmlHelper::nameToId($id);
+    }
+
+    /**
+     * getDefaultScopeValue returns a fully qualified scope default value
+     */
+    public function getDefaultScopeValue()
+    {
+        $defaults = $this->defaults;
+        if ($defaults === null) {
+            return null;
+        }
+
+        // Basic value
+        if (is_scalar($defaults)) {
+            return ['value' => $defaults];
+        }
+
+        // Invalid value
+        if (!is_array($defaults)) {
+            return null;
+        }
+
+        // Numerical array
+        if (Arr::isList($defaults)) {
+            return ['value' => $defaults];
+        }
+
+        // Associative array
+        return $defaults;
+    }
+
+    /**
+     * objectMethodExists is an internal helper for method existence checks.
+     * @param  object $object
+     * @param  string $method
+     */
+    protected function objectMethodExists($object, $method): bool
+    {
+        if (method_exists($object, 'methodExists')) {
+            return $object->methodExists($method);
+        }
+
+        return method_exists($object, $method);
     }
 }

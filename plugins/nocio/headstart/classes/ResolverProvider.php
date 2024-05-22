@@ -1,10 +1,13 @@
 <?php namespace Nocio\Headstart\Classes;
 
 use Closure;
+use Cms\Classes\Theme;
+use Illuminate\Support\Facades\Log;
 use Nuwave\Lighthouse\Schema\Values\FieldValue;
 use GraphQL\Type\Definition\ResolveInfo;
 use Cms\Classes\CodeParser;
 use Nuwave\Lighthouse\Schema\ResolverProvider as LighthouseResolverProvider;
+use RainLab\Pages\Classes\Menu;
 
 
 class ResolverProvider extends LighthouseResolverProvider {
@@ -27,12 +30,16 @@ class ResolverProvider extends LighthouseResolverProvider {
                 $resolveMethod = 'resolve' . studly_case($fieldName);
 
                 if (method_exists($codeObj, $resolveMethod)) {
-                    return $codeObj->$resolveMethod($root, $args, $context, $resolveInfo);
+                    Log::info('method_exists');
+                    Log::info($resolveMethod);
+                    Log::info('$args', $args);
+                    $data = $codeObj->$resolveMethod($root, $args);
+                    return $data;
                 }
+            }else{
+                // default resolver
+                return parent::provideResolver($fieldValue)($root, $args, $context, $resolveInfo);
             }
-
-            // default resolver
-            return parent::provideResolver($fieldValue)($root, $args, $context, $resolveInfo);
         };
     }
 

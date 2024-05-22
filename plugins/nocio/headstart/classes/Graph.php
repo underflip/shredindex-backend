@@ -5,7 +5,6 @@ namespace Nocio\Headstart\Classes;
 use Lang;
 use Cms\Classes\Page;
 
-
 class Graph extends Page
 {
 
@@ -32,7 +31,8 @@ class Graph extends Page
         'title' => 'required'
     ];
 
-    public function getCodeClassParent() : string {
+    public function getCodeClassParent() : string
+    {
         return GraphCode::class;
     }
 
@@ -42,5 +42,4 @@ class Graph extends Page
             $component->onRun();
         }
     }
-
 }

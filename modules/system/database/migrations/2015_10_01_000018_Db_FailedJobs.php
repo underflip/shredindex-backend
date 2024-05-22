@@ -3,16 +3,16 @@
 use October\Rain\Database\Schema\Blueprint;
 use October\Rain\Database\Updates\Migration;
 
-class DbFailedJobs extends Migration
+return new class extends Migration
 {
     public function up()
     {
         Schema::create($this->getTableName(), function (Blueprint $table) {
-            $table->engine = 'InnoDB';
             $table->increments('id');
             $table->text('connection');
             $table->text('queue');
             $table->text('payload');
+            $table->longText('exception')->nullable();
             $table->timestamp('failed_at')->nullable();
         });
     }
@@ -26,4 +26,4 @@ class DbFailedJobs extends Migration
     {
         return Config::get('queue.failed.table', 'failed_jobs');
     }
-}
+};

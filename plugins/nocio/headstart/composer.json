@@ -1,0 +1,16 @@
+{
+    "name": "nocio/headstart",
+    "type": "october-plugin",
+    "description": "OctoberCMS plugin for headless GraphQL-driven content management",
+    "homepage": "https://github.com/nocio/headstart",
+    "authors": [
+        {
+            "name": "Noelyn Stephens",
+            "email": "hello@noc.io"
+        }
+    ],
+    "require": {
+        "nuwave/lighthouse": "v6.*",
+        "guzzlehttp/guzzle": "~6.3"
+    }
+}

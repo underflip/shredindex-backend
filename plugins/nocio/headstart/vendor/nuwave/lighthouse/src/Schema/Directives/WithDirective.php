@@ -1,33 +1,24 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use Closure;
-use GraphQL\Deferred;
-use Illuminate\Database\Eloquent\Model;
-use GraphQL\Type\Definition\ResolveInfo;
-use Nuwave\Lighthouse\Schema\Values\FieldValue;
-use Nuwave\Lighthouse\Execution\DataLoader\BatchLoader;
+use GraphQL\Language\AST\FieldDefinitionNode;
+use GraphQL\Language\AST\InterfaceTypeDefinitionNode;
+use GraphQL\Language\AST\ObjectTypeDefinitionNode;
+use Nuwave\Lighthouse\Exceptions\DefinitionException;
+use Nuwave\Lighthouse\Execution\ModelsLoader\ModelsLoader;
+use Nuwave\Lighthouse\Execution\ModelsLoader\SimpleModelsLoader;
+use Nuwave\Lighthouse\Execution\ResolveInfo;
+use Nuwave\Lighthouse\Schema\AST\DocumentAST;
+use Nuwave\Lighthouse\Schema\RootType;
+use Nuwave\Lighthouse\Support\Contracts\FieldManipulator;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
-use Nuwave\Lighthouse\Support\Contracts\FieldMiddleware;
-use Nuwave\Lighthouse\Support\Contracts\DefinedDirective;
-use Nuwave\Lighthouse\Execution\DataLoader\RelationBatchLoader;
 
-class WithDirective extends RelationDirective implements FieldMiddleware, DefinedDirective
+class WithDirective extends WithRelationDirective implements FieldManipulator
 {
-    /**
-     * Name of the directive.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'with';
-    }
-
     public static function definition(): string
     {
-        return /* @lang GraphQL */ <<<'SDL'
+        return /** @lang GraphQL */ <<<'GRAPHQL'
 """
 Eager-load an Eloquent relation.
 """
@@ -42,49 +33,23 @@ directive @with(
   Apply scopes to the underlying query.
   """
   scopes: [String!]
-) on FIELD_DEFINITION
-SDL;
+) repeatable on FIELD_DEFINITION
+GRAPHQL;
     }
 
-    /**
-     * Eager load a relation on the parent instance.
-     *
-     * @param  \Nuwave\Lighthouse\Schema\Values\FieldValue  $fieldValue
-     * @param  \Closure  $next
-     * @return \Nuwave\Lighthouse\Schema\Values\FieldValue
-     */
-    public function handleField(FieldValue $fieldValue, Closure $next): FieldValue
+    public function manipulateFieldDefinition(DocumentAST &$documentAST, FieldDefinitionNode &$fieldDefinition, ObjectTypeDefinitionNode|InterfaceTypeDefinitionNode &$parentType): void
     {
-        $resolver = $fieldValue->getResolver();
+        if (RootType::isRootType($parentType->name->value)) {
+            throw new DefinitionException("Can not use @{$this->name()} on fields of a root type.");
+        }
+    }
 
-        return $next(
-            $fieldValue->setResolver(
-                function (Model $parent, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) use ($resolver): Deferred {
-                    $loader = BatchLoader::instance(
-                        RelationBatchLoader::class,
-                        $resolveInfo->path,
-                        [
-                            'relationName' => $this->directiveArgValue('relation', $this->definitionNode->name->value),
-                            'args' => $args,
-                            'scopes' => $this->directiveArgValue('scopes', []),
-                            'resolveInfo' => $resolveInfo,
-                        ]
-                    );
-
-                    return new Deferred(function () use ($loader, $resolver, $parent, $args, $context, $resolveInfo) {
-                        return $loader
-                            ->load(
-                                $parent->getKey(),
-                                ['parent' => $parent]
-                            )
-                            ->then(
-                                function () use ($resolver, $parent, $args, $context, $resolveInfo) {
-                                    return $resolver($parent, $args, $context, $resolveInfo);
-                                }
-                            );
-                    });
-                }
-            )
+    /** @return SimpleModelsLoader */
+    protected function modelsLoader(mixed $parent, array $args, GraphQLContext $context, ResolveInfo $resolveInfo): ModelsLoader
+    {
+        return new SimpleModelsLoader(
+            $this->relation(),
+            $this->makeBuilderDecorator($parent, $args, $context, $resolveInfo),
         );
     }
 }

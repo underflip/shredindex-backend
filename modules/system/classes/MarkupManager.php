@@ -1,90 +1,38 @@
 <?php namespace System\Classes;
 
-use Str;
+use App;
+use System;
 use Twig\TokenParser\AbstractTokenParser as TwigTokenParser;
 use Twig\TwigFilter as TwigSimpleFilter;
 use Twig\TwigFunction as TwigSimpleFunction;
-use ApplicationException;
 
 /**
- * This class manages Twig functions, token parsers and filters.
+ * MarkupManager class manages Twig functions, token parsers and filters.
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
  */
 class MarkupManager
 {
-    use \October\Rain\Support\Traits\Singleton;
-
     const EXTENSION_FILTER = 'filters';
     const EXTENSION_FUNCTION = 'functions';
     const EXTENSION_TOKEN_PARSER = 'tokens';
 
     /**
-     * @var array Cache of registration callbacks.
-     */
-    protected $callbacks = [];
-
-    /**
-     * @var array Globally registered extension items
+     * @var array[MarkupExtensionItem[]] items are globally registered extension items
      */
     protected $items;
 
     /**
-     * @var \System\Classes\PluginManager
+     * instance creates a new instance of this singleton
      */
-    protected $pluginManager;
-
-    /**
-     * @var array Transaction based extension items
-     */
-    protected $transactionItems;
-
-    /**
-     * @var bool Manager is in transaction mode
-     */
-    protected $transactionMode = false;
-
-    /**
-     * Initialize this singleton.
-     */
-    protected function init()
+    public static function instance(): static
     {
-        $this->pluginManager = PluginManager::instance();
-    }
-
-    protected function loadExtensions()
-    {
-        /*
-         * Load module items
-         */
-        foreach ($this->callbacks as $callback) {
-            $callback($this);
-        }
-
-        /*
-         * Load plugin items
-         */
-        $plugins = $this->pluginManager->getPlugins();
-
-        foreach ($plugins as $id => $plugin) {
-            $items = $plugin->registerMarkupTags();
-            if (!is_array($items)) {
-                continue;
-            }
-
-            foreach ($items as $type => $definitions) {
-                if (!is_array($definitions)) {
-                    continue;
-                }
-
-                $this->registerExtensions($type, $definitions);
-            }
-        }
+        return App::make('system.markup');
     }
 
     /**
-     * Registers a callback function that defines simple Twig extensions.
+     * registerCallback function that defines simple Twig extensions.
      * The callback function should register menu items by calling the manager's
      * `registerFunctions`, `registerFilters`, `registerTokenParsers` function.
      * The manager instance is passed to the callback function as an argument. Usage:
@@ -95,15 +43,57 @@ class MarkupManager
      *         $manager->registerTokenParsers([...]);
      *     });
      *
+     * @deprecated this will be removed in a later version
      * @param callable $callback A callable function.
      */
     public function registerCallback(callable $callback)
     {
-        $this->callbacks[] = $callback;
+        App::extendInstance('system.markup', $callback);
     }
 
     /**
-     * Registers the CMS Twig extension items.
+     * loadExtensions parses all registrations and adds them to this class
+     */
+    protected function loadExtensions()
+    {
+        // Load module items
+        foreach (System::listModules() as $module) {
+            if ($provider = App::getProvider($module . '\\ServiceProvider')) {
+                $this->loadExtensionsFromArray($provider->registerMarkupTags());
+            }
+        }
+
+        // Load plugin items
+        foreach (PluginManager::instance()->getPlugins() as $plugin) {
+            $this->loadExtensionsFromArray($plugin->registerMarkupTags());
+        }
+
+        // Load app items
+        if ($app = App::getProvider(\App\Provider::class)) {
+            $this->loadExtensionsFromArray($app->registerMarkupTags());
+        }
+    }
+
+    /**
+     * loadExtensionsFromArray helper
+     */
+    protected function loadExtensionsFromArray($items)
+    {
+        if (!is_array($items)) {
+            return;
+        }
+
+        foreach ($items as $type => $definitions) {
+            if (!is_array($definitions)) {
+                return;
+            }
+
+            $this->registerExtensions($type, $definitions);
+        }
+    }
+
+    /**
+     * registerExtensions registers the CMS Twig extension items.
      * The argument is an array of the extension definitions. The array keys represent the
      * function/filter name, specific for the plugin/module. Each element in the
      * array should be an associative array.
@@ -112,27 +102,39 @@ class MarkupManager
      */
     public function registerExtensions($type, array $definitions)
     {
-        $items = $this->transactionMode ? 'transactionItems' : 'items';
-
-        if ($this->$items === null) {
-            $this->$items = [];
+        if ($this->items === null) {
+            $this->items = [];
         }
 
-        if (!array_key_exists($type, $this->$items)) {
-            $this->$items[$type] = [];
+        if (!array_key_exists($type, $this->items)) {
+            $this->items[$type] = [];
         }
 
         foreach ($definitions as $name => $definition) {
+            $item = $this->defineMarkupExtensionItem([
+                'name' => $name,
+                'type' => $type,
+                'definition' => $definition,
+            ]);
+
             switch ($type) {
                 case self::EXTENSION_TOKEN_PARSER:
-                    $this->$items[$type][] = $definition;
+                    $this->items[$type][] = $item;
                     break;
                 case self::EXTENSION_FILTER:
                 case self::EXTENSION_FUNCTION:
-                    $this->$items[$type][$name] = $definition;
+                    $this->items[$type][$name] = $item;
                     break;
             }
         }
+    }
+
+    /**
+     * defineMarkupExtensionItem
+     */
+    protected function defineMarkupExtensionItem(array $config): MarkupExtensionItem
+    {
+        return (new MarkupExtensionItem)->useConfig($config);
     }
 
     /**
@@ -163,7 +165,7 @@ class MarkupManager
     }
 
     /**
-     * Returns a list of the registered Twig extensions of a type.
+     * listExtensions returns a list of the registered Twig extensions of a type.
      * @param $type string The Twig extension type
      * @return array
      */
@@ -179,15 +181,11 @@ class MarkupManager
             $results = $this->items[$type];
         }
 
-        if ($this->transactionItems !== null && isset($this->transactionItems[$type])) {
-            $results = array_merge($results, $this->transactionItems[$type]);
-        }
-
         return $results;
     }
 
     /**
-     * Returns a list of the registered Twig filters.
+     * listFilters returns a list of the registered Twig filters.
      * @return array
      */
     public function listFilters()
@@ -196,7 +194,7 @@ class MarkupManager
     }
 
     /**
-     * Returns a list of the registered Twig functions.
+     * listFunctions returns a list of the registered Twig functions.
      * @return array
      */
     public function listFunctions()
@@ -205,7 +203,7 @@ class MarkupManager
     }
 
     /**
-     * Returns a list of the registered Twig token parsers.
+     * listTokenParsers returns a list of the registered Twig token parsers.
      * @return array
      */
     public function listTokenParsers()
@@ -214,7 +212,7 @@ class MarkupManager
     }
 
     /**
-     * Makes a set of Twig functions for use in a twig extension.
+     * makeTwigFunctions makes a set of Twig functions for use in a twig extension.
      * @param  array $functions Current collection
      * @return array
      */
@@ -224,30 +222,19 @@ class MarkupManager
             $functions = [];
         }
 
-        foreach ($this->listFunctions() as $name => $callable) {
-            /*
-             * Handle a wildcard function
-             */
-            if (strpos($name, '*') !== false && $this->isWildCallable($callable)) {
-                $callable = function ($name) use ($callable) {
-                    $arguments = array_slice(func_get_args(), 1);
-                    $method = $this->isWildCallable($callable, Str::camel($name));
-                    return call_user_func_array($method, $arguments);
-                };
-            }
-
-            if (!is_callable($callable)) {
-                throw new ApplicationException(sprintf('The markup function for %s is not callable.', $name));
-            }
-
-            $functions[] = new TwigSimpleFunction($name, $callable, ['is_safe' => ['html']]);
+        foreach ($this->listFunctions() as $item) {
+            $functions[] = new TwigSimpleFunction(
+                $item->name,
+                $item->getTwigCallback(),
+                $item->getTwigOptions()
+            );
         }
 
         return $functions;
     }
 
     /**
-     * Makes a set of Twig filters for use in a twig extension.
+     * makeTwigFilters makes a set of Twig filters for use in a twig extension.
      * @param  array $filters Current collection
      * @return array
      */
@@ -257,30 +244,19 @@ class MarkupManager
             $filters = [];
         }
 
-        foreach ($this->listFilters() as $name => $callable) {
-            /*
-             * Handle a wildcard function
-             */
-            if (strpos($name, '*') !== false && $this->isWildCallable($callable)) {
-                $callable = function ($name) use ($callable) {
-                    $arguments = array_slice(func_get_args(), 1);
-                    $method = $this->isWildCallable($callable, Str::camel($name));
-                    return call_user_func_array($method, $arguments);
-                };
-            }
-
-            if (!is_callable($callable)) {
-                throw new ApplicationException(sprintf('The markup filter for %s is not callable.', $name));
-            }
-
-            $filters[] = new TwigSimpleFilter($name, $callable, ['is_safe' => ['html']]);
+        foreach ($this->listFilters() as $item) {
+            $filters[] = new TwigSimpleFilter(
+                $item->name,
+                $item->getTwigCallback(),
+                $item->getTwigOptions()
+            );
         }
 
         return $filters;
     }
 
     /**
-     * Makes a set of Twig token parsers for use in a twig extension.
+     * makeTwigTokenParsers makes a set of Twig token parsers for use in a twig extension.
      * @param  array $parsers Current collection
      * @return array
      */
@@ -290,92 +266,14 @@ class MarkupManager
             $parsers = [];
         }
 
-        $extraParsers = $this->listTokenParsers();
-        foreach ($extraParsers as $obj) {
-            if (!$obj instanceof TwigTokenParser) {
+        foreach ($this->listTokenParsers() as $item) {
+            if (!$item->callback instanceof TwigTokenParser) {
                 continue;
             }
 
-            $parsers[] = $obj;
+            $parsers[] = $item->callback;
         }
 
         return $parsers;
-    }
-
-    /**
-     * Tests if a callable type contains a wildcard, also acts as a
-     * utility to replace the wildcard with a string.
-     * @param  callable  $callable
-     * @param  string|bool $replaceWith
-     * @return mixed
-     */
-    protected function isWildCallable($callable, $replaceWith = false)
-    {
-        $isWild = false;
-
-        if (is_string($callable) && strpos($callable, '*') !== false) {
-            $isWild = $replaceWith ? str_replace('*', $replaceWith, $callable) : true;
-        }
-
-        if (is_array($callable)) {
-            if (is_string($callable[0]) && strpos($callable[0], '*') !== false) {
-                if ($replaceWith) {
-                    $isWild = $callable;
-                    $isWild[0] = str_replace('*', $replaceWith, $callable[0]);
-                }
-                else {
-                    $isWild = true;
-                }
-            }
-
-            if (!empty($callable[1]) && strpos($callable[1], '*') !== false) {
-                if ($replaceWith) {
-                    $isWild = $isWild ?: $callable;
-                    $isWild[1] = str_replace('*', $replaceWith, $callable[1]);
-                }
-                else {
-                    $isWild = true;
-                }
-            }
-        }
-
-        return $isWild;
-    }
-
-    //
-    // Transactions
-    //
-
-    /**
-     * Execute a single serving transaction, containing filters, functions,
-     * and token parsers that are disposed of afterwards.
-     * @param  \Closure  $callback
-     * @return void
-     */
-    public function transaction(Closure $callback)
-    {
-        $this->beginTransaction();
-        $callback($this);
-        $this->endTransaction();
-    }
-
-    /**
-     * Start a new transaction.
-     * @return void
-     */
-    public function beginTransaction()
-    {
-        $this->transactionMode = true;
-    }
-
-    /**
-     * Ends an active transaction.
-     * @return void
-     */
-    public function endTransaction()
-    {
-        $this->transactionMode = false;
-
-        $this->transactionItems = null;
     }
 }

@@ -2,8 +2,6 @@
 
 use Lang;
 use Flash;
-use Config;
-use Request;
 use Backend;
 use BackendMenu;
 use System\Classes\SettingsManager;
@@ -21,38 +19,44 @@ use Exception;
 class Settings extends Controller
 {
     /**
-     * @var WidgetBase Reference to the widget object.
+     * @var WidgetBase formWidget reference to the widget object
      */
     protected $formWidget;
 
     /**
-     * @var array Permissions required to view this page.
+     * @var array requiredPermissions to view this page
      */
     public $requiredPermissions = [];
 
     /**
-     * Constructor.
+     * __construct
      */
     public function __construct()
     {
         parent::__construct();
 
         if ($this->action == 'backend_preferences') {
-            $this->requiredPermissions = ['backend.manage_preferences'];
+            $this->requiredPermissions = ['preferences'];
         }
 
-        $this->addCss('/modules/system/assets/css/settings/settings.css', 'core');
+        $this->addCss('/modules/system/assets/css/pages/settings.css', 'global');
 
         BackendMenu::setContext('October.System', 'system', 'settings');
     }
 
+    /**
+     * index action
+     */
     public function index()
     {
-        $this->pageTitle = 'system::lang.settings.menu_label';
+        $this->pageTitle = 'Settings';
         $this->vars['items'] = SettingsManager::instance()->listItems('system');
-        $this->bodyClass = 'compact-container sidenav-tree-root';
+        $this->bodyClass = 'compact-container sidenav-tree-expanded';
     }
 
+    /**
+     * mysettings action
+     */
     public function mysettings()
     {
         BackendMenu::setContextSideMenu('mysettings');
@@ -65,19 +69,23 @@ class Settings extends Controller
     // Generated Form
     //
 
+    /**
+     * update action
+     */
     public function update($author, $plugin, $code = null)
     {
         SettingsManager::setContext($author.'.'.$plugin, $code);
 
         $this->vars['parentLink'] = Backend::url('system/settings');
-        $this->vars['parentLabel'] = Lang::get('system::lang.settings.menu_label');
+        $this->vars['parentLabel'] = __('Settings');
 
         try {
             if (!$item = $this->findSettingItem($author, $plugin, $code)) {
-                throw new ApplicationException(Lang::get('system::lang.settings.not_found'));
+                throw new ApplicationException(__('Unable to find the specified settings.'));
             }
 
             $this->pageTitle = $item->label;
+            $this->pageSize = Backend::sizeToPixels($item->size) ?: null;
 
             if ($item->context == 'mysettings') {
                 $this->vars['parentLink'] = Backend::url('system/settings/mysettings');
@@ -85,6 +93,7 @@ class Settings extends Controller
             }
 
             $model = $this->createModel($item);
+
             $this->initWidgets($model);
         }
         catch (Exception $ex) {
@@ -92,6 +101,9 @@ class Settings extends Controller
         }
     }
 
+    /**
+     * update_onSave AJAX handler
+     */
     public function update_onSave($author, $plugin, $code = null)
     {
         $item = $this->findSettingItem($author, $plugin, $code);
@@ -102,13 +114,17 @@ class Settings extends Controller
         foreach ($saveData as $attribute => $value) {
             $model->{$attribute} = $value;
         }
-        $model->save(null, $this->formWidget->getSessionKey());
 
-        Flash::success(Lang::get('system::lang.settings.update_success', ['name' => Lang::get($item->label)]));
+        // Multisite
+        if ($this->formHasMultisite($model)) {
+            $this->tagMultisiteModel($model);
+        }
 
-        /*
-         * Handle redirect
-         */
+        $model->save(['propagate' => true, 'sessionKey' => $this->formWidget->getSessionKey()]);
+
+        Flash::success(__(':name settings updated', ['name' => e(Lang::get($item->label))]));
+
+        // Handle redirect
         if ($redirectUrl = post('redirect', true)) {
             $redirectUrl = ($item->context == 'mysettings')
                 ? 'system/settings/mysettings'
@@ -118,6 +134,9 @@ class Settings extends Controller
         }
     }
 
+    /**
+     * update_onResetDefault AJAX handler
+     */
     public function update_onResetDefault($author, $plugin, $code = null)
     {
         $item = $this->findSettingItem($author, $plugin, $code);
@@ -130,7 +149,7 @@ class Settings extends Controller
     }
 
     /**
-     * Render the form.
+     * formRender renders the form
      */
     public function formRender($options = [])
     {
@@ -142,24 +161,8 @@ class Settings extends Controller
     }
 
     /**
-     * Returns the form widget used by this behavior.
-     *
-     * @return \Backend\Widgets\Form
-     */
-    public function formGetWidget()
-    {
-        if (is_null($this->formWidget)) {
-            $item = $this->findSettingItem();
-            $model = $this->createModel($item);
-            $this->initWidgets($model);
-        }
-
-        return $this->formWidget;
-    }
-
-    /**
-     * Prepare the widgets used by this action
-     * Model $model
+     * initWidgets prepare the widgets used by this action
+     * @param Model $model
      */
     protected function initWidgets($model)
     {
@@ -168,18 +171,18 @@ class Settings extends Controller
         $config->arrayName = class_basename($model);
         $config->context = 'update';
 
-        $widget = $this->makeWidget('Backend\Widgets\Form', $config);
+        $widget = $this->makeWidget(\Backend\Widgets\Form::class, $config);
         $widget->bindToController();
         $this->formWidget = $widget;
     }
 
     /**
-     * Internal method, prepare the list model object
+     * createModel is an internal method to prepare the form model object
      */
     protected function createModel($item)
     {
         if (!isset($item->class) || !strlen($item->class)) {
-            throw new ApplicationException(Lang::get('system::lang.settings.missing_model'));
+            throw new ApplicationException(__('The settings page is missing a Model definition.'));
         }
 
         $class = $item->class;
@@ -187,22 +190,10 @@ class Settings extends Controller
     }
 
     /**
-     * Locates a setting item for a module or plugin.
-     *
-     * If none of the parameters are provided, they will be auto-guessed from the URL.
-     *
-     * @param string|null $author
-     * @param string|null $plugin
-     * @param string|null $code
-     *
-     * @return array
+     * findSettingItem locates a setting item for a module or plugin
      */
-    protected function findSettingItem($author = null, $plugin = null, $code = null)
+    protected function findSettingItem($author, $plugin, $code)
     {
-        if (is_null($author) || is_null($plugin)) {
-            [$author, $plugin, $code] = $this->guessSettingItem();
-        }
-
         $manager = SettingsManager::instance();
 
         $moduleOwner = $author;
@@ -219,21 +210,53 @@ class Settings extends Controller
     }
 
     /**
-     * Guesses the requested setting item from the current URL segments provided by the Request object.
-     *
-     * @return array
+     * formHasMultisite
      */
-    protected function guessSettingItem()
+    protected function formHasMultisite($model)
     {
-        $segments = Request::segments();
+        return $model &&
+            $model->isClassInstanceOf(\October\Contracts\Database\MultisiteInterface::class) &&
+            $model->isMultisiteEnabled();
+    }
 
-        if (!empty(Config::get('cms.backendUri', 'backend'))) {
-            array_splice($segments, 0, 4);
-        } else {
-            array_splice($segments, 0, 3);
+    /**
+     * tagMultisiteModel
+     */
+    public function tagMultisiteModel($model)
+    {
+        if ($model->site_root_id) {
+            return;
         }
 
-        // Ensure there's at least 3 segments
-        return array_pad($segments, 3, null);
+        $rootModel = $this->findMultisiteRootModel($model);
+        if (!$rootModel) {
+            return;
+        }
+
+        $model->site_root_id = $rootModel->id;
+    }
+
+    /**
+     * findMultisiteRootModel
+     */
+    public function findMultisiteRootModel($model)
+    {
+        // Find nearest existing model
+        if (!$model->exists) {
+            $model = $model->newQuery()->withSites()->first();
+            if (!$model) {
+                return;
+            }
+        }
+
+        // Model is root
+        if ((int) $model->site_root_id === (int) $model->id) {
+            return $model;
+        }
+
+        // Find root model
+        return $model->newQuery()->withSites()
+            ->where('id', $model->site_root_id)
+            ->first();
     }
 }

@@ -1,131 +1,99 @@
 <?php namespace Backend\Classes;
 
-use October\Rain\Exception\SystemException;
+use Html;
+use October\Rain\Element\Navigation\ItemDefinition;
 
 /**
- * Class MainMenuItem
+ * MainMenuItem
  *
- * @package Backend\Classes
+ * @method MainMenuItem owner(string $owner) owner
+ * @method MainMenuItem iconSvg(null|string $iconSvg) iconSvg
+ * @method MainMenuItem counter(mixed $counter) counter
+ * @method MainMenuItem counterLabel(null|string $counterLabel) counterLabel
+ * @method MainMenuItem attributes(array $attributes) attributes
+ * @method MainMenuItem permissions(array $permissions) permissions
+ * @method MainMenuItem sideMenu(SideMenuItem[] $sideMenu) sideMenu
+ * @method MainMenuItem useDropdown(bool $useDropdown) useDropdown
+ *
+ * @package october\backend
+ * @author Alexey Bobkov, Samuel Georges
  */
-class MainMenuItem
+class MainMenuItem extends ItemDefinition
 {
     /**
-     * @var string
+     * initDefaultValues for this scope
      */
-    public $code;
+    protected function initDefaultValues()
+    {
+        parent::initDefaultValues();
+
+        $this
+            ->order(500)
+            ->permissions([])
+            ->sideMenu([])
+            ->useDropdown(true)
+        ;
+    }
 
     /**
-     * @var string
-     */
-    public $owner;
-
-    /**
-     * @var string
-     */
-    public $label;
-
-    /**
-     * @var null|string
-     */
-    public $icon;
-
-    /**
-     * @var null|string
-     */
-    public $iconSvg;
-
-    /**
-     * @var mixed
-     */
-    public $counter;
-
-    /**
-     * @var null|string
-     */
-    public $counterLabel;
-
-    /**
-     * @var null|string
-     */
-     public $badge;
-
-    /**
-     * @var string
-     */
-    public $url;
-
-    /**
-     * @var array
-     */
-    public $permissions = [];
-
-    /**
-     * @var int
-     */
-    public $order = 500;
-
-    /**
-     * @var SideMenuItem[]
-     */
-    public $sideMenu = [];
-
-    /**
+     * addPermission
+     * @deprecated recommend not using this method until v4 when signature is fixed
+     * should be a non-associative array
      * @param string $permission
      * @param array $definition
      */
     public function addPermission(string $permission, array $definition)
     {
-        $this->permissions[$permission] = $definition;
+        $this->config['permissions'][$permission] = $definition;
     }
 
     /**
+     * addSideMenuItem
      * @param SideMenuItem $sideMenu
      */
     public function addSideMenuItem(SideMenuItem $sideMenu)
     {
-        $this->sideMenu[$sideMenu->code] = $sideMenu;
+        $this->config['sideMenu'][$sideMenu->code] = $sideMenu;
     }
 
     /**
-     * @param string $code
-     * @return SideMenuItem
-     * @throws SystemException
+     * getSideMenuItem
      */
-    public function getSideMenuItem(string $code)
+    public function getSideMenuItem(string $code): ?SideMenuItem
     {
-        if (!array_key_exists($code, $this->sideMenu)) {
-            throw new SystemException('No sidenavigation item available with code ' . $code);
-        }
-
-        return $this->sideMenu[$code];
+        return $this->config['sideMenu'][$code] ?? null;
     }
 
     /**
+     * removeSideMenuItem
      * @param string $code
      */
     public function removeSideMenuItem(string $code)
     {
-        unset($this->sideMenu[$code]);
+        unset($this->config['sideMenu'][$code]);
     }
 
     /**
-     * @param array $data
-     * @return static
+     * itemAttributes returns HTML attributes for the list item
      */
-    public static function createFromArray(array $data)
+    public function itemAttributes(): string
     {
-        $instance = new static();
-        $instance->code = $data['code'];
-        $instance->owner = $data['owner'];
-        $instance->label = $data['label'];
-        $instance->url = $data['url'];
-        $instance->icon = $data['icon'] ?? null;
-        $instance->iconSvg = $data['iconSvg'] ?? null;
-        $instance->counter = $data['counter'] ?? null;
-        $instance->counterLabel = $data['counterLabel'] ?? null;
-        $instance->badge = $data['badge'] ?? null;
-        $instance->permissions = $data['permissions'] ?? $instance->permissions;
-        $instance->order = $data['order'] ?? $instance->order;
-        return $instance;
+        if ($this->attributes === null) {
+            return '';
+        }
+
+        return Html::attributes(array_except($this->attributes, ['target']));
+    }
+
+    /**
+     * linkAttributes returns HTML for the anchor link
+     */
+    public function linkAttributes(): string
+    {
+        if (!isset($this->attributes['target'])) {
+            return '';
+        }
+
+        return Html::attributes(array_only($this->attributes, ['target']));
     }
 }

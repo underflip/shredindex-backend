@@ -30,8 +30,20 @@ class AddressFinder extends FormWidgetBase
      */
     public $defaultAlias = 'addressfinder';
 
+    /**
+     * @var array fieldMap
+     */
     protected $fieldMap;
+
+    /**
+     * @var string countryRestriction
+     */
     protected $countryRestriction;
+
+    /**
+     * @var string reverseStreetNumber
+     */
+    protected $reverseStreetNumber;
 
     /**
      * {@inheritDoc}
@@ -40,6 +52,7 @@ class AddressFinder extends FormWidgetBase
     {
         $this->fieldMap = $this->getConfig('fieldMap', []);
         $this->countryRestriction = $this->getConfig('countryRestriction', '');
+        $this->reverseStreetNumber = $this->getConfig('reverseStreetNumber', false);
     }
 
     /**
@@ -53,7 +66,7 @@ class AddressFinder extends FormWidgetBase
     }
 
     /**
-     * Prepares the list data
+     * prepareVars for the list data
      */
     public function prepareVars()
     {
@@ -62,6 +75,9 @@ class AddressFinder extends FormWidgetBase
         $this->vars['field'] = $this->formField;
     }
 
+    /**
+     * getFieldMapAttributes
+     */
     public function getFieldMapAttributes()
     {
         $fields = $this->getParentForm()->getFields();
@@ -78,9 +94,20 @@ class AddressFinder extends FormWidgetBase
         return Html::attributes($result);
     }
 
+    /**
+     * getCountryRestriction
+     */
     public function getCountryRestriction()
     {
         return $this->countryRestriction;
+    }
+
+    /**
+     * getStreetReverseValue
+     */
+    public function getReverseStreetNumber()
+    {
+        return $this->reverseStreetNumber ? 1 : 0;
     }
 
     /**
@@ -89,7 +116,7 @@ class AddressFinder extends FormWidgetBase
     public function loadAssets()
     {
         $apiKey = Setting::get('google_maps_key');
-        $this->addJs('//maps.googleapis.com/maps/api/js?libraries=places&key='.$apiKey);
+        $this->addJs('//maps.googleapis.com/maps/api/js?libraries=places&callback=initMap&key='.$apiKey);
         $this->addJs('js/location-autocomplete.js', 'core');
     }
 }

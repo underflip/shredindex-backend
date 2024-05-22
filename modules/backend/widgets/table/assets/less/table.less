@@ -1,16 +1,21 @@
 @import "../../../../../backend/assets/less/core/boot.less";
 
-/*
- * General control styling
- */
+@table-color: @input-color;
+@table-bg: var(--bs-table-bg);
+@table-striped-bg: var(--bs-table-striped-bg);
+@table-toolbar-bg: @input-bg;
 
-@table-active-border: #e0e0e0;
-@table-inactive-border: #e0e0e0;
+@table-header-color: @heading-color;
+@table-header-bg: @tertiary-bg;
+
+@table-border-color: @input-border;
+@table-active-border: @primary-border;
+@table-inactive-border: @primary-border;
 
 .control-table {
     .table-container {
-        border: 1px solid @table-inactive-border;
-        .border-radius(4px);
+        border: 1px solid @table-border-color;
+        border-radius: 4px;
         overflow: hidden;
         margin-bottom: 15px;
 
@@ -27,11 +32,12 @@
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
+        position: relative;
 
         td, th {
             padding: 0;
             font-size: 13px;
-            color: #555555;
+            color: @table-color;
         }
 
         [data-view-container] {
@@ -52,17 +58,16 @@
             left: 1px;
             right: 1px;
             margin-top: -1px;
-            border-bottom: 1px solid @table-inactive-border;
+            border-bottom: 1px solid @table-border-color;
         }
 
         th {
             padding: 7px 10px;
             font-weight: normal;
-            text-transform: uppercase;
-            font-size: @font-size-base - 3;
-            color: #333333;
-            background: white;
-            border-right: 1px solid #ecf0f1;
+            font-size: @font-size-base;
+            color: @table-header-color;
+            background: @table-header-bg;
+            border-right: 1px solid @table-border-color;
             [data-view-container] {
                 padding-bottom: 6px;
             }
@@ -83,7 +88,7 @@
 
     table.data {
         td {
-            border: 1px solid #ecf0f1;
+            border: 1px solid @table-inactive-border;
 
             .content-container {
                 position: relative;
@@ -91,54 +96,35 @@
             }
 
             &.active {
-                border-color: @color-focus!important;
+                background: @input-bg;
 
                 .content-container {
-                    padding: 0;
-                    border: 1px solid @color-focus;
+                    box-shadow: inset 0 0 1px 1px @color-focus;
 
-                    &:before, &:after {
-                        content: ' ';
-                        background: @color-focus;
-                        position: absolute;
-                        left: -2px;
-                        top: -2px;
-                    }
-
-                    &:before {
-                        width: 1px;
-                        bottom: -2px;
-                    }
-
-                    &:after {
-                        right: -2px;
-                        height: 1px;
+                    input {
+                        background: transparent;
+                        color: @input-color;
                     }
                 }
             }
         }
 
         tr {
-            background-color: white;
+            background-color: @table-bg;
 
             &.error {
-                background-color: #fbecec!important;
+                background-color: var(--oc-table-active-bg, #fbecec)!important;
 
                 td.active.error {
-                    border-color: #ec0000!important;
-
                     .content-container {
-                        border-color: #ec0000!important;
-                        &:before, &:after {
-                            background-color: #ec0000!important;
-                        }
+                        box-shadow: inset 0 0 1px 1px #ec0000;
                     }
                 }
             }
         }
 
         tr:nth-child(2n) {
-            background-color: #fbfbfb;
+            background-color: @table-striped-bg;
         }
     }
 
@@ -168,30 +154,34 @@
 
         table.data {
             tr:last-child td {
-                border-bottom: 1px solid #ecf0f1;
+                border-bottom: 1px solid @table-border-color;
             }
         }
     }
 
     .toolbar {
-        background: white;
-        border-bottom: 1px solid @table-inactive-border;
+        background: @table-toolbar-bg;
+        border-bottom: 1px solid @table-border-color;
+        padding: 3px;
+        font-size: 0;
+        white-space: nowrap;
 
         a.btn {
-            color: #323e50;
-            padding: 8px 10px;
-            .opacity(0.5);
-            .box-shadow(none) !important;
-            text-shadow: none;
+            .backend-toolbar-button();
+            font-size: 14px;
+            box-shadow: none;
+            line-height: 30px;
+            vertical-align: top;
+        }
 
-            &:hover {
-                .opacity(1);
-            }
+        a.btn, button {
+            color: @toolbar-color;
+            margin: 1px 0;
         }
 
         .table-search {
             float: right;
-            margin: 3px 3px 0 0;
+            margin: 0 3px 0 0;
 
             .table-search-input {
                 height: auto;
@@ -234,7 +224,7 @@
             li {
                 list-style: none;
                 padding: 4px 6px;
-                .border-radius(2px);
+                border-radius: 2px;
                 display: inline-block;
                 margin-right: 5px;
                 font-size: 12px;
@@ -247,9 +237,10 @@
                 }
 
                 &.active {
-                    background: @brand-accent;
-
-                    a {color: #ffffff;}
+                    background: @brand-primary;
+                    a {
+                        color: #fff;
+                    }
                 }
             }
         }
@@ -288,39 +279,17 @@
             display: block;
             outline: none;
             border: none;
-            padding: 6px 10px 7px;
-        }
-    }
-}
-
-html.chrome {
-    .control-table {
-        td[data-column-type=string],
-        td[data-column-type=autocomplete] {
-            input[type=text] {
-                padding: 6px 10px 7px!important;
-            }
-        }
-    }
-}
-
-html.safari, html.gecko {
-    .control-table {
-        td[data-column-type=string],
-        td[data-column-type=autocomplete] {
-            input[type=text] {
-                padding: 5px 10px 5px;
-            }
+            padding: 5px 10px 6px;
         }
     }
 }
 
 ul.table-widget-autocomplete {
-    background: white;
+    background: @dropdown-bg;
     font-size: 13px;
     margin-top: 0;
-    border: 1px solid #808c8d;
-    border-top: 1px solid #ecf0f1;
+    border: 1px solid @table-active-border;
+    border-top: 1px solid @toolbar-border;
     .border-bottom-radius(4px);
 
     li a {
@@ -334,38 +303,9 @@ ul.table-widget-autocomplete {
 
 .control-table {
     td[data-column-type=checkbox] {
-        div[data-checkbox-element] {
-            width: 16px;
-            height: 16px;
-            border-radius: @border-radius-base;
-            background-color: #FFFFFF;
-            border: 1px solid @color-custom-input-border;
-            margin: 5px 5px 5px 10px;
-            cursor: pointer;
-
-            .user-select(none);
-
-            &:hover {
-                border-color: darken(@color-custom-input-border, 10%);
-                color: darken(@color-custom-input-icon, 10%);
-            }
-
-            &.checked {
-                border-width: 2px;
-
-                &:before {
-                    .icon(@check);
-                    font-size: 10px;
-                    position: relative;
-                    left: 1px;
-                    top: -4px;
-                }
-            }
-
-            &:focus {
-                border-color: @color-focus;
-                outline: none;
-            }
+        input[data-checkbox-element] {
+            font-size: 1rem;
+            margin-left: 10px;
         }
     }
 }
@@ -376,10 +316,10 @@ ul.table-widget-autocomplete {
 
 .control-table {
     td[data-column-type=dropdown] {
-        .user-select(none);
+        user-select: none;
 
         .dropdown-arrow() {
-            .icon(@angle-down);
+            .icon(@icon-angle-down);
             font-size: 13px;
             line-height: 100%;
             color: #95a5a6;
@@ -403,9 +343,9 @@ ul.table-widget-autocomplete {
         }
 
         [data-dropdown-open=true] {
-            background: white;
+            background: @primary-bg;
             [data-view-container]:after {
-                .icon(@angle-up);
+                .icon(@icon-angle-up);
             }
         }
 
@@ -422,7 +362,7 @@ ul.table-widget-autocomplete {
         border-top: none;
         border-left: none;
         border-right: none;
-        .border-radius(0);
+        border-radius: 0;
     }
 
     .toolbar {
@@ -435,7 +375,7 @@ ul.table-widget-autocomplete {
 html.cssanimations {
     .control-table td[data-column-type=dropdown] {
         [data-view-container].loading:after {
-            background: url('../../../../../../modules/system/assets/ui/images/loader-transparent.svg') 50% 50%;
+            background: url('../../../../../../modules/backend/assets/images/loader-transparent.svg') 50% 50%;
             background-size: 15px 15px;
             position: absolute;
             width: 15px;
@@ -449,19 +389,19 @@ html.cssanimations {
 }
 
 .table-control-dropdown-list {
-    .user-select(none);
+    user-select: none;
     position: absolute;
-    background: white;
+    background: @dropdown-bg;
     border: 1px solid @table-active-border;
     border-top: none;
     padding-top: 1px;
     overflow: hidden;
     z-index: 1000;
-    .box-sizing(border-box);
+    box-sizing: border-box;
     .border-bottom-radius(4px);
 
     ul {
-        border-top: 1px solid #ecf0f1;
+        border-top: 1px solid @toolbar-border;
         padding: 0;
         margin: 0;
         max-height: 200px;
@@ -471,12 +411,14 @@ html.cssanimations {
     li {
         list-style: none;
         font-size: 13px;
-        color: #555555;
+        color: @text-color;
         padding: 5px 10px;
         cursor: pointer;
         outline: none;
 
-        &:focus {
+        &:hover,
+        &:focus,
+        &.selected {
             background: @color-focus;
             color: white;
         }

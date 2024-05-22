@@ -2,17 +2,19 @@
 
 use Lang;
 use Model;
-use Config;
 use System\Classes\PluginManager;
 
 /**
- * Stores information about current plugin versions.
+ * PluginVersion stores information about current plugin versions.
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
  */
 class PluginVersion extends Model
 {
+    /**
+     * @var string table associated with the model
+     */
     public $table = 'system_plugin_versions';
 
     /**
@@ -21,14 +23,9 @@ class PluginVersion extends Model
     protected $guarded = ['*'];
 
     /**
-     * @var bool Disable model timestamps.
+     * @var bool timestamps enabled
      */
     public $timestamps = false;
-
-    /**
-     * @var array Cache store for version information
-     */
-    protected static $versionCache;
 
     /**
      * @var bool Plugin has been disabled by a missing dependency.
@@ -77,47 +74,42 @@ class PluginVersion extends Model
     protected $appends = ['slug'];
 
     /**
-     * After the model is populated
+     * afterFetch
      */
     public function afterFetch()
     {
-        /*
-         * Override the database columns with the plugin details
-         * found in the plugin registration file.
-         */
+        // Override the database columns with the plugin details
+        // found in the plugin registration file.
         $manager = PluginManager::instance();
         $pluginObj = $manager->findByIdentifier($this->code);
 
-        if ($pluginObj) {
-            $pluginInfo = $pluginObj->pluginDetails();
-            foreach ($pluginInfo as $attribute => $info) {
-                if (property_exists($this, $attribute)) {
-                    $this->{$attribute} = Lang::get($info);
-                }
-            }
-
-            if ($this->is_disabled) {
-                $manager->disablePlugin($this->code, true);
-            }
-            else {
-                $manager->enablePlugin($this->code, true);
-            }
-
-            $this->disabledBySystem = $pluginObj->disabled;
-
-            if (($configDisabled = Config::get('cms.disablePlugins')) && is_array($configDisabled)) {
-                $this->disabledByConfig = in_array($this->code, $configDisabled);
-            }
-        }
-        else {
+        if (!$pluginObj) {
             $this->name = $this->code;
-            $this->description = Lang::get('system::lang.plugins.unknown_plugin');
+            $this->description = __("Plugin has been removed from the file system.");
             $this->orphaned = true;
+            return;
+        }
+
+        if ($pluginObj->disabled) {
+            $this->name = $this->code;
+            $this->disabledBySystem = true;
+            $this->disabledByConfig = in_array($this->code, $manager->listDisabledByConfig());
+            $this->description = $this->disabledByConfig || $this->is_disabled
+                ? __("Plugin has been disabled by configuration.")
+                : __("Plugin has missing dependencies or disabled by system.");
+            return;
+        }
+
+        $pluginInfo = $pluginObj->pluginDetails();
+        foreach ($pluginInfo as $attribute => $info) {
+            if (property_exists($this, $attribute)) {
+                $this->{$attribute} = Lang::get($info);
+            }
         }
     }
 
     /**
-     * Returns true if the plugin should be updated by the system.
+     * getIsUpdatableAttribute returns true if the plugin should be updated by the system.
      * @return bool
      */
     public function getIsUpdatableAttribute()
@@ -126,7 +118,7 @@ class PluginVersion extends Model
     }
 
     /**
-     * Only include enabled plugins
+     * scopeApplyEnabled to only include enabled plugins
      * @param $query
      * @return mixed
      */
@@ -136,21 +128,7 @@ class PluginVersion extends Model
     }
 
     /**
-     * Returns the current version for a plugin
-     * @param  string $pluginCode Plugin code. Eg: Acme.Blog
-     * @return string
-     */
-    public static function getVersion($pluginCode)
-    {
-        if (self::$versionCache === null) {
-            self::$versionCache = self::lists('version', 'code');
-        }
-
-        return self::$versionCache[$pluginCode] ?? null;
-    }
-
-    /**
-     * Provides the slug attribute.
+     * getSlugAttribute provides the slug attribute.
      */
     public function getSlugAttribute()
     {
@@ -158,7 +136,7 @@ class PluginVersion extends Model
     }
 
     /**
-     * Generates a slug for the plugin.
+     * makeSlug generates a slug for the plugin.
      */
     public static function makeSlug($code)
     {

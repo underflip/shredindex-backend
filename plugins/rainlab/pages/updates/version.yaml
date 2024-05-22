@@ -10,9 +10,7 @@ v1.0.9: Fixes issue where Snippet tab is missing from the Partials form.
 v1.0.10: Add translations for various locales.
 v1.0.11: Fixes issue where placeholders tabs were missing from Page form.
 v1.0.12: Implement Media Manager support.
-v1.1.0:
-  - Adds meta title and description to pages. Adds |staticPage filter.
-  - snippets_rename_viewbag_properties.php
+v1.1.0: Adds meta title and description to pages. Adds |staticPage filter.
 v1.1.1: Add support for Syntax Fields.
 v1.1.2: Static Breadcrumbs component now respects the hide from navigation setting.
 v1.1.3: Minor back-end styling fix.
@@ -40,7 +38,7 @@ v1.2.12: Fixes minor issue when using snippets and switching the application loc
 v1.2.13: Fixes bug when AJAX is used on a page that does not yet exist.
 v1.2.14: Add theme logging support for changes made to menus.
 v1.2.15: Back-end navigation sort order updated.
-v1.2.16: Fixes a bug when saving a template that has been modified outside of the CMS (mtime mismatch).
+v1.2.16: Fixes a bug when saving a template that has been pluginsmodified outside of the CMS (mtime mismatch).
 v1.2.17: Changes locations of custom fields to secondary tabs instead of the primary Settings area. New menu search ability on adding menu items
 v1.2.18: Fixes cache-invalidation issues when RainLab.Translate is not installed. Added Greek & Simplified Chinese translations. Removed deprecated calls. Allowed saving HTML in snippet properties. Added support for the MediaFinder in menu items.
 v1.2.19: Catch exception with corrupted menu file.
@@ -66,3 +64,17 @@ v1.4.9: Fixes a lifecycle issue when switching the page layout.
 v1.4.10: Fixes maintenance mode when using static pages.
 v1.4.11: Adds type hidden to content placeholders.
 v1.4.12: Improve support with October v2.2
+v1.5.0: Improve support with October v3.0
+v1.5.4: Compatibility updates
+v1.5.5: Fixes media finder added to menu in October v2
+v1.5.6: Fixes concurrency save form in October v3
+v1.5.7: Adds page finder support for October v3.2
+v1.5.8: Fixes resolving links used in static pages
+v1.5.9: Fixes fancy layout with nested forms
+v1.5.10: Adds forward compatibility with October CMS v3.4
+v1.5.12: Fixes more areas of forward compatibility
+v2.0.1: Compatibility with core snippets
+v2.0.2: Fixes bug opening menu with tailor list menu items
+v2.0.3: Fixes bug showing wrong placeholder code
+v2.0.4: Fixes sidebar delete button in October v3.5
+v2.0.5: Compatibility fixes for October v3.6

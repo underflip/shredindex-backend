@@ -1,9 +1,9 @@
 .flyout-container {
-    > .flyout {
+    > .flyout-content {
         overflow: hidden;
         width: 0;
         left: 0!important;
-        .transition(width 0.1s);
+        transition: width 0.1s;
     }
 }
 
@@ -14,7 +14,7 @@
     z-index: 5000;
     position: absolute;
     background-color: rgba(0,0,0,0);
-    .transition(background-color 0.3s);
+    transition: background-color 0.3s;
 }
 
 .flyout-toggle {
@@ -23,7 +23,7 @@
     left: 0;
     width: 23px;
     height: 25px;
-    background: #2b3e50;
+    background: @color-grey-1;
     cursor: pointer;
     .border-right-radius(4px);
     color: #bdc3c7;
@@ -44,5 +44,17 @@ body.flyout-visible {
 
     .flyout-overlay {
         background-color: rgba(0,0,0,0.3);
+    }
+}
+
+// Proxy container
+#layout-sidenav-responsive.has-toggle {
+    position: relative;
+
+    ul.nav {
+        padding-left: 35px;
+    }
+    .flyout-toggle {
+        top: 18px;
     }
 }

@@ -1,0 +1,15 @@
+fields:
+    name:
+        label: Name
+        type: text
+        span: auto
+        required: 1
+    code:
+        label: Code
+        type: text
+        span: auto
+        required: 1
+    continent_id:
+        label: Continent ID
+        type: integer
+        span: auto

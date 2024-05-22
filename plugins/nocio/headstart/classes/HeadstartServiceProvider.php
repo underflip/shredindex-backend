@@ -1,5 +1,6 @@
 <?php namespace Nocio\Headstart\Classes;
 
+use Illuminate\Database\ConnectionResolverInterface;
 use Nuwave\Lighthouse\Schema\Source\SchemaSourceProvider;
 use Nuwave\Lighthouse\Support\Contracts\CreatesContext;
 use Nuwave\Lighthouse\Support\Contracts\ProvidesResolver;
@@ -8,14 +9,14 @@ use Nocio\Headstart\Classes\SchemaSourceProvider as HeadstartSchemaSourceProvide
 use Nocio\Headstart\Classes\CreatesContext as HeadstartCreatesContext;
 use October\Rain\Support\ServiceProvider;
 
-
-class HeadstartServiceProvider extends ServiceProvider {
+class HeadstartServiceProvider extends ServiceProvider
+{
 
     public function register()
     {
+        $this->app->bind(ConnectionResolverInterface::class, ConnectionResolver::class);
         $this->app->bind(ProvidesResolver::class, HeadstartProvidesResolver::class);
         $this->app->singleton(CreatesContext::class, HeadstartCreatesContext::class);
         $this->app->singleton(SchemaSourceProvider::class, HeadstartSchemaSourceProvider::class);
     }
-
 }

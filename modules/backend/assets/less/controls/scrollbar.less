@@ -3,7 +3,7 @@
 // --------------------------------------------------
 
 .drag-noselect {
-    .user-select(none);
+    user-select: none;
 }
 
 @scrollbar-thumb-size: 6px;
@@ -107,19 +107,4 @@ html.mobile {
 
     &:active >.scrollbar-scrollbar,
     &:hover >.scrollbar-scrollbar {opacity: 1;}
-}
-
-@media (max-width: @screen-sm) {
-    &.responsive-sidebar {
-        > .layout-cell:last-child {
-            .control-scrollbar {
-                overflow: visible;
-                height: auto;
-
-                .scrollbar-scrollbar {
-                    display: none!important;
-                }
-            }
-        }
-    }
 }

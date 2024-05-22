@@ -1,8 +1,8 @@
 <?php namespace RainLab\Location\Models;
 
-use Http;
 use Form;
 use Model;
+use October\Rain\Network\Http;
 use Exception;
 
 /**
@@ -35,7 +35,7 @@ class Country extends Model
     /**
      * @var array Fillable fields
      */
-    protected $fillable = ['name', 'code'];
+    protected $fillable = ['name', 'code', 'calling_code'];
 
     /**
      * @var array Validation rules

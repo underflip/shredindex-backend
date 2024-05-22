@@ -8,7 +8,7 @@ use ApplicationException;
 use File as FileHelper;
 
 /**
- * Mail layout
+ * MailLayout
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
@@ -18,43 +18,43 @@ class MailLayout extends Model
     use \October\Rain\Database\Traits\Validation;
 
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'system_mail_layouts';
 
     /**
-     * @var array Guarded fields
+     * @var array guarded fields
      */
     protected $guarded = [];
 
     /**
-     * @var array Fillable fields
+     * @var array fillable fields
      */
     protected $fillable = [];
 
     /**
-     * @var array Validation rules
+     * @var array rules for validation
      */
     public $rules = [
-        'code'                  => 'required|unique:system_mail_layouts',
-        'name'                  => 'required',
-        'content_html'          => 'required',
+        'code' => 'required|unique:system_mail_layouts',
+        'name' => 'required',
+        'content_html' => 'required',
     ];
 
     /**
-     * @var array Options array
+     * @var array jsonable attribute names that are json encoded and decoded from the database
      */
     protected $jsonable = [
         'options'
     ];
 
+    /**
+     * @var array codeCache
+     */
     public static $codeCache;
 
     /**
-     * Fired before the model is deleted.
-     *
-     * @return void
-     * @throws ApplicationException if the template is locked
+     * beforeDelete
      */
     public function beforeDelete()
     {
@@ -64,9 +64,7 @@ class MailLayout extends Model
     }
 
     /**
-     * List MailLayouts codes keyed by ID.
-     *
-     * @return array
+     * listCodes
      */
     public static function listCodes()
     {
@@ -78,10 +76,7 @@ class MailLayout extends Model
     }
 
     /**
-     * Return the ID of a MailLayout instance from a defined code.
-     *
-     * @param string $code
-     * @return string
+     * getIdFromCode
      */
     public static function getIdFromCode($code)
     {
@@ -89,10 +84,7 @@ class MailLayout extends Model
     }
 
     /**
-     * Find a MailLayout instance by its code or create a new instance from the view file.
-     *
-     * @param string $code
-     * @return MailLayout
+     * findOrMakeLayout
      */
     public static function findOrMakeLayout($code)
     {
@@ -108,9 +100,8 @@ class MailLayout extends Model
     }
 
     /**
-     * Loops over each mail layout and ensures the system has a layout,
+     * createLayouts loops over each mail layout and ensures the system has a layout,
      * if the layout does not exist, it will create one.
-     *
      * @return void
      */
     public static function createLayouts()
@@ -132,11 +123,7 @@ class MailLayout extends Model
     }
 
     /**
-     * Fill model using a view file retrieved by code.
-     *
-     * @param string|null $code
-     * @return void
-     * @throws ApplicationException if a layout with the defined code is not registered.
+     * fillFromCode
      */
     public function fillFromCode($code = null)
     {
@@ -154,16 +141,13 @@ class MailLayout extends Model
     }
 
     /**
-     * Fill model using a view file retrieved by path.
-     *
-     * @param string $path
-     * @return void
+     * fillFromView
      */
     public function fillFromView($path)
     {
         $sections = self::getTemplateSections($path);
 
-        $css = '
+        $defaultCss = '
 @media only screen and (max-width: 600px) {
     .inner-body {
         width: 100% !important;
@@ -182,23 +166,17 @@ class MailLayout extends Model
         ';
 
         $this->name = array_get($sections, 'settings.name', '???');
-        $this->content_css = $css;
-        $this->content_html =  array_get($sections, 'html');
-        $this->content_text = array_get($sections, 'text');
+        $this->options = array_get($sections, 'settings.options', null);
+        $this->content_css = $sections['css'] ?? $defaultCss;
+        $this->content_html =  $sections['html'] ?? '';
+        $this->content_text = $sections['text'] ?? '';
     }
 
     /**
-     * Get section array from a view file retrieved by code.
-     *
-     * @param string $code
-     * @return array|null
+     * getTemplateSections
      */
     protected static function getTemplateSections($code)
     {
-        if (!View::exists($code)) {
-            return null;
-        }
-        $view = View::make($code);
-        return MailParser::parse(FileHelper::get($view->getPath()));
+        return MailParser::parse(FileHelper::get(View::make($code)->getPath()));
     }
 }

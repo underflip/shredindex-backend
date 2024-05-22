@@ -1,15 +1,14 @@
 <?php namespace System\Traits;
 
+use Date;
 use Crypt;
 use Config;
 use Request;
 use Session;
-use Carbon\Carbon;
-use Symfony\Component\HttpFoundation\Response as BaseResponse;
 use Symfony\Component\HttpFoundation\Cookie;
 
 /**
- * Security Controller Trait
+ * SecurityController Trait
  * Adds cross-site scripting protection methods to a controller based class
  *
  * @package october\system
@@ -18,19 +17,17 @@ use Symfony\Component\HttpFoundation\Cookie;
 trait SecurityController
 {
     /**
-     * Adds anti-CSRF cookie.
+     * makeXsrfCookie adds anti-CSRF cookie.
      * Adds a cookie with a token for CSRF checks to the response.
-     *
-     * @return \Symfony\Component\HttpFoundation\Cookie
      */
-    protected function makeXsrfCookie()
+    protected function makeXsrfCookie(): Cookie
     {
         $config = Config::get('session');
 
         return new Cookie(
             'XSRF-TOKEN',
             Session::token(),
-            Carbon::now()->addMinutes((int) $config['lifetime'])->getTimestamp(),
+            Date::now()->addMinutes((int) $config['lifetime'])->getTimestamp(),
             $config['path'],
             $config['domain'],
             $config['secure'],
@@ -41,14 +38,14 @@ trait SecurityController
     }
 
     /**
-     * Checks the request data / headers for a valid CSRF token.
-     * Returns false if a valid token is not found. Override this
-     * method to disable the check.
+     * verifyCsrfToken checks if the request requires verification first (not GET, HEAD, OPTIONS) and
+     * then the request data / headers for a valid CSRF token. Returns false if a valid token is not
+     * found. Override this method to disable the check.
      * @return bool
      */
-    protected function verifyCsrfToken()
+    protected function verifyCsrfToken(): bool
     {
-        if (!Config::get('cms.enableCsrfProtection', true)) {
+        if (!Config::get('system.enable_csrf_protection', true)) {
             return true;
         }
 
@@ -73,15 +70,16 @@ trait SecurityController
     }
 
     /**
-     * Checks if the back-end should force a secure protocol (HTTPS) enabled by config.
+     * verifyForceSecure checks if the back-end should force a secure protocol
+     * (HTTPS) enabled by config.
      * @return bool
      */
-    protected function verifyForceSecure()
+    protected function verifyForceSecure(): bool
     {
         if (Request::secure() || Request::ajax()) {
             return true;
         }
 
-        return !Config::get('cms.backendForceSecure', false);
+        return !Config::get('backend.force_secure', false);
     }
 }

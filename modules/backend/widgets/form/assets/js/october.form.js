@@ -1,224 +1,269 @@
 /*
  * Form Widget
  *
- * Dependences:
- * - Nil
+ * Config:
+ * - refreshHandler: null
+ * - refreshData: {}
  */
 +function ($) { "use strict";
-    var Base = $.oc.foundation.base,
-        BaseProto = Base.prototype
 
-    var FormWidget = function (element, options) {
-        this.$el = $(element)
-        this.options = options || {}
-        this.fieldElementCache = null
+    oc.registerControl('formwidget', class extends oc.ControlBase {
 
-        /*
-         * Throttle dependency updating
-         */
-        this.dependantUpdateInterval = 300
-        this.dependantUpdateTimers = {}
+        init() {
+            // Throttle dependency updating
+            this.dependantUpdateInterval = 300;
+            this.dependantUpdateTimers = {};
 
-        $.oc.foundation.controlUtils.markDisposable(element)
-        Base.call(this)
-        this.init()
-    }
+            this.fieldElementCache = null;
+        }
 
-    FormWidget.prototype = Object.create(BaseProto)
-    FormWidget.prototype.constructor = FormWidget
+        connect() {
+            this.$el = $(this.element);
+            this.$form = this.$el.closest('form');
+            this.options = Object.assign({}, this.config || {});
 
-    FormWidget.prototype.init = function() {
+            this.$el.on('change.oc.formwidget', '[data-change-handler]', this.proxy(this.onRefreshChangeField));
+            $('.nav-tabs', this.$el).on('shown.bs.tab shownLinkable.oc.tab', 'li.tab-lazy > a', this.proxy(this.showLazyTab));
+            this.$el.on('oc.triggerOn.afterUpdate', '.field-checkboxlist', this.proxy(this.toggleCheckboxlist));
+            this.$el.on('click', '.field-checkboxlist input[type=checkbox]', this.proxy(this.onClickCheckboxListCheckbox));
 
-        this.$form = this.$el.closest('form')
+            addEventListener('trigger:complete', this.proxy(this.toggleEmptyTabs));
+            oc.Events.on(this.$el.get(0), 'trigger:empty', '.field-checkboxlist', this.proxy(this.clearCheckboxlist));
 
-        this.bindDependants()
-        this.bindCheckboxlist()
-        this.toggleEmptyTabs()
-        this.bindLazyTabs()
-        this.bindCollapsibleSections()
+            this.bindDependents();
+            this.bindCheckboxlist();
+            this.bindCollapsibleSections();
+            this.toggleEmptyTabs();
+        }
 
-        this.$el.on('oc.triggerOn.afterUpdate', this.proxy(this.toggleEmptyTabs))
-        this.$el.one('dispose-control', this.proxy(this.dispose))
-    }
+        disconnect() {
+            this.$el.off('change.oc.formwidget', '[data-change-handler]', this.proxy(this.onRefreshChangeField));
+            $('.nav-tabs', this.$el).off('shown.bs.tab shownLinkable.oc.tab', 'li.tab-lazy > a', this.proxy(this.showLazyTab));
+            this.$el.off('oc.triggerOn.afterUpdate', '.field-checkboxlist', this.proxy(this.toggleCheckboxlist));
+            this.$el.off('click', '.field-checkboxlist input[type=checkbox]', this.proxy(this.onClickCheckboxListCheckbox));
 
-    FormWidget.prototype.dispose = function() {
-        this.unbindDependants()
-        this.unbindCheckboxList()
-        this.unbindLazyTabs()
-        this.unbindCollapsibleSections()
+            this.$el.off('click', '[data-field-checkboxlist-all]');
+            this.$el.off('click', '[data-field-checkboxlist-none]');
+            $('.section-field[data-field-collapsible]', this.$form).off('click');
 
-        this.$el.off('dispose-control', this.proxy(this.dispose))
-        this.$el.removeData('oc.formwidget')
+            removeEventListener('trigger:complete', this.proxy(this.toggleEmptyTabs));
+            oc.Events.off(this.$el.get(0), 'trigger:empty', '.field-checkboxlist', this.proxy(this.clearCheckboxlist));
 
-        this.$el = null
-        this.$form = null
-        this.options = null
-        this.fieldElementCache = null
+            this.$el.removeData('oc.formwidget');
 
-        BaseProto.dispose.call(this)
-    }
+            this.$el = null;
+            this.$form = null;
+            this.options = null;
+            this.fieldElementCache = null;
+        }
 
-    /*
-     * Logic for checkboxlist
-     */
-    FormWidget.prototype.bindCheckboxlist = function() {
+        // Logic for checkboxlist
+        onClickCheckboxListCheckbox(ev) {
+            $.oc.checkboxRangeRegisterClick(ev, '.form-check', 'input[type=checkbox]');
+        }
 
-        var checkAllBoxes = function($field, flag) {
+        toggleCheckboxlist(ev) {
+            var $field = $(ev.target).closest('.field-checkboxlist'),
+                isDisabled = $field.hasClass('control-disabled');
+
+            $('input[type=checkbox]', $field).prop('disabled', isDisabled);
+            $('.checkboxlist-controls > .control-button', $field).attr('disabled', isDisabled);
+        }
+
+        clearCheckboxlist(ev) {
+            this.checkAllCheckboxlist(ev.target, false);
+        }
+
+        bindCheckboxlist() {
+            var self = this;
+
+            this.$el.on('click', '[data-field-checkboxlist-all]', function() {
+                if (!$(this).is('[disabled]') && !$(this).is('[readonly]')) {
+                    self.checkAllCheckboxlist($(this).closest('.field-checkboxlist'), true);
+                }
+            });
+
+            this.$el.on('click', '[data-field-checkboxlist-none]', function() {
+                if (!$(this).is('[disabled]') && !$(this).is('[readonly]')) {
+                    self.checkAllCheckboxlist($(this).closest('.field-checkboxlist'), false);
+                }
+            });
+
+            $('.field-checkboxlist', this.$el).each(function() {
+                self.toggleCheckboxlist({ target: this });
+            });
+        }
+
+        checkAllCheckboxlist($field, flag) {
             $('input[type=checkbox]', $field)
                 .prop('checked', flag)
                 .first()
-                .trigger('change')
+                .trigger('change');
         }
 
-        this.$el.on('click', '[data-field-checkboxlist-all]', function() {
-            checkAllBoxes($(this).closest('.field-checkboxlist'), true)
-        })
+        // Get all fields elements that belong to this form, nested form
+        // fields are removed from this collection.
+        getFieldElements() {
+            if (this.fieldElementCache !== null) {
+                return this.fieldElementCache;
+            }
 
-        this.$el.on('click', '[data-field-checkboxlist-none]', function() {
-            checkAllBoxes($(this).closest('.field-checkboxlist'), false)
-        })
+            var form = this.$el,
+                nestedFields = form.find('[data-control="formwidget"] [data-field-name]');
 
-    }
-
-    /*
-     * Unbind checkboxlist handlers
-     */
-    FormWidget.prototype.unbindCheckboxList = function() {
-        this.$el.off('click', '[data-field-checkboxlist-all]')
-        this.$el.off('click', '[data-field-checkboxlist-none]')
-    }
-
-    /*
-     * Get all fields elements that belong to this form, nested form
-     * fields are removed from this collection.
-     */
-    FormWidget.prototype.getFieldElements = function() {
-        if (this.fieldElementCache !== null) {
-            return this.fieldElementCache
+            return this.fieldElementCache = form.find('[data-field-name]').not(nestedFields);
         }
 
-        var form = this.$el,
-            nestedFields = form.find('[data-control="formwidget"] [data-field-name]')
+        // Bind dependant fields
+        bindDependents() {
+            if (!$('[data-field-depends]', this.$el).length) {
+                return;
+            }
 
-        return this.fieldElementCache = form.find('[data-field-name]').not(nestedFields)
-    }
+            var self = this,
+                fieldMap = {},
+                fieldElements = this.getFieldElements();
 
-    /*
-     * Bind dependant fields
-     */
-    FormWidget.prototype.bindDependants = function() {
-        var self = this,
-            fieldMap = this._getDependants()
+            // Map master and slave fields
+            fieldElements.filter('[data-field-depends]').each(function() {
+                var name = $(this).data('field-name'),
+                    depends = $(this).data('field-depends');
 
-        /*
-         * When a field is updated, refresh its dependents
-         */
-        $.each(fieldMap, function(fieldName, toRefresh) {
-            $(document).on('change.oc.formwidget',
-                '[data-field-name="' + fieldName + '"]',
-                $.proxy(self.onRefreshDependants, self, fieldName, toRefresh)
-            )
-        })
-    }
+                $.each(depends, function(index, depend){
+                    if (!fieldMap[depend]) {
+                        fieldMap[depend] = { fields: [] };
+                    }
 
-    /*
-     * Dispose of the dependant field handlers
-     */
-    FormWidget.prototype.unbindDependants = function() {
-        var fieldMap = this._getDependants()
-
-        $.each(fieldMap, function(fieldName, toRefresh) {
-            $(document).off('change.oc.formwidget', '[data-field-name="' + fieldName + '"]')
-        })
-    }
-
-    /*
-     * Retrieve the dependant fields
-     */
-    FormWidget.prototype._getDependants = function() {
-        if (!$('[data-field-depends]', this.$el).length) {
-            return;
-        }
-
-        var fieldMap = {},
-            fieldElements = this.getFieldElements()
-
-        /*
-         * Map master and slave fields
-         */
-        fieldElements.filter('[data-field-depends]').each(function() {
-            var name = $(this).data('field-name'),
-                depends = $(this).data('field-depends')
-
-            $.each(depends, function(index, depend){
-                if (!fieldMap[depend]) {
-                    fieldMap[depend] = { fields: [] }
-                }
-
-                fieldMap[depend].fields.push(name)
-            })
-        })
-
-        return fieldMap
-    }
-
-    /*
-     * Refresh a dependancy field
-     * Uses a throttle to prevent duplicate calls and click spamming
-     */
-    FormWidget.prototype.onRefreshDependants = function(fieldName, toRefresh) {
-        var self = this,
-            form = this.$el,
-            formEl = this.$form,
-            fieldElements = this.getFieldElements()
-
-        if (this.dependantUpdateTimers[fieldName] !== undefined) {
-            window.clearTimeout(this.dependantUpdateTimers[fieldName])
-        }
-
-        this.dependantUpdateTimers[fieldName] = window.setTimeout(function() {
-            var refreshData = $.extend({},
-                toRefresh,
-                paramToObj('data-refresh-data', self.options.refreshData)
-            )
-
-            formEl.request(self.options.refreshHandler, {
-                data: refreshData
-            }).success(function() {
-                self.toggleEmptyTabs()
-                $.each(toRefresh.fields, function(key, field) {
-                    $('[data-field-name="' + field + '"]').trigger('change')
+                    fieldMap[depend].fields.push(name);
                 })
             })
-        }, this.dependantUpdateInterval)
 
-        $.each(toRefresh.fields, function(index, field) {
-            fieldElements.filter('[data-field-name="'+field+'"]:visible')
-                .addClass('loading-indicator-container size-form-field')
-                .loadIndicator()
-        })
-    }
+            // When a master is updated, refresh its slaves
+            $.each(fieldMap, function(fieldName, toRefresh){
+                fieldElements.filter('[data-field-name="'+fieldName+'"]')
+                    .on('change.oc.formwidget', $.proxy(self.onRefreshDependents, self, fieldName, toRefresh));
 
-    /*
-     * Render tab form fields once a lazy tab is selected.
-     */
-    FormWidget.prototype.bindLazyTabs = function() {
-        var tabControl = $('[data-control=tab]', this.$el),
-            tabContainer = $('.nav-tabs', tabControl)
+                // Set up disposal
+                self.$el.one('dispose-control', function() {
+                    fieldElements.filter('[data-field-name="'+fieldName+'"]')
+                        .off('change.oc.formwidget');
+                });
+            })
+        }
 
-        tabContainer.on('click', '.tab-lazy [data-toggle="tab"]', function() {
-            var $el = $(this),
-                handlerName = $el.data('tab-lazy-handler')
+        // Refresh a dependency field
+        // Uses a throttle to prevent duplicate calls and click spamming
+        onRefreshDependents(fieldName, toRefresh) {
+            var formEl = this.$form,
+                fieldElements = this.getFieldElements();
 
-            $.request(handlerName, {
+            if (this.dependantUpdateTimers[fieldName] !== undefined) {
+                window.clearTimeout(this.dependantUpdateTimers[fieldName]);
+            }
+
+            this.dependantUpdateTimers[fieldName] = window.setTimeout(() => {
+                var refreshData = $.extend({},
+                    toRefresh,
+                    paramToObj('data-refresh-data', this.options.refreshData)
+                );
+
+                formEl.request(this.options.refreshHandler, {
+                    data: refreshData
+                }).done(() => {
+                    this.toggleEmptyTabs();
+
+                    $.each(toRefresh.fields, function(key, field) {
+                        $('[data-field-name="' + field + '"]').trigger('change');
+                    });
+                });
+            }, this.dependantUpdateInterval);
+
+            $.each(toRefresh.fields, function(index, field) {
+                fieldElements.filter('[data-field-name="'+field+'"]:visible')
+                    .addClass('loading-indicator-container size-form-field')
+                    .loadIndicator();
+            });
+        }
+
+        // Calls an AJAX handler when the field updates.
+        onRefreshChangeField(ev) {
+            // @todo same approach in onRefreshDependents instead of debounce? -sg
+            if (!this.isCurrentFormContext(ev.target)) {
+                return;
+            }
+
+            var $group = $(ev.target).closest('[data-change-handler]'),
+                handler = $group.data('change-handler');
+
+            // Debounce needed because select2 triggers change twice (vanilla + jquery) -sg
+            if (this.dependantUpdateTimers[handler] !== undefined) {
+                window.clearTimeout(this.dependantUpdateTimers[handler]);
+            }
+
+            this.dependantUpdateTimers[handler] = window.setTimeout(() => {
+                var refreshData = paramToObj('data-refresh-data', this.options.refreshData);
+                $group.request(handler, {
+                    data: refreshData
+                }).done(() => {
+                    this.toggleEmptyTabs();
+                });
+            }, this.dependantUpdateInterval);
+        }
+
+        isCurrentFormContext(el) {
+            return el.closest('[data-control="formwidget"]') === this.$el.get(0);
+        }
+
+        // Hides tabs that have no content, it is possible this can be
+        // called multiple times in a single cycle due to input.trigger.
+        toggleEmptyTabs() {
+            var form = this.$el;
+
+            if (this.toggleEmptyTabsTimer !== undefined) {
+                window.clearTimeout(this.toggleEmptyTabsTimer);
+            }
+
+            this.toggleEmptyTabsTimer = window.setTimeout(() => {
+                var tabControl = $('[data-control=tab]', this.$el),
+                    tabContainer = $('.nav-tabs', tabControl);
+
+                if (!tabControl.length || !$.contains(form.get(0), tabControl.get(0))) {
+                    return;
+                }
+
+                // Check each tab pane for form field groups, locate first level form groups only
+                $('.tab-pane:not(.is-lazy):not(.nohide)', tabControl).each(function() {
+                    var hasControlsSelector = '> .form-group:not(:empty):not(.oc-hide), > .row > .form-group:not(:empty):not(.oc-hide)';
+
+                    $('[data-bs-target="#' + $(this).attr('id') + '"]', tabControl)
+                        .closest('li')
+                        .toggle(!!$(hasControlsSelector, $(this)).length);
+                });
+
+                // If a hidden tab was selected, select the first visible tab
+                if (!$('> li.active:visible', tabContainer).length) {
+                    $('> li:visible:first', tabContainer)
+                        .find('> a:first')
+                        .tab('show');
+                }
+            }, 1);
+        }
+
+        // Render tab form fields once a lazy tab is selected.
+        showLazyTab(ev) {
+            var $el = $(ev.target),
+                handlerName = $el.data('tab-lazy-handler');
+
+            $el.request(handlerName, {
                 data: {
                     target: $el.data('target'),
                     name: $el.data('tab-name'),
-                    section: $el.data('tab-section'),
+                    section: $el.data('tab-section')
                 },
                 success: function(data) {
-                    this.success(data)
-                    $el.parent().removeClass('tab-lazy')
+                    this.success(data);
+                    $el.parent().removeClass('tab-lazy');
+
                     // Trigger all input presets to populate new fields.
                     setTimeout(function() {
                         $('[data-input-preset]').each(function() {
@@ -227,145 +272,41 @@
                                 preset.$src.trigger('input')
                             }
                         })
-                    }, 0)
+                    }, 0);
                 }
-            })
-        })
-
-        // If initial active tab is lazy loaded, load it immediately
-        if ($('> li.active.tab-lazy', tabContainer).length) {
-            $('> li.active.tab-lazy > [data-toggle="tab"]', tabContainer).trigger('click')
-        }
-    }
-
-    /*
-     * Unbind the lazy tab handlers
-     */
-    FormWidget.prototype.unbindLazyTabs = function() {
-        var tabControl = $('[data-control=tab]', this.$el)
-
-        $('.nav-tabs', tabControl).off('click', '.tab-lazy [data-toggle="tab"]')
-    }
-
-    /*
-     * Hides tabs that have no content, it is possible this can be
-     * called multiple times in a single cycle due to input.trigger.
-     */
-    FormWidget.prototype.toggleEmptyTabs = function() {
-        var self = this,
-            form = this.$el
-
-        if (this.toggleEmptyTabsTimer !== undefined) {
-            window.clearTimeout(this.toggleEmptyTabsTimer)
+            });
         }
 
-        this.toggleEmptyTabsTimer = window.setTimeout(function() {
+        // Makes sections collapsible by targeting every field after
+        // up until the next section
+        bindCollapsibleSections() {
+            $('.section-field[data-field-collapsible]', this.$form)
+                .addClass('collapsed')
+                .find('.field-section:first')
+                    .addClass('is-collapsible')
+                    .end()
+                .on('click', function() {
+                    $(this)
+                        .toggleClass('collapsed')
+                        .nextUntil('.section-field').toggle();
+                })
+                .nextUntil('.section-field').hide();
+        }
+    });
 
-            var tabControl = $('[data-control=tab]', self.$el),
-                tabContainer = $('.nav-tabs', tabControl)
-
-            if (!tabControl.length || !form || !form.length || !$.contains(form.get(0), tabControl.get(0)))
-                return
-
-            /*
-             * Check each tab pane for form field groups
-             */
-            $('.tab-pane:not(.lazy)', tabControl).each(function() {
-                $('[data-target="#' + $(this).attr('id') + '"]', tabControl)
-                    .closest('li')
-                    .toggle(!!$('> .form-group:not(:empty):not(.hide)', $(this)).length)
-            })
-
-            /*
-             * If a hidden tab was selected, select the first visible tab
-             */
-            if (!$('> li.active:visible', tabContainer).length) {
-                $('> li:visible:first', tabContainer)
-                    .find('> a:first')
-                    .tab('show')
-            }
-
-        }, 1)
-    }
-
-    /*
-     * Makes sections collapsible by targeting every field after
-     * up until the next section
-     */
-    FormWidget.prototype.bindCollapsibleSections = function() {
-        $('.section-field[data-field-collapsible]', this.$form)
-            .addClass('collapsed')
-            .find('.field-section:first')
-                .addClass('is-collapsible')
-                .end()
-            .on('click', function() {
-                $(this)
-                    .toggleClass('collapsed')
-                    .nextUntil('.section-field').toggle()
-            })
-            .nextUntil('.section-field').hide()
-    }
-
-    /*
-     * Unbinds collapsible section handlers
-     */
-    FormWidget.prototype.unbindCollapsibleSections = function() {
-        $('.section-field[data-field-collapsible]', this.$form).off('click')
-    }
-
-    FormWidget.DEFAULTS = {
-        refreshHandler: null,
-        refreshData: {}
-    }
-
-    // FORM WIDGET PLUGIN DEFINITION
-    // ============================
-
-    var old = $.fn.formWidget
-
-    $.fn.formWidget = function (option) {
-        var args = arguments,
-            result
-
-        this.each(function () {
-            var $this   = $(this)
-            var data    = $this.data('oc.formwidget')
-            var options = $.extend({}, FormWidget.DEFAULTS, $this.data(), typeof option == 'object' && option)
-            if (!data) $this.data('oc.formwidget', (data = new FormWidget(this, options)))
-            if (typeof option == 'string') result = data[option].call($this)
-            if (typeof result != 'undefined') return false
-        })
-
-        return result ? result : this
-      }
-
-    $.fn.formWidget.Constructor = FormWidget
-
-    // FORM WIDGET NO CONFLICT
-    // =================
-
-    $.fn.formWidget.noConflict = function () {
-        $.fn.formWidget = old
-        return this
-    }
-
-    // FORM WIDGET DATA-API
+    // FORM WIDGET INTERNALS
     // ==============
 
     function paramToObj(name, value) {
-        if (value === undefined) value = ''
-        if (typeof value == 'object') return value
+        if (value === undefined) value = '';
+        if (typeof value == 'object') return value;
 
         try {
-            return ocJSON("{" + value + "}")
+            return oc.parseJSON("{" + value + "}");
         }
         catch (e) {
-            throw new Error('Error parsing the '+name+' attribute value. '+e)
+            throw new Error('Error parsing the '+name+' attribute value. '+e);
         }
     }
-
-    $(document).render(function() {
-        $('[data-control="formwidget"]').formWidget();
-    })
 
 }(window.jQuery);

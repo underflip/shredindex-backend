@@ -44,10 +44,6 @@ $(document).ready(function() {
         editor.setShowInvisibles($(this).is(':checked'))
     })
 
-    $('#Form-field-Preference-editor_enable_snippets').on('change', function() {
-        editor.setOption('enableSnippets', $(this).is(':checked'))
-    })
-
     $('#Form-field-Preference-editor_display_indent_guides').on('change', function() {
         editor.setDisplayIndentGuides($(this).is(':checked'))
     })
@@ -55,7 +51,7 @@ $(document).ready(function() {
     $('#Form-field-Preference-editor_show_print_margin').on('change', function() {
         editor.setShowPrintMargin($(this).is(':checked'))
     })
-    
+
     $('#Form-field-Preference-editor_highlight_active_line').on('change', function() {
         editor.setHighlightActiveLine($(this).is(':checked'))
     })
@@ -67,5 +63,4 @@ $(document).ready(function() {
     $('#Form-field-Preference-editor_show_gutter').on('change', function() {
         renderer.setShowGutter($(this).is(':checked'))
     })
-
 })

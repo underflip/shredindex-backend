@@ -1,5 +1,5 @@
 /*
- * Sensitive field widget plugin.
+ * Sensitive field widget plugin
  *
  * Data attributes:
  * - data-control="sensitive" - enables the plugin on an element
@@ -9,71 +9,80 @@
  */
 +function ($) { "use strict";
     var Base = $.oc.foundation.base,
-        BaseProto = Base.prototype
+        BaseProto = Base.prototype;
 
     var Sensitive = function(element, options) {
-        this.$el = $(element)
-        this.options = options
-        this.clean = Boolean(this.$el.data('clean'))
-        this.hidden = true
+        this.$el = $(element);
+        this.options = options;
+        this.clean = !!this.$el.data('sensitive-clean');
+        this.hidden = true;
 
-        this.$input = this.$el.find('[data-input]').first()
-        this.$toggle = this.$el.find('[data-toggle]').first()
-        this.$icon = this.$el.find('[data-icon]').first()
-        this.$loader = this.$el.find('[data-loader]').first()
-        this.$copy = this.$el.find('[data-copy]').first()
+        this.$input = $('[data-sensitive-input]:first', this.$el);
+        this.$toggle = $('[data-sensitive-toggle]:first', this.$el);
+        this.$icon = $('[data-sensitive-icon]:first', this.$el);
+        this.$loader = $('[data-sensitive-loader]:first', this.$el);
+        this.$copy = $('[data-sensitive-copy]:first', this.$el);
+        this.$facade = $('[data-sensitive-facade]:first', this.$el);
 
-        $.oc.foundation.controlUtils.markDisposable(element)
-        Base.call(this)
-        this.init()
+        $.oc.foundation.controlUtils.markDisposable(element);
+        Base.call(this);
+        this.init();
     }
 
     Sensitive.DEFAULTS = {
         readOnly: false,
         disabled: false,
-        eventHandler: null,
+        revealHandler: null,
         hideOnTabChange: false,
+        displayMode: 'text'
     }
 
-    Sensitive.prototype = Object.create(BaseProto)
-    Sensitive.prototype.constructor = Sensitive
+    Sensitive.prototype = Object.create(BaseProto);
+    Sensitive.prototype.constructor = Sensitive;
 
     Sensitive.prototype.init = function() {
-        this.$input.on('keydown', this.proxy(this.onInput))
-        this.$toggle.on('click', this.proxy(this.onToggle))
+        this.$input.on('keydown', this.proxy(this.onInput));
+        this.$toggle.on('click', this.proxy(this.onToggle));
 
         if (this.options.hideOnTabChange) {
-            // Watch for tab change or minimise
-            document.addEventListener('visibilitychange', this.proxy(this.onTabChange))
+            document.addEventListener('visibilitychange', this.proxy(this.onTabChange));
         }
 
         if (this.$copy.length) {
-            this.$copy.on('click', this.proxy(this.onCopy))
+            this.$copy.on('click', this.proxy(this.onCopy));
         }
+
+        this.$el.one('dispose-control', this.proxy(this.dispose));
     }
 
     Sensitive.prototype.dispose = function () {
-        this.$input.off('keydown', this.proxy(this.onInput))
-        this.$toggle.off('click', this.proxy(this.onToggle))
+        this.$input.off('keydown', this.proxy(this.onInput));
+        this.$toggle.off('click', this.proxy(this.onToggle));
 
         if (this.options.hideOnTabChange) {
-            document.removeEventListener('visibilitychange', this.proxy(this.onTabChange))
+            document.removeEventListener('visibilitychange', this.proxy(this.onTabChange));
         }
 
         if (this.$copy.length) {
-            this.$copy.off('click', this.proxy(this.onCopy))
+            this.$copy.off('click', this.proxy(this.onCopy));
         }
 
-        this.$input = this.$toggle = this.$icon = this.$loader = null
-        this.$el = null
+        this.$el.off('dispose-control', this.proxy(this.dispose));
+        this.$el.removeData('oc.sensitive');
 
-        BaseProto.dispose.call(this)
+        this.$input = null;
+        this.$toggle = null;
+        this.$icon = null;
+        this.$loader = null;
+        this.$el = null;
+
+        BaseProto.dispose.call(this);
     }
 
     Sensitive.prototype.onInput = function() {
         if (this.clean) {
-            this.clean = false
-            this.$input.val('')
+            this.clean = false;
+            this.$input.val('');
         }
 
         return true
@@ -81,112 +90,132 @@
 
     Sensitive.prototype.onToggle = function() {
         if (this.$input.val() !== '' && this.clean) {
-            this.reveal()
-        } else {
-            this.toggleVisibility()
+            this.reveal();
+        }
+        else {
+            this.toggleVisibility();
         }
 
-        return true
+        return true;
     }
 
     Sensitive.prototype.onTabChange = function() {
         if (document.hidden && !this.hidden) {
-            this.toggleVisibility()
+            this.toggleVisibility();
         }
     }
 
     Sensitive.prototype.onCopy = function() {
-        var that = this,
+        var self = this,
             deferred = $.Deferred(),
-            isHidden = this.hidden
+            isHidden = this.hidden,
+            isDisabled = this.$input.is(':disabled');
 
         deferred.then(function () {
-            if (that.hidden) {
-                that.toggleVisibility()
+            if (isDisabled) {
+                self.$input.attr('disabled', false);
+            }
+            if (self.hidden) {
+                self.toggleVisibility();
             }
 
-            that.$input.focus()
-            that.$input.select()
+            self.$input.focus();
+            self.$input.select();
 
             try {
-                document.execCommand('copy')
-            } catch (err) {
+                document.execCommand('copy');
+            }
+            catch (err) {
             }
 
-            that.$input.blur()
+            self.$input.blur();
+
+            if (isDisabled) {
+                self.$input.attr('disabled', true);
+            }
+
             if (isHidden) {
-                that.toggleVisibility()
+                self.toggleVisibility();
             }
         })
 
         if (this.$input.val() !== '' && this.clean) {
-            this.reveal(deferred)
-        } else {
-            deferred.resolve()
+            this.reveal(deferred);
+        }
+        else {
+            deferred.resolve();
         }
     }
 
     Sensitive.prototype.toggleVisibility = function() {
-        if (this.hidden) {
-            this.$input.attr('type', 'text')
-        } else {
-            this.$input.attr('type', 'password')
+
+        if (this.options.displayMode === 'textarea') {
+            this.$facade.toggle();
+            this.$input.toggle();
+        }
+        else {
+            if (this.hidden) {
+                this.$input.attr('type', 'text');
+            }
+            else {
+                this.$input.attr('type', 'password');
+            }
         }
 
-        this.$icon.toggleClass('icon-eye icon-eye-slash')
+        this.$icon.toggleClass('icon-eye icon-eye-slash');
 
-        this.hidden = !this.hidden
+        this.hidden = !this.hidden;
     }
 
     Sensitive.prototype.reveal = function(deferred) {
-        var that = this
+        var self = this;
         this.$icon.css({
             visibility: 'hidden'
-        })
-        this.$loader.removeClass('hide')
+        });
+        this.$loader.removeClass('oc-hide');
 
-        this.$input.request(this.options.eventHandler, {
+        this.$input.request(this.options.revealHandler, {
             success: function (data) {
-                that.$input.val(data.value)
-                that.clean = false
+                self.$input.val(data.value);
+                self.clean = false;
 
-                that.$icon.css({
+                self.$icon.css({
                     visibility: 'visible'
-                })
-                that.$loader.addClass('hide')
+                });
+                self.$loader.addClass('oc-hide');
 
-                that.toggleVisibility()
+                self.toggleVisibility();
 
                 if (deferred) {
-                    deferred.resolve()
+                    deferred.resolve();
                 }
             }
-        })
+        });
     }
 
-    var old = $.fn.sensitive
+    var old = $.fn.sensitive;
 
     $.fn.sensitive = function (option) {
-        var args = Array.prototype.slice.call(arguments, 1), result
+        var args = Array.prototype.slice.call(arguments, 1), result;
         this.each(function () {
-            var $this   = $(this)
-            var data    = $this.data('oc.sensitive')
-            var options = $.extend({}, Sensitive.DEFAULTS, $this.data(), typeof option == 'object' && option)
-            if (!data) $this.data('oc.sensitive', (data = new Sensitive(this, options)))
-            if (typeof option == 'string') result = data[option].apply(data, args)
-            if (typeof result != 'undefined') return false
+            var $this   = $(this);
+            var data    = $this.data('oc.sensitive');
+            var options = $.extend({}, Sensitive.DEFAULTS, $this.data(), typeof option == 'object' && option);
+            if (!data) $this.data('oc.sensitive', (data = new Sensitive(this, options)));
+            if (typeof option == 'string') result = data[option].apply(data, args);
+            if (typeof result != 'undefined') return false;
         })
 
-        return result ? result : this
+        return result ? result : this;
     }
 
     $.fn.sensitive.noConflict = function () {
-        $.fn.sensitive = old
-        return this
+        $.fn.sensitive = old;
+        return this;
     }
 
     $(document).render(function () {
-        $('[data-control="sensitive"]').sensitive()
+        $('[data-control="sensitive"]').sensitive();
     });
 
 }(window.jQuery);

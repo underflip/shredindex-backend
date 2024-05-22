@@ -27,6 +27,8 @@ extend type Query {
     resorts(
         filter: Filter
         orderBy: OrderBy
+        first: Int!
+        page: Int!
     ): [Resort!]! @filterResorts
 }
 
@@ -67,8 +69,8 @@ type Numeric {
     name: String!
     title: String
     value: Int
-    unit: String
-    max_value: Int
+    unit: String!
+    max_value: String!
 }
 
 type Generic {
@@ -87,7 +89,7 @@ type Location {
     longitude: String!
     country: Country! @hasOne
     state: State @hasOne
-    continent: Continent! @hasOne
+    continent: Continent @hasOne
 }
 
 type Country {

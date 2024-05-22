@@ -1,14 +1,23 @@
 <?php namespace Cms\Twig;
 
+use App;
+use Cms;
 use Block;
 use Event;
-use Twig\Extension\AbstractExtension as TwigExtension;
+use Response;
+use Cms\Classes\PageManager;
+use Cms\Classes\Controller;
+use Cms\Classes\ThisVariable;
+use Twig\Environment as TwigEnvironment;
 use Twig\TwigFilter as TwigSimpleFilter;
 use Twig\TwigFunction as TwigSimpleFunction;
-use Cms\Classes\Controller;
+use Twig\Extension\AbstractExtension as TwigExtension;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * The CMS Twig extension class implements the basic CMS Twig functions and filters.
+ * Extension implements the basic CMS Twig functions and filters.
  *
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
@@ -16,13 +25,12 @@ use Cms\Classes\Controller;
 class Extension extends TwigExtension
 {
     /**
-     * @var \Cms\Classes\Controller A reference to the CMS controller.
+     * @var \Cms\Classes\Controller controller reference
      */
     protected $controller;
 
     /**
-     * Creates the extension instance.
-     * @param \Cms\Classes\Controller $controller The CMS controller object.
+     * __construct the extension instance.
      */
     public function __construct(Controller $controller = null)
     {
@@ -30,44 +38,72 @@ class Extension extends TwigExtension
     }
 
     /**
-     * Returns a list of functions to add to the existing list.
-     *
-     * @return array An array of functions
+     * addExtensionToTwig adds this extension to the Twig environment and also
+     * creates a hook for others.
+     */
+    public static function addExtensionToTwig(TwigEnvironment $twig, Controller $controller = null)
+    {
+        $twig->addExtension(new static($controller));
+
+        /**
+         * @event cms.extendTwig
+         * Provides an opportunity to extend the Twig environment used by the CMS
+         *
+         * Example usage:
+         *
+         *     Event::listen('system.extendTwig', function ((Twig\Environment) $twig) {
+         *         $twig->addExtension(new \Twig\Extension\StringLoaderExtension);
+         *     });
+         *
+         */
+        Event::fire('cms.extendTwig', [$twig]);
+    }
+
+    /**
+     * getFunctions returns a list of functions to add to the existing list.
+     * @return array
      */
     public function getFunctions()
     {
         return [
             new TwigSimpleFunction('page', [$this, 'pageFunction'], ['is_safe' => ['html']]),
             new TwigSimpleFunction('partial', [$this, 'partialFunction'], ['is_safe' => ['html']]),
+            new TwigSimpleFunction('hasPartial', [$this, 'hasPartialFunction'], ['is_safe' => ['html']]),
             new TwigSimpleFunction('content', [$this, 'contentFunction'], ['is_safe' => ['html']]),
+            new TwigSimpleFunction('hasContent', [$this, 'hasContentFunction'], ['is_safe' => ['html']]),
             new TwigSimpleFunction('component', [$this, 'componentFunction'], ['is_safe' => ['html']]),
             new TwigSimpleFunction('placeholder', [$this, 'placeholderFunction'], ['is_safe' => ['html']]),
+            new TwigSimpleFunction('hasPlaceholder', [$this, 'hasPlaceholderFunction'], ['is_safe' => ['html']]),
+            new TwigSimpleFunction('ajaxHandler', [$this, 'ajaxHandlerFunction'], []),
+            new TwigSimpleFunction('response', [$this, 'responseFunction'], []),
+            new TwigSimpleFunction('redirect', [$this, 'redirectFunction'], []),
+            new TwigSimpleFunction('abort', [$this, 'abortFunction'], []),
         ];
     }
 
     /**
-     * Returns a list of filters this extensions provides.
-     *
-     * @return array An array of filters
+     * getFilters returns a list of filters this extension provides.
+     * @return array
      */
     public function getFilters()
     {
         return [
             new TwigSimpleFilter('page', [$this, 'pageFilter'], ['is_safe' => ['html']]),
             new TwigSimpleFilter('theme', [$this, 'themeFilter'], ['is_safe' => ['html']]),
+            new TwigSimpleFilter('content', [$this, 'contentFilter'], ['is_safe' => ['html']]),
         ];
     }
 
     /**
-     * Returns a list of token parsers this extensions provides.
-     *
-     * @return array An array of token parsers
+     * getTokenParsers returns a list of token parsers this extension provides.
+     * @return array
      */
     public function getTokenParsers()
     {
         return [
             new PageTokenParser,
             new PartialTokenParser,
+            new AjaxPartialTokenParser,
             new ContentTokenParser,
             new PutTokenParser,
             new PlaceholderTokenParser,
@@ -77,25 +113,41 @@ class Extension extends TwigExtension
             new FlashTokenParser,
             new ScriptsTokenParser,
             new StylesTokenParser,
+            new MetaTokenParser,
         ];
     }
 
     /**
-     * Renders a page.
-     * This function should be used in the layout code to output the requested page.
-     * @return string Returns the page contents.
+     * getNodeVisitors returns a list of node visitors this extension provides.
+     * @return array
      */
-    public function pageFunction()
+    public function getNodeVisitors()
     {
+        return [
+            new GetAttrAdjuster
+        ];
+    }
+
+    /**
+     * pageFunction renders a page.
+     * This function should be used in the layout code to output the requested page.
+     * @param array|null $context
+     * @return string
+     */
+    public function pageFunction($context = null)
+    {
+        if ($this->controller->getLayout()->isPriority() && is_array($context)) {
+            $this->controller->vars += $context;
+        }
+
         return $this->controller->renderPage();
     }
 
     /**
-     * Renders a partial.
-     * @param string $name Specifies the partial name.
-     * @param array $parameters A optional list of parameters to pass to the partial.
-     * @param bool $throwException Throw an exception if the partial is not found.
-     * @return string Returns the partial contents.
+     * partialFunction renders a partial based on the partial name. The parameters
+     * are an optional list of view variables. An exception can be thrown if
+     * nothing is found.
+     * @return string
      */
     public function partialFunction($name, $parameters = [], $throwException = false)
     {
@@ -103,21 +155,39 @@ class Extension extends TwigExtension
     }
 
     /**
-     * Renders a content file.
-     * @param string $name Specifies the content block name.
-     * @param array $parameters A optional list of parameters to pass to the content.
-     * @return string Returns the file contents.
+     * hasPartialFunction checks the partials existence without rendering it.
+     * @return bool
      */
-    public function contentFunction($name, $parameters = [])
+    public function hasPartialFunction($name)
     {
-        return $this->controller->renderContent($name, $parameters);
+        return (bool) $this->controller->loadPartialObject($name);
     }
 
     /**
-     * Renders a component's default content.
+     * contentFunction renders a partial based on the file name. The parameters
+     * are an optional list of view variables, otherwise pass false to render nothing
+     * and check the existence. An exception can be thrown if nothing is found.
+     * @return string
+     */
+    public function contentFunction($name, $parameters = [], $throwException = false)
+    {
+        return $this->controller->renderContent($name, $parameters, $throwException);
+    }
+
+    /**
+     * hasContentFunction checks the content existence without rendering it.
+     * @return bool
+     */
+    public function hasContentFunction($name)
+    {
+        return (bool) $this->controller->loadContentObject($name);
+    }
+
+    /**
+     * componentFunction renders a component's default content.
      * @param string $name Specifies the component name.
      * @param array $parameters A optional list of parameters to pass to the component.
-     * @return string Returns the component default contents.
+     * @return string
      */
     public function componentFunction($name, $parameters = [])
     {
@@ -125,18 +195,22 @@ class Extension extends TwigExtension
     }
 
     /**
-     * Renders registered assets of a given type
-     * @return string Returns the component default contents.
+     * assetsFunction renders registered assets of a given type
+     * @return string
      */
     public function assetsFunction($type = null)
     {
-        return $this->controller->makeAssets($type);
+        $result = $this->controller->makeAssets($type);
+
+        Event::fire('cms.assets.render', [$type, &$result]);
+
+        return $result;
     }
 
     /**
-     * Renders a placeholder content, without removing the block,
+     * placeholderFunction renders a placeholder content, without removing the block,
      * must be called before the placeholder tag itself
-     * @return string Returns the placeholder contents.
+     * @return string
      */
     public function placeholderFunction($name, $default = null)
     {
@@ -145,24 +219,103 @@ class Extension extends TwigExtension
         }
 
         $result = str_replace('<!-- X_OCTOBER_DEFAULT_BLOCK_CONTENT -->', trim($default), $result);
+
         return $result;
     }
 
     /**
-     * Looks up the URL for a supplied page and returns it relative to the website root.
-     * @param mixed $name Specifies the Cms Page file name.
-     * @param array $parameters Route parameters to consider in the URL.
-     * @param bool $routePersistence By default the existing routing parameters will be included
-     * when creating the URL, set to false to disable this feature.
+     * hasPlaceholderFunction checks that a placeholder exists without rendering it
+     */
+    public function hasPlaceholderFunction($name)
+    {
+        return Block::has($name);
+    }
+
+    /**
+     * ajaxHandlerFunction runs an ajax handler
+     * @param string $name
+     */
+    public function ajaxHandlerFunction($name = '')
+    {
+        return $this->controller->runAjaxHandlerAsResponse($name);
+    }
+
+    /**
+     * responseFunction returns a new response from the application.
+     * @param \Illuminate\Contracts\View\View|string|array|null $content
+     * @param int|null $status
+     * @param array $headers
+     */
+    public function responseFunction($content = '', $status = null, array $headers = [])
+    {
+        if ($content instanceof \Illuminate\Contracts\Support\Responsable) {
+            $response = $content->toResponse(App::make('request'));
+        }
+        elseif ($content instanceof \Symfony\Component\HttpFoundation\Response) {
+            $response = $content;
+        }
+        else {
+            $response = Response::make($content, $status ?: 200, $headers);
+        }
+
+        if ($status !== null) {
+            $response->setStatusCode($status);
+        }
+
+        // Allow headers and interception from Response Maker
+        $response = $this->controller->makeResponse($response);
+
+        throw new HttpResponseException($response);
+    }
+
+    /**
+     * redirectFunction will redirect the response to a theme page or URL
+     * @param string $to
+     * @param int $code
+     */
+    public function redirectFunction($to, $parameters = [], $code = 302)
+    {
+        throw new HttpResponseException(Cms::redirect($to, $parameters, $code));
+    }
+
+    /**
+     * abortFunction will abort the successful page cycle
+     * @param int $code
+     * @param string|false $message
+     */
+    public function abortFunction($code, $message = '')
+    {
+        if ($message === false) {
+            $this->controller->setStatusCode($code);
+            return;
+        }
+
+        if ($code == 404) {
+            throw new NotFoundHttpException($message);
+        }
+
+        throw new HttpException($code, $message);
+    }
+
+    /**
+     * pageFilter looks up the URL for a supplied page name and returns it relative to the website root,
+     * including route parameters. Parameters can be persisted from the current page parameters.
+     * @param mixed $name
+     * @param array $parameters
+     * @param bool $routePersistence
      * @return string
      */
     public function pageFilter($name, $parameters = [], $routePersistence = true)
     {
+        if ($name instanceof ThisVariable) {
+            $name = '';
+        }
+
         return $this->controller->pageUrl($name, $parameters, $routePersistence);
     }
 
     /**
-     * Converts supplied URL to a theme URL relative to the website root. If the URL provided is an
+     * themeFilter converts supplied URL to a theme URL relative to the website root. If the URL provided is an
      * array then the files will be combined.
      * @param mixed $url Specifies the theme-relative URL
      * @return string
@@ -173,7 +326,17 @@ class Extension extends TwigExtension
     }
 
     /**
-     * Opens a layout block.
+     * contentFilter processes content for links and snippets
+     * @param string $content
+     * @return string
+     */
+    public function contentFilter($content)
+    {
+        return PageManager::processMarkup($content);
+    }
+
+    /**
+     * startBlock opens a layout block.
      * @param string $name Specifies the block name
      */
     public function startBlock($name)
@@ -182,10 +345,18 @@ class Extension extends TwigExtension
     }
 
     /**
-     * Returns a layout block contents and removes the block.
+     * setBlock sets a block value as a variable.
+     */
+    public function setBlock(string $name, $value)
+    {
+        Block::set($name, $value);
+    }
+
+    /**
+     * displayBlock returns a layout block contents and removes the block.
      * @param string $name Specifies the block name
      * @param string $default The default placeholder contents.
-     * @return mixed Returns the block contents string or null of the block doesn't exist
+     * @return string|null
      */
     public function displayBlock($name, $default = null)
     {
@@ -211,11 +382,12 @@ class Extension extends TwigExtension
         }
 
         $result = str_replace('<!-- X_OCTOBER_DEFAULT_BLOCK_CONTENT -->', trim($default), $result);
+
         return $result;
     }
 
     /**
-     * Closes a layout block.
+     * endBlock closes a layout block.
      */
     public function endBlock($append = true)
     {

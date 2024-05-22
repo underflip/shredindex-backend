@@ -7,16 +7,15 @@ use Str;
 use Lang;
 use Input;
 use Markdown;
-use Cms\Widgets\ComponentList as CmsComponentList;
-
 
 class Documentation extends CmsComponentList
 {
 
-    protected function getDirectives() {
+    protected function getDirectives()
+    {
         $directives = [];
         $directive = null;
-        foreach(file(__DIR__ . '/documentation/directives.md') as $line) {
+        foreach (file(__DIR__ . '/documentation/directives.md') as $line) {
             if (starts_with($line, '##')) {
                 if (!is_null($directive)) {
                     $directives[] = (object) $directive;
@@ -69,8 +68,7 @@ class Documentation extends CmsComponentList
     protected function updateList()
     {
         return ['#'.$this->getId('documentation') => $this->makePartial('items', [
-                'items' => $this->getData()]
-        )];
+                'items' => $this->getData()])];
     }
 
     protected function itemContainsWord($word, $item)
@@ -85,5 +83,4 @@ class Documentation extends CmsComponentList
 
         return false;
     }
-
 }

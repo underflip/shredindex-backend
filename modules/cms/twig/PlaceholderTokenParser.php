@@ -6,7 +6,7 @@ use Twig\TokenParser\AbstractTokenParser as TwigTokenParser;
 use Twig\Error\SyntaxError as TwigErrorSyntax;
 
 /**
- * Parser for the `{% placeholder %}` Twig tag.
+ * PlaceholderTokenParser for the `{% placeholder %}` Twig tag.
  *
  *     {% placeholder head %}
  *
@@ -22,9 +22,7 @@ use Twig\Error\SyntaxError as TwigErrorSyntax;
 class PlaceholderTokenParser extends TwigTokenParser
 {
     /**
-     * Parses a token and returns a node.
-     *
-     * @param TwigToken $token A TwigToken instance
+     * parse a token and returns a node.
      * @return TwigNode A TwigNode instance
      */
     public function parse(TwigToken $token)
@@ -45,14 +43,20 @@ class PlaceholderTokenParser extends TwigTokenParser
             $params = $this->loadParams($stream);
         }
 
-        return new PlaceholderNode($name, $params, $body, $token->getLine(), $this->getTag());
+        return new PlaceholderNode($body, $name, $params, $token->getLine(), $this->getTag());
     }
 
+    /**
+     * decidePlaceholderEnd
+     */
     public function decidePlaceholderEnd(TwigToken $token)
     {
         return $token->test('endplaceholder');
     }
 
+    /**
+     * loadParams
+     */
     protected function loadParams($stream)
     {
         $params = [];
@@ -87,8 +91,7 @@ class PlaceholderTokenParser extends TwigTokenParser
     }
 
     /**
-     * Gets the tag name associated with this token parser.
-     *
+     * getTag name associated with this token parser.
      * @return string The tag name
      */
     public function getTag()

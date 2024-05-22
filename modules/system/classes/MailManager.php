@@ -1,31 +1,25 @@
 <?php namespace System\Classes;
 
-use Twig;
+use App;
+use Arr;
+use System;
 use Markdown;
 use System\Models\MailPartial;
 use System\Models\MailTemplate;
 use System\Models\MailBrandSetting;
 use System\Helpers\View as ViewHelper;
-use System\Twig\MailPartialTokenParser;
 use TijsVerkoyen\CssToInlineStyles\CssToInlineStyles;
 
 /**
- * This class manages Mail sending functions
+ * MailManager manages Mail sending functions
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
  */
 class MailManager
 {
-    use \October\Rain\Support\Traits\Singleton;
-
     /**
-     * @var array Cache of registration callbacks.
-     */
-    protected $callbacks = [];
-
-    /**
-     * @var array A cache of customised mail templates.
+     * @var array A cache of customized mail templates.
      */
     protected $templateCache = [];
 
@@ -50,12 +44,54 @@ class MailManager
     protected $isHtmlRenderMode = false;
 
     /**
-     * @var bool Internal marker for booting custom twig extensions.
+     * instance creates a new instance of this singleton
      */
-    protected $isTwigStarted = false;
+    public static function instance(): static
+    {
+        return App::make('system.mailer');
+    }
 
     /**
-     * Same as `addContentToMailer` except with raw content.
+     * registerCallback registers a callback function that defines mail templates.
+     * The callback function should register templates by calling the manager's
+     * registerMailTemplates() function. Thi instance is passed to the
+     * callback function as an argument. Usage:
+     *
+     *     MailManager::registerCallback(function ($manager) {
+     *         $manager->registerMailTemplates([...]);
+     *     });
+     *
+     * @deprecated this will be removed in a later version
+     * @param callable $callback A callable function.
+     */
+    public static function registerCallback(callable $callback)
+    {
+        App::extendInstance('system.mailer', $callback);
+    }
+
+    /**
+     * addContentFromEvent handles adding content from the `mailer.beforeAddContent` event
+     */
+    public function addContentFromEvent($message, $view = null, $plain = null, $raw = null, $data = [])
+    {
+        // Dual views have been supplied, this is Laravel implementation
+        if ($view !== null && $plain !== null) {
+            return false;
+        }
+
+        // When "plain-text only" email is sent, $view is null, this sets the flag appropriately
+        $plainOnly = $view === null;
+
+        if ($raw === null) {
+            return $this->addContentToMailer($message, $view ?: $plain, $data, $plainOnly);
+        }
+        else {
+            return $this->addRawContentToMailer($message, $raw, $data, $plainOnly);
+        }
+    }
+
+    /**
+     * addRawContentToMailer is the same as `addContentToMailer` except with raw content
      *
      * @return bool
      */
@@ -71,8 +107,8 @@ class MailManager
     }
 
     /**
-     * This function hijacks the `addContent` method of the `October\Rain\Mail\Mailer`
-     * class, using the `mailer.beforeAddContent` event.
+     * addContentToMailer function hijacks the `addContent` method of the
+     * `October\Rain\Mail\Mailer` class, using the `mailer.beforeAddContent` event.
      *
      * @param \Illuminate\Mail\Message $message
      * @param string $code
@@ -103,62 +139,45 @@ class MailManager
     }
 
     /**
-     * Internal method used to share logic between `addRawContentToMailer` and `addContentToMailer`
+     * addContentToMailerInternal is an internal method used to share logic
+     * between `addRawContentToMailer` and `addContentToMailer`
      *
      * @param \Illuminate\Mail\Message $message
-     * @param string $template
+     * @param MailTemplate $template
      * @param array $data
      * @param bool $plainOnly Add only plain text content to the message
      * @return void
      */
     protected function addContentToMailerInternal($message, $template, $data, $plainOnly = false)
     {
-        /*
-         * Start twig transaction
-         */
-        $this->startTwig();
-
-        /*
-         * Inject global view variables
-         */
+        // Inject global view variables
         $globalVars = ViewHelper::getGlobalVars();
         if (!empty($globalVars)) {
             $data = (array) $data + $globalVars;
         }
 
-        /*
-         * Subject
-         */
-        $swiftMessage = $message->getSwiftMessage();
+        // Subject
+        $sMessage = $message->getSymfonyMessage();
 
-        if (empty($swiftMessage->getSubject())) {
-            $message->subject(Twig::parse($template->subject, $data));
+        if (empty($sMessage->getSubject())) {
+            $message->subject($this->parseTwig($template->subject, $data));
         }
 
         $data += [
-            'subject' => $swiftMessage->getSubject()
+            'subject' => $sMessage->getSubject()
         ];
 
+        // HTML contents
         if (!$plainOnly) {
-            /*
-             * HTML contents
-             */
             $html = $this->renderTemplate($template, $data);
 
-            $message->setBody($html, 'text/html');
+            $message->html($html);
         }
 
-        /*
-         * Text contents
-         */
+        // Text contents
         $text = $this->renderTextTemplate($template, $data);
 
-        $message->addPart($text, 'text/plain');
-
-        /*
-         * End twig transaction
-         */
-        $this->stopTwig();
+        $message->text($text);
     }
 
     //
@@ -166,8 +185,7 @@ class MailManager
     //
 
     /**
-     * Render the Markdown template into HTML.
-     *
+     * render the Markdown template into HTML
      * @param  string  $content
      * @param  array  $data
      * @return string
@@ -178,44 +196,55 @@ class MailManager
             return '';
         }
 
-        $html = $this->renderTwig($content, $data);
+        $html = $this->parseTwig($content, $data);
 
-        $html = Markdown::parseSafe($html);
+        $html = Markdown::parseIndent($html);
 
         return $html;
     }
 
+    /**
+     * renderTemplate
+     */
     public function renderTemplate($template, $data = [])
     {
         $this->isHtmlRenderMode = true;
 
         $html = $this->render($template->content_html, $data);
 
-        $css = MailBrandSetting::renderCss();
-
         $disableAutoInlineCss = false;
+        $brandCss = MailBrandSetting::renderCss($template, $data);
+        $css = '';
 
-        if ($template->layout) {
-            $disableAutoInlineCss = array_get($template->layout->options, 'disable_auto_inline_css', $disableAutoInlineCss);
+        // Parse template layout
+        if ($template->layout && $template->layout->content_html) {
+            // Disable inline CSS
+            if (array_get($template->layout->options, 'disable_auto_inline_css', false)) {
+                $disableAutoInlineCss = true;
+            }
 
-            $html = $this->renderTwig($template->layout->content_html, [
+            // Disable branding CSS
+            if (array_get($template->layout->options, 'disable_brand_css', false)) {
+                $brandCss = '';
+            }
+
+            $css = $template->layout->content_css;
+            $html = $this->parseTwig($template->layout->content_html, [
                 'content' => $html,
-                'css' => $template->layout->content_css,
-                'brandCss' => $css
+                'css' => $css,
+                'brandCss' => $brandCss
             ] + (array) $data);
-
-            $css .= PHP_EOL . $template->layout->content_css;
         }
 
         if (!$disableAutoInlineCss) {
-            $html = (new CssToInlineStyles)->convert($html, $css);
+            $html = (new CssToInlineStyles)->convert($html, $brandCss . PHP_EOL . $css);
         }
 
         return $html;
     }
 
     /**
-     * Render the Markdown template into text.
+     * renderText renders the Markdown template into text.
      * @param $content
      * @param array $data
      * @return string
@@ -226,27 +255,26 @@ class MailManager
             return '';
         }
 
-        $text = $this->renderTwig($content, $data);
+        $text = $this->parseTwig($content, $data);
 
         $text = html_entity_decode(preg_replace("/[\r\n]{2,}/", "\n\n", $text), ENT_QUOTES, 'UTF-8');
 
         return $text;
     }
 
+    /**
+     * renderTextTemplate
+     */
     public function renderTextTemplate($template, $data = [])
     {
         $this->isHtmlRenderMode = false;
 
-        $templateText = $template->content_text;
-
-        if (!strlen($template->content_text)) {
-            $templateText = $template->content_html;
-        }
+        $templateText = $template->content_text ?: $template->content_html;
 
         $text = $this->renderText($templateText, $data);
 
-        if ($template->layout) {
-            $text = $this->renderTwig($template->layout->content_text, [
+        if ($template->layout && $template->layout->content_text) {
+            $text = $this->parseTwig($template->layout->content_text, [
                 'content' => $text
             ] + (array) $data);
         }
@@ -254,6 +282,9 @@ class MailManager
         return $text;
     }
 
+    /**
+     * renderPartial
+     */
     public function renderPartial($code, array $params = [])
     {
         if (!$partial = MailPartial::findOrMakePartial($code)) {
@@ -271,60 +302,17 @@ class MailManager
             return '';
         }
 
-        return $this->renderTwig($content, $params);
+        return $this->parseTwig($content, $params);
     }
 
     /**
-     * Internal helper for rendering Twig
+     * parseTwig parses Twig using the mailer environment
      */
-    protected function renderTwig($content, $data = [])
+    protected function parseTwig($contents, $vars = [])
     {
-        if ($this->isTwigStarted) {
-            return Twig::parse($content, $data);
-        }
-
-        $this->startTwig();
-
-        $result = Twig::parse($content, $data);
-
-        $this->stopTwig();
-
-        return $result;
-    }
-
-    /**
-     * Temporarily registers mail based token parsers with Twig.
-     * @return void
-     */
-    protected function startTwig()
-    {
-        if ($this->isTwigStarted) {
-            return;
-        }
-
-        $this->isTwigStarted = true;
-
-        $markupManager = MarkupManager::instance();
-        $markupManager->beginTransaction();
-        $markupManager->registerTokenParsers([
-            new MailPartialTokenParser
-        ]);
-    }
-
-    /**
-     * Indicates that we are finished with Twig.
-     * @return void
-     */
-    protected function stopTwig()
-    {
-        if (!$this->isTwigStarted) {
-            return;
-        }
-
-        $markupManager = MarkupManager::instance();
-        $markupManager->endTransaction();
-
-        $this->isTwigStarted = false;
+        $twig = App::make('twig.environment.mailer');
+        $template = $twig->createTemplate($contents);
+        return $template->render($vars);
     }
 
     //
@@ -332,36 +320,57 @@ class MailManager
     //
 
     /**
-     * Loads registered mail templates from modules and plugins
+     * loadRegisteredTemplates loads registered mail templates from modules and plugins
      * @return void
      */
     public function loadRegisteredTemplates()
     {
-        foreach ($this->callbacks as $callback) {
-            $callback($this);
-        }
+        // Registration logic
+        $registrar = function($provider) {
+            if (is_array($templates = $provider->registerMailTemplates())) {
+                if (isset($templates['templates'])) {
+                    $this->registerMailTemplates($templates['templates']);
+                    if (is_array($partials = $templates['partials'] ?? null)) {
+                        $this->registerMailPartials($partials);
+                    }
+                    if (is_array($layouts = $templates['layouts'] ?? null)) {
+                        $this->registerMailLayouts($layouts);
+                    }
+                }
+                else {
+                    $this->registerMailTemplates($templates);
+                }
+            }
 
-        $plugins = PluginManager::instance()->getPlugins();
-        foreach ($plugins as $pluginId => $pluginObj) {
-            $layouts = $pluginObj->registerMailLayouts();
-            if (is_array($layouts)) {
+            if (is_array($layouts = $provider->registerMailLayouts())) {
                 $this->registerMailLayouts($layouts);
             }
 
-            $templates = $pluginObj->registerMailTemplates();
-            if (is_array($templates)) {
-                $this->registerMailTemplates($templates);
-            }
-
-            $partials = $pluginObj->registerMailPartials();
-            if (is_array($partials)) {
+            if (is_array($partials = $provider->registerMailPartials())) {
                 $this->registerMailPartials($partials);
             }
+        };
+
+        // Load module items
+        foreach (System::listModules() as $module) {
+            if ($provider = App::getProvider($module . '\\ServiceProvider')) {
+                $registrar($provider);
+            }
+        }
+
+        // Load plugin widgets
+        foreach (PluginManager::instance()->getPlugins() as $pluginObj) {
+            $registrar($pluginObj);
+        }
+
+        // Load app widgets
+        if ($app = App::getProvider(\App\Provider::class)) {
+            $registrar($app);
         }
     }
 
     /**
-     * Returns a list of the registered templates.
+     * listRegisteredTemplates returns a list of the registered templates.
      * @return array
      */
     public function listRegisteredTemplates()
@@ -374,7 +383,19 @@ class MailManager
     }
 
     /**
-     * Returns a list of the registered partials.
+     * getViewPathForTemplate returns a view path for a registered template
+     */
+    public function getViewPathForTemplate($code): ?string
+    {
+        if ($this->registeredTemplates === null) {
+            $this->loadRegisteredTemplates();
+        }
+
+        return $this->registeredTemplates[$code] ?? null;
+    }
+
+    /**
+     * listRegisteredPartials returns a list of the registered partials.
      * @return array
      */
     public function listRegisteredPartials()
@@ -387,7 +408,7 @@ class MailManager
     }
 
     /**
-     * Returns a list of the registered layouts.
+     * listRegisteredLayouts returns a list of the registered layouts.
      * @return array
      */
     public function listRegisteredLayouts()
@@ -400,24 +421,7 @@ class MailManager
     }
 
     /**
-     * Registers a callback function that defines mail templates.
-     * The callback function should register templates by calling the manager's
-     * registerMailTemplates() function. Thi instance is passed to the
-     * callback function as an argument. Usage:
-     *
-     *     MailManager::registerCallback(function ($manager) {
-     *         $manager->registerMailTemplates([...]);
-     *     });
-     *
-     * @param callable $callback A callable function.
-     */
-    public function registerCallback(callable $callback)
-    {
-        $this->callbacks[] = $callback;
-    }
-
-    /**
-     * Registers mail views and manageable templates.
+     * registerMailTemplates registers mail views and manageable templates.
      */
     public function registerMailTemplates(array $definitions)
     {
@@ -425,18 +429,15 @@ class MailManager
             $this->registeredTemplates = [];
         }
 
-        // Prior sytax where (key) code => (value) description
-        if (!isset($definitions[0])) {
-            $definitions = array_keys($definitions);
+        if (Arr::isList($definitions)) {
+            $definitions = array_combine($definitions, $definitions);
         }
-
-        $definitions = array_combine($definitions, $definitions);
 
         $this->registeredTemplates = $definitions + $this->registeredTemplates;
     }
 
     /**
-     * Registers mail views and manageable layouts.
+     * registerMailPartials registers mail views and manageable layouts.
      */
     public function registerMailPartials(array $definitions)
     {
@@ -448,7 +449,7 @@ class MailManager
     }
 
     /**
-     * Registers mail views and manageable layouts.
+     * registerMailLayouts registers mail views and manageable layouts.
      */
     public function registerMailLayouts(array $definitions)
     {

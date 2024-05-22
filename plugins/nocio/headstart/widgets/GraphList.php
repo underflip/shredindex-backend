@@ -1,7 +1,6 @@
-<?php namespace Nocio\Headstart\Widgets;
+<?php
 
-use Cms\Widgets\TemplateList;
-
+namespace Nocio\Headstart\Widgets;
 
 class GraphList extends TemplateList
 {
@@ -15,5 +14,4 @@ class GraphList extends TemplateList
      * @var string Message to display when the Delete button is clicked.
      */
     public $deleteConfirmation = 'nocio.headstart::lang.graph.delete_confirm';
-
 }

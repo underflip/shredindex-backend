@@ -2,7 +2,7 @@ title = "Filters"
 description = "Global filters"
 ==
 extend type Query {
-    filters: [Type!]! @all(model: "Underflip\\Resorts\\Models\\Type") @orderBy(column: "sort_order", direction: "ASC")
+    filters: [Type!]! @all(model: "Underflip\\Resorts\\Models\\Type")
 }
 
 type Type {

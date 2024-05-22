@@ -7,10 +7,10 @@ App::before(function ($request) {
     /*
      * Combine JavaScript and StyleSheet assets
      */
-    Route::any('combine/{file}', 'System\Classes\SystemController@combine');
+    Route::any('combine/{file}', [\System\Classes\SystemController::class, 'combine']);
 
     /*
      * Resize image assets
      */
-    Route::get('resizer/{identifier}/{encodedUrl}', 'System\Classes\SystemController@resizer');
+    Route::get('resize/{file}', [\System\Classes\SystemController::class, 'resize']);
 });

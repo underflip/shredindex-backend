@@ -1,25 +1,24 @@
 <?php namespace System\Classes;
 
 use Lang;
-use Config;
-use Response;
-use Exception;
-use SystemException;
+use System;
 use ApplicationException;
 use Illuminate\Routing\Controller as ControllerBase;
+use Exception;
+use Response;
 
 /**
- * The is the master controller for system related routing.
+ * SystemController is the master controller for system related routing.
  * It is currently only responsible for serving up the asset combiner contents.
  *
  * @see System\Classes\CombineAssets Asset combiner class
  * @package october\system
- * @author Alexey Bobkov, Samuel Georges, Luke Towers
+ * @author Alexey Bobkov, Samuel Georges
  */
 class SystemController extends ControllerBase
 {
     /**
-     * Combines JavaScript and StyleSheet assets.
+     * combine JavaScript and StyleSheet asset files
      * @param string $name Combined file code
      * @return string Combined content.
      */
@@ -27,7 +26,7 @@ class SystemController extends ControllerBase
     {
         try {
             if (!strpos($name, '-')) {
-                throw new ApplicationException(Lang::get('system::lang.combiner.not_found', ['name' => $name]));
+                throw new ApplicationException(__("The combiner file ':name' is not found.", ['name' => $name]));
             }
 
             $parts = explode('-', $name);
@@ -37,49 +36,44 @@ class SystemController extends ControllerBase
             $combiner = CombineAssets::instance();
 
             return $combiner->getContents($cacheId);
-        } catch (Exception $ex) {
-            return Response::make('/* '.e($ex->getMessage()).' */', 500);
+        }
+        catch (Exception $ex) {
+            if (System::checkDebugMode()) {
+                return Response::make($ex, 404);
+            }
+            else {
+                return Response::make('/* '.e(Lang::get('system::lang.page.custom_error.help')).' */', 404);
+            }
         }
     }
 
     /**
-     * Resizes an image using the provided configuration
-     * and returns a redirect to the resized image
-     *
-     * @param string $identifier The identifier used to retrieve the image configuration
-     * @param string $encodedUrl The double-encoded URL of the resized image, see https://github.com/octobercms/october/issues/3592#issuecomment-671017380
+     * resize an image
+     * @param string $name Combined file code
      * @return RedirectResponse
      */
-    public function resizer(string $identifier, string $encodedUrl)
+    public function resize($name)
     {
-        $resizedUrl = ImageResizer::getValidResizedUrl($identifier, $encodedUrl);
-        if (empty($resizedUrl)) {
-            return response('Invalid identifier or redirect URL', 400);
-        }
-
-        // Attempt to process the resize
         try {
-            $resizer = ImageResizer::fromIdentifier($identifier);
-            $resizer->resize();
-        } catch (SystemException $ex) {
-            // If the resizing failed with a SystemException, it was most
-            // likely because it is in progress or has already finished
-            // although it could also be because the cache system used to store
-            // configuration data is broken
-            if (Config::get('cache.default', 'file') === 'array') {
-                throw new Exception('Image resizing requires a persistent cache driver, "array" is not supported. Try changing config/cache.php -> default to a persistent cache driver.');
-            }
-        } catch (Exception $ex) {
-            // If it failed for any other reason, restore the config so that
-            // the resizer route will continue to work until it succeeds
-            if ($resizer) {
-                $resizer->storeConfig();
+            if (!strpos($name, '-')) {
+                throw new ApplicationException(__("The resizer file ':name' is not found.", ['name' => $name]));
             }
 
-            // Rethrow the exception
-            throw $ex;
+            $parts = explode('-', $name);
+
+            $cacheId = $parts[0];
+
+            $combiner = ResizeImages::instance();
+
+            return $combiner->getContents($cacheId);
         }
-
-        return redirect()->to($resizedUrl);
+        catch (Exception $ex) {
+            if (System::checkDebugMode()) {
+                return Response::make($ex, 404);
+            }
+            else {
+                return Response::make('/* '.e(Lang::get('system::lang.page.custom_error.help')).' */', 404);
+            }
+        }
     }
 }

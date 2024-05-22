@@ -1,24 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Source;
 
-/**
- * Interface SchemaSourceProvider.
- */
 interface SchemaSourceProvider
 {
-    /**
-     * Set schema root path.
-     *
-     * @param  string  $path
-     * @return \Nuwave\Lighthouse\Schema\Source\SchemaSourceProvider
-     */
-    public function setRootPath(string $path);
-
-    /**
-     * Provide the schema definition.
-     *
-     * @return string
-     */
+    /** Provide the string contents of the schema definition. */
     public function getSchemaString(): string;
 }

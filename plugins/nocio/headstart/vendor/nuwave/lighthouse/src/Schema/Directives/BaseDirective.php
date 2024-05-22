@@ -1,90 +1,100 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Nuwave\Lighthouse\Schema\Directives;
 
-use Closure;
-use GraphQL\Language\AST\Node;
-use Nuwave\Lighthouse\Support\Utils;
 use GraphQL\Language\AST\DirectiveNode;
-use Illuminate\Database\Eloquent\Model;
-use Nuwave\Lighthouse\Schema\AST\ASTHelper;
+use GraphQL\Language\AST\EnumTypeDefinitionNode;
+use GraphQL\Language\AST\EnumTypeExtensionNode;
+use GraphQL\Language\AST\EnumValueDefinitionNode;
 use GraphQL\Language\AST\FieldDefinitionNode;
+use GraphQL\Language\AST\InputObjectTypeDefinitionNode;
+use GraphQL\Language\AST\InputObjectTypeExtensionNode;
+use GraphQL\Language\AST\InputValueDefinitionNode;
+use GraphQL\Language\AST\InterfaceTypeDefinitionNode;
+use GraphQL\Language\AST\InterfaceTypeExtensionNode;
 use GraphQL\Language\AST\ObjectTypeDefinitionNode;
+use GraphQL\Language\AST\ObjectTypeExtensionNode;
+use GraphQL\Language\AST\ScalarTypeDefinitionNode;
+use GraphQL\Language\AST\ScalarTypeExtensionNode;
+use GraphQL\Language\AST\UnionTypeDefinitionNode;
+use GraphQL\Language\AST\UnionTypeExtensionNode;
+use GraphQL\Utils\AST;
+use Illuminate\Database\Eloquent\Model;
+use Nuwave\Lighthouse\Exceptions\DefinitionException;
+use Nuwave\Lighthouse\Schema\AST\ASTHelper;
+use Nuwave\Lighthouse\Schema\DirectiveLocator;
 use Nuwave\Lighthouse\Support\Contracts\Directive;
-use Nuwave\Lighthouse\Exceptions\DirectiveException;
+use Nuwave\Lighthouse\Support\Utils;
 
+/**
+ * A useful base class for directives.
+ *
+ * @api
+ */
 abstract class BaseDirective implements Directive
 {
     /**
-     * The node the directive is defined on.
+     * The AST node of the directive.
      *
-     * @var \GraphQL\Language\AST\Node
+     * May not be set if the directive is added programmatically.
      */
-    protected $definitionNode;
+    public DirectiveNode $directiveNode;
 
     /**
-     * The hydrate function is called when retrieving a directive from the directive registry.
+     * The node the directive is defined on.
      *
-     * @param  \GraphQL\Language\AST\Node  $definitionNode
-     * @return $this
+     * @see \GraphQL\Language\DirectiveLocation
+     *
+     * Intentionally leaving out the request definitions and the 'SCHEMA' location.
      */
-    public function hydrate(Node $definitionNode): self
+    public ScalarTypeDefinitionNode|ScalarTypeExtensionNode|ObjectTypeDefinitionNode|ObjectTypeExtensionNode|InterfaceTypeDefinitionNode|InterfaceTypeExtensionNode|UnionTypeDefinitionNode|UnionTypeExtensionNode|EnumTypeDefinitionNode|EnumTypeExtensionNode|InputObjectTypeDefinitionNode|InputObjectTypeExtensionNode|FieldDefinitionNode|InputValueDefinitionNode|EnumValueDefinitionNode $definitionNode;
+
+    /**
+     * Cached directive arguments.
+     *
+     * Lazily initialized.
+     *
+     * @var array<string, mixed>
+     */
+    protected array $directiveArgs;
+
+    /** The hydrate function is called when retrieving a directive from the directive registry. */
+    public function hydrate(DirectiveNode $directiveNode, ScalarTypeDefinitionNode|ScalarTypeExtensionNode|ObjectTypeDefinitionNode|ObjectTypeExtensionNode|InterfaceTypeDefinitionNode|InterfaceTypeExtensionNode|UnionTypeDefinitionNode|UnionTypeExtensionNode|EnumTypeDefinitionNode|EnumTypeExtensionNode|InputObjectTypeDefinitionNode|InputObjectTypeExtensionNode|FieldDefinitionNode|InputValueDefinitionNode|EnumValueDefinitionNode $definitionNode): self
     {
+        $this->directiveNode = $directiveNode;
         $this->definitionNode = $definitionNode;
+
+        unset($this->directiveArgs);
 
         return $this;
     }
 
     /**
-     * Get the directive definition associated with the current directive.
+     * Returns the name of the used directive.
      *
-     * @return \GraphQL\Language\AST\DirectiveNode
+     * @api
      */
-    protected function directiveDefinition(): DirectiveNode
+    public function name(): string
     {
-        return ASTHelper::directiveDefinition(
-            $this->definitionNode,
-            static::name()
-        );
+        return DirectiveLocator::directiveName(static::class);
     }
 
     /**
-     * Get directive argument value.
+     * The name of the node the directive is defined upon.
      *
-     * @param  string  $name
-     * @param  mixed|null  $default
-     * @return mixed|null
+     * @api
      */
-    protected function directiveArgValue(string $name, $default = null)
+    protected function nodeName(): string
     {
-        return ASTHelper::directiveArgValue(
-            $this->directiveDefinition(),
-            $name,
-            $default
-        );
+        return $this->definitionNode->name->value;
     }
 
     /**
-     * Does the current directive have an argument with the given name?
+     * Get a Closure that is defined through an argument of the directive.
      *
-     * @param  string  $name
-     * @return bool
+     * @api
      */
-    public function directiveHasArgument(string $name): bool
-    {
-        return ASTHelper::directiveHasArgument(
-            $this->directiveDefinition(),
-            $name
-        );
-    }
-
-    /**
-     * Get a Closure that is defined through an argument on the directive.
-     *
-     * @param  string  $argumentName
-     * @return \Closure
-     */
-    public function getResolverFromArgument(string $argumentName): Closure
+    public function getResolverFromArgument(string $argumentName): \Closure
     {
         [$className, $methodName] = $this->getMethodArgumentParts($argumentName);
 
@@ -94,68 +104,90 @@ abstract class BaseDirective implements Directive
     }
 
     /**
+     * Does the current directive have an argument with the given name?
+     *
+     * @api
+     */
+    protected function directiveHasArgument(string $name): bool
+    {
+        if (! isset($this->directiveArgs)) {
+            $this->loadArgValues();
+        }
+
+        return array_key_exists($name, $this->directiveArgs);
+    }
+
+    /**
+     * Get the value of an argument of the directive.
+     *
+     * @api
+     *
+     * @param  mixed  $default Use this over `??` to preserve explicit `null`
+     *
+     * @return mixed The argument value or the default
+     */
+    protected function directiveArgValue(string $name, mixed $default = null): mixed
+    {
+        if (! isset($this->directiveArgs)) {
+            $this->loadArgValues();
+        }
+
+        return array_key_exists($name, $this->directiveArgs)
+            ? $this->directiveArgs[$name]
+            : $default;
+    }
+
+    /**
      * Get the model class from the `model` argument of the field.
      *
-     * @param  string  $argumentName The default argument name "model" may be overwritten
-     * @return string
+     * @api
      *
-     * @throws \Nuwave\Lighthouse\Exceptions\DirectiveException
+     * @param  string  $argumentName  The default argument name "model" may be overwritten
+     *
+     * @return class-string<\Illuminate\Database\Eloquent\Model>
      */
     protected function getModelClass(string $argumentName = 'model'): string
     {
-        $model = $this->directiveArgValue($argumentName);
-
-        // Fallback to using information from the schema definition as the model name
-        if (! $model) {
-            if ($this->definitionNode instanceof FieldDefinitionNode) {
-                $model = ASTHelper::getUnderlyingTypeName($this->definitionNode);
-            } elseif ($this->definitionNode instanceof ObjectTypeDefinitionNode) {
-                $model = $this->definitionNode->name->value;
-            }
-        }
-
-        if (! $model) {
-            throw new DirectiveException(
-                "A `model` argument must be assigned to the '{$this->name()}'directive on '{$this->definitionNode->name->value}"
-            );
-        }
+        $model = $this->directiveArgValue($argumentName, ASTHelper::modelName($this->definitionNode))
+            ?? throw new DefinitionException("Could not determine a model name for the '@{$this->name()}' directive on '{$this->nodeName()}'.");
 
         return $this->namespaceModelClass($model);
     }
 
     /**
-     * @param  string  $classCandidate
-     * @param  string[]  $namespacesToTry
-     * @param  callable  $determineMatch
-     * @return string
+     * Find a class name in a set of given namespaces.
      *
-     * @throws \Nuwave\Lighthouse\Exceptions\DirectiveException
+     * @api
+     *
+     * @param  array<string>  $namespacesToTry
+     * @param  (callable(string $className): bool)|null  $determineMatch
+     *
+     * @return class-string
      */
-    protected function namespaceClassName(string $classCandidate, array $namespacesToTry = [], callable $determineMatch = null): string
-    {
-        // Always try the explicitly set namespace first
-        array_unshift(
-            $namespacesToTry,
-            ASTHelper::getNamespaceForDirective(
-                $this->definitionNode,
-                static::name()
-            )
+    protected function namespaceClassName(
+        string $classCandidate,
+        array $namespacesToTry = [],
+        ?callable $determineMatch = null,
+    ): string {
+        $namespaceForDirective = ASTHelper::namespaceForDirective(
+            $this->definitionNode,
+            $this->name(),
         );
 
-        if (! $determineMatch) {
+        if (is_string($namespaceForDirective)) {
+            // Always try the explicitly set namespace first
+            array_unshift($namespacesToTry, $namespaceForDirective);
+        }
+
+        if ($determineMatch === null) {
             $determineMatch = 'class_exists';
         }
 
-        $className = Utils::namespaceClassname(
-            $classCandidate,
-            $namespacesToTry,
-            $determineMatch
-        );
+        $className = Utils::namespaceClassname($classCandidate, $namespacesToTry, $determineMatch);
 
-        if (! $className) {
-            throw new DirectiveException(
-                "No class '{$classCandidate}' was found for directive '{$this->name()}'"
-            );
+        if ($className === null) {
+            $consideredNamespaces = implode(', ', $namespacesToTry);
+            throw new DefinitionException("Failed to find class {$classCandidate} in namespaces [{$consideredNamespaces}] for directive @{$this->name()}.");
         }
 
         return $className;
@@ -164,34 +196,38 @@ abstract class BaseDirective implements Directive
     /**
      * Split a single method argument into its parts.
      *
+     * @api
+     *
      * A method argument is expected to contain a class and a method name, separated by an @ symbol.
-     * e.g. "App\My\Class@methodName"
-     * This validates that exactly two parts are given and are not empty.
      *
-     * @param  string  $argumentName
-     * @return string[] Contains two entries: [string $className, string $methodName]
+     * @example "App\My\Class@methodName"
      *
-     * @throws \Nuwave\Lighthouse\Exceptions\DirectiveException
+     * This validates that exactly two non-empty parts are given, not that the method exists.
+     *
+     * @return array{0: string, 1: string} Contains two entries: [string $className, string $methodName]
      */
     protected function getMethodArgumentParts(string $argumentName): array
     {
         $argumentParts = explode(
             '@',
-            $this->directiveArgValue($argumentName)
+            $this->directiveArgValue($argumentName),
         );
 
         if (
             count($argumentParts) > 2
             || empty($argumentParts[0])
         ) {
-            throw new DirectiveException(
-                "Directive '{$this->name()}' must have an argument '{$argumentName}' in the form 'ClassName@methodName' or 'ClassName'"
+            throw new DefinitionException(
+                "Directive '{$this->name()}' must have an argument '{$argumentName}' in the form 'ClassName@methodName' or 'ClassName'",
             );
         }
 
+        /** @var array{0: string, 1?: string} $argumentParts */
         if (empty($argumentParts[1])) {
             $argumentParts[1] = '__invoke';
         }
+
+        /** @var array{0: string, 1: string} $argumentParts */
 
         return $argumentParts;
     }
@@ -199,17 +235,56 @@ abstract class BaseDirective implements Directive
     /**
      * Try adding the default model namespace and ensure the given class is a model.
      *
-     * @param  string  $modelClassCandidate
-     * @return string
+     * @api
+     *
+     * @return class-string<\Illuminate\Database\Eloquent\Model>
      */
     protected function namespaceModelClass(string $modelClassCandidate): string
     {
-        return $this->namespaceClassName(
+        $modelClass = $this->namespaceClassName(
             $modelClassCandidate,
             (array) config('lighthouse.namespaces.models'),
-            function (string $classCandidate): bool {
-                return is_subclass_of($classCandidate, Model::class);
-            }
+            static fn (string $classCandidate): bool => is_subclass_of($classCandidate, Model::class),
         );
+        assert(is_subclass_of($modelClass, Model::class));
+
+        return $modelClass;
+    }
+
+    /**
+     * Validate at most one of the given mutually exclusive arguments is used.
+     *
+     * @api
+     *
+     * @param  array<string>  $names
+     */
+    protected function validateMutuallyExclusiveArguments(array $names): void
+    {
+        $given = array_filter($names, [$this, 'directiveHasArgument']);
+
+        if (count($given) > 1) {
+            $namesString = implode(', ', $names);
+            $givenString = implode(', ', $given);
+            throw new DefinitionException("The arguments [{$namesString}] for @{$this->name()} are mutually exclusive, found [{$givenString}] on {$this->nodeName()}.");
+        }
+    }
+
+    /** Loads directive argument values from AST and caches them in $directiveArgs. */
+    protected function loadArgValues(): void
+    {
+        $this->directiveArgs = [];
+
+        // If the directive was added programmatically, it has no arguments
+        if (! isset($this->directiveNode)) {
+            return;
+        }
+
+        foreach ($this->directiveNode->arguments as $node) {
+            if (array_key_exists($node->name->value, $this->directiveArgs)) {
+                throw new DefinitionException("Directive {$this->directiveNode->name->value} has two arguments with the same name {$node->name->value}");
+            }
+
+            $this->directiveArgs[$node->name->value] = AST::valueFromASTUntyped($node->value);
+        }
     }
 }

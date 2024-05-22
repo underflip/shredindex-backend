@@ -3,12 +3,11 @@
 use October\Rain\Database\Schema\Blueprint;
 use October\Rain\Database\Updates\Migration;
 
-class DbBackendUserThrottle extends Migration
+return new class extends Migration
 {
     public function up()
     {
         Schema::create('backend_user_throttle', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
             $table->increments('id');
             $table->integer('user_id')->unsigned()->nullable()->index();
             $table->string('ip_address')->nullable()->index();
@@ -25,4 +24,4 @@ class DbBackendUserThrottle extends Migration
     {
         Schema::dropIfExists('backend_user_throttle');
     }
-}
+};

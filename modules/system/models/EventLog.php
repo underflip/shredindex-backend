@@ -1,12 +1,12 @@
 <?php namespace System\Models;
 
-use App;
 use Str;
 use Model;
+use System;
 use Exception;
 
 /**
- * Model for logging system errors and debug trace messages
+ * EventLog model for logging system errors and debug trace messages
  *
  * @package october\system
  * @author Alexey Bobkov, Samuel Georges
@@ -14,38 +14,45 @@ use Exception;
 class EventLog extends Model
 {
     /**
-     * @var string The database table used by the model.
+     * @var string table associated with the model
      */
     protected $table = 'system_event_logs';
 
     /**
-     * @var array List of attribute names which are json encoded and decoded from the database.
+     * @var array jsonable attribute names that are json encoded and decoded from the database
      */
     protected $jsonable = ['details'];
 
     /**
-     * Returns true if this logger should be used.
-     * @return bool
+     * useLogging returns true if this logger should be used
      */
-    public static function useLogging()
+    public static function useLogging(): bool
     {
-        return (
-            class_exists('Model') &&
-            Model::getConnectionResolver() &&
-            App::hasDatabase() &&
-            !defined('OCTOBER_NO_EVENT_LOGGING') &&
-            LogSetting::get('log_events')
-        );
+        if (defined('OCTOBER_TRACING_SQL') || defined('OCTOBER_NO_EVENT_LOGGING')) {
+            return false;
+        }
+
+        try {
+            return (
+                !defined('OCTOBER_NO_EVENT_LOGGING') &&
+                class_exists('Model') &&
+                Model::getConnectionResolver() &&
+                System::hasDatabase() &&
+                LogSetting::get('log_events')
+            );
+        }
+        catch (Exception $ex) {
+            return false;
+        }
     }
 
     /**
-     * Creates a log record
+     * add a log record
      * @param string $message Specifies the message text
      * @param string $level Specifies the logging level
-     * @param string $details Specifies the error details string
-     * @return self
+     * @param array $details Specifies the error details string
      */
-    public static function add($message, $level = 'info', $details = null)
+    public static function add($message, $level = 'info', $details = null): EventLog
     {
         $record = new static;
         $record->message = $message;
@@ -65,7 +72,7 @@ class EventLog extends Model
     }
 
     /**
-     * Beautify level value.
+     * getLevelAttribute will beautify the "level" value
      * @param  string $level
      * @return string
      */
@@ -75,7 +82,7 @@ class EventLog extends Model
     }
 
     /**
-     * Creates a shorter version of the message attribute,
+     * getSummaryAttribute creates a shorter version of the message attribute,
      * extracts the exception message or limits by 100 characters.
      * @return string
      */
