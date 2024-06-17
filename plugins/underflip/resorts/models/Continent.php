@@ -14,11 +14,10 @@ use System\Models\File;
  */
 class Continent extends Model
 {
-
     public $timestamps = false;
     public $table = 'underflip_resorts_continents';
 
-    public $fillable = ['name', 'code', 'continent_id'];
+    public $fillable = ['name', 'code'];
 
     public function countries()
     {

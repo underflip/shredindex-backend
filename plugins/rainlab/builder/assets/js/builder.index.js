@@ -149,7 +149,7 @@
             code: { menu: 'code', count: 0 }
         }
 
-        $('> div.tab-content > div.tab-pane[data-pluginsmodified] > form', this.$masterTabs).each(function(){
+        $('> div.tab-content > div.tab-pane[data-modified] > form', this.$masterTabs).each(function(){
             var entity = $(this).data('entity')
             counters[entity].count++
         })
@@ -218,7 +218,7 @@
     }
 
     Builder.prototype.onFormChanged = function(ev) {
-        $('.form-tabless-fields', ev.target).trigger('pluginsmodified.oc.tab')
+        $('.form-tabless-fields', ev.target).trigger('modified.oc.tab')
         this.updateModifiedCounter()
     }
 

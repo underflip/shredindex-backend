@@ -79,8 +79,6 @@ class Resort extends Model
      */
     public function getUrlAttribute()
     {
-
-
         return sprintf('resorts/%s', $this->url_segment);
     }
 

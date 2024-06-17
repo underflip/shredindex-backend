@@ -10,7 +10,6 @@ use Underflip\Resorts\Models\TotalScore;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Models\TypeValue;
 use Underflip\Resorts\Models\Unit;
-use Underflip\Resorts\Plugin;
 
 class SeedTypesTable extends Seeder
 {
@@ -36,9 +35,9 @@ class SeedTypesTable extends Seeder
      * @param Type $type
      * @param array $options e.g ['name' => 'title']
      * @param bool $distinct Will generate a new type value instead of using an existing one
-     * @return List|TypeValue[] The TypeValues used for the enum set
+     * @return array The TypeValues used for the enum set
      */
-    protected function populateEnum($type, $options, $distinct = false)
+    protected function populateEnum(Type $type, array $options, bool $distinct = false): array
     {
         $ids = [];
 
@@ -64,7 +63,7 @@ class SeedTypesTable extends Seeder
             $ids[] = $typeValue->id;
         }
 
-        return TypeValue::whereIn('id', $ids)->get();
+        return TypeValue::whereIn('id', $ids)->get()->toArray();
     }
 
     /**
@@ -87,216 +86,52 @@ class SeedTypesTable extends Seeder
     {
         $score = $this->getUnitByName('score');
 
-        Type::create([
-            'name' => 'digital_nomad_score',
-            'title' => 'Digital Nomad Score',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'seasonal_worker_score',
-            'title' => 'Seasonal Worker Score',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'family_vacation_score',
-            'title' => 'Family Vacation Score',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'affordability',
-            'title' => 'Affordability',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'money_saving_potential',
-            'title' => 'Money Saving Potential',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'snow_quality',
-            'title' => 'Snow Quality',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'backcountry_accessibility',
-            'title' => 'Backcountry Accessibility',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'slackcountry_accessibility',
-            'title' => 'Slackcountry Accessibility',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'nearby_vehicle_access',
-            'title' => 'Nearby Sled / Snowmobile Access',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'avalanche_safety',
-            'title' => 'Avalanche Safety',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'fresh_tracks',
-            'title' => 'Fresh Tracks',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'lift_access',
-            'title' => 'Lift Access',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'ski_in_ski_out',
-            'title' => 'Ski-In Ski-Out',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'uncrowded',
-            'title' => 'Uncrowded',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'expert_terrain',
-            'title' => 'Expert Terrain',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'terrain_park',
-            'title' => 'Terrain Park',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'child_friendly',
-            'title' => 'Child Friendly',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'livability',
-            'title' => 'Livability',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'housing_availability',
-            'title' => 'Housing Availability',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'job_availability',
-            'title' => 'Job Availability',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'summer_activities',
-            'title' => 'Summer Activities',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'english_level',
-            'title' => 'English Level',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'local_language_non_essential',
-            'title' => 'Local Language Non-Essential (for work)',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'lgbt_friendly',
-            'title' => 'LGBT Friendly',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'cannabis_friendly',
-            'title' => 'Cannabis Friendly',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'international_ratio',
-            'title' => 'International Ratio',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'gender_ratio',
-            'title' => 'Gender Ratio',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'positive_vibes',
-            'title' => 'Positive Vibes',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'camper_friendly',
-            'title' => 'Camper Friendly',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'apres',
-            'title' => 'Apres',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'night_life',
-            'title' => 'Night Life',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'co_working_spaces',
-            'title' => 'Co-working Spaces',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'connectivity',
-            'title' => 'Internet / Broadband',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'cafes_to_work_from',
-            'title' => 'Cafes to work from',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
-        Type::create([
-            'name' => 'co_working_culture',
-            'title' => 'Co-working Culture',
-            'category' => Rating::class,
-            'unit_id' => $score->id,
-        ]);
+        $ratingTypes = [
+            'digital_nomad_score' => 'Digital Nomad Score',
+            'seasonal_worker_score' => 'Seasonal Worker Score',
+            'family_vacation_score' => 'Family Vacation Score',
+            'affordability' => 'Affordability',
+            'money_saving_potential' => 'Money Saving Potential',
+            'snow_quality' => 'Snow Quality',
+            'backcountry_accessibility' => 'Backcountry Accessibility',
+            'slackcountry_accessibility' => 'Slackcountry Accessibility',
+            'nearby_vehicle_access' => 'Nearby Sled / Snowmobile Access',
+            'avalanche_safety' => 'Avalanche Safety',
+            'fresh_tracks' => 'Fresh Tracks',
+            'lift_access' => 'Lift Access',
+            'ski_in_ski_out' => 'Ski-In Ski-Out',
+            'uncrowded' => 'Uncrowded',
+            'expert_terrain' => 'Expert Terrain',
+            'terrain_park' => 'Terrain Park',
+            'child_friendly' => 'Child Friendly',
+            'livability' => 'Livability',
+            'housing_availability' => 'Housing Availability',
+            'job_availability' => 'Job Availability',
+            'summer_activities' => 'Summer Activities',
+            'english_level' => 'English Level',
+            'local_language_non_essential' => 'Local Language Non-Essential (for work)',
+            'lgbt_friendly' => 'LGBT Friendly',
+            'cannabis_friendly' => 'Cannabis Friendly',
+            'international_ratio' => 'International Ratio',
+            'gender_ratio' => 'Gender Ratio',
+            'positive_vibes' => 'Positive Vibes',
+            'camper_friendly' => 'Camper Friendly',
+            'apres' => 'Apres',
+            'night_life' => 'Night Life',
+            'co_working_spaces' => 'Co-working Spaces',
+            'connectivity' => 'Internet / Broadband',
+            'cafes_to_work_from' => 'Cafes to work from',
+            'co_working_culture' => 'Co-working Culture',
+        ];
+
+        foreach ($ratingTypes as $name => $title) {
+            Type::create([
+                'name' => $name,
+                'title' => $title,
+                'category' => Rating::class,
+                'unit_id' => $score->id,
+            ]);
+        }
     }
 
     /**
@@ -309,99 +144,51 @@ class SeedTypesTable extends Seeder
         $total = $this->getUnitByName('total');
         $percentage = $this->getUnitByName('percentage');
 
-        Type::create([
-            'name' => 'average_annual_snowfall',
-            'title' => 'Average Annual Snowfall',
-            'category' => Numeric::class,
-            'unit_id' => $meters->id,
-        ]);
+        $numericTypes = [
+            'average_annual_snowfall' => ['title' => 'Average Annual Snowfall', 'unit' => $meters->id],
+            'elevation_peak' => ['title' => 'Elevation Peak', 'unit' => $meters->id],
+            'number_of_runs' => ['title' => 'Number of Runs', 'unit' => null],
+            'number_of_lifts' => ['title' => 'Number of Lifts', 'unit' => $total->id],
+            'skiable_terrain' => ['title' => 'Skiable Terrain', 'unit' => $meters->id],
+            'vertical_drop' => ['title' => 'Vertical Drop', 'unit' => $meters->id],
+            'longest_run' => ['title' => 'Longest Run', 'unit' => $meters->id],
+            'terrain_expert' => ['title' => 'Terrain Expert', 'unit' => $percentage->id],
+            'terrain_intermediate' => ['title' => 'Terrain Intermediate', 'unit' => $percentage->id],
+            'terrain_beginner' => ['title' => 'Terrain Beginner', 'unit' => $percentage->id],
+        ];
 
-        Type::create([
-            'name' => 'elevation_peak',
-            'title' => 'Elevation Peak',
-            'category' => Numeric::class,
-            'unit_id' => $meters->id,
-        ]);
-
-        Type::create([
-            'name' => 'number_of_runs',
-            'title' => 'Number of Runs',
-            'category' => Numeric::class,
-        ]);
-
-        Type::create([
-            'name' => 'number_of_lifts',
-            'title' => 'Number of Lifts',
-            'category' => Numeric::class,
-            'unit_id' => $total->id,
-        ]);
-
-        Type::create([
-            'name' => 'skiable_terrain',
-            'title' => 'Skiable Terrain',
-            'category' => Numeric::class,
-            'unit_id' => $meters->id,
-        ]);
-
-        Type::create([
-            'name' => 'vertical_drop',
-            'title' => 'Vertical Drop',
-            'category' => Numeric::class,
-            'unit_id' => $meters->id,
-        ]);
-
-        Type::create([
-            'name' => 'longest_run',
-            'title' => 'Longest Run',
-            'category' => Numeric::class,
-            'unit_id' => $meters->id,
-        ]);
-
-        Type::create([
-            'name' => 'terrain_expert',
-            'title' => 'Terrain Expert',
-            'category' => Numeric::class,
-            'unit_id' => $percentage->id,
-        ]);
-
-        Type::create([
-            'name' => 'terrain_intermediate',
-            'title' => 'Terrain Intermediate',
-            'category' => Numeric::class,
-            'unit_id' => $percentage->id,
-        ]);
-
-        Type::create([
-            'name' => 'terrain_beginner',
-            'title' => 'Terrain Beginner',
-            'category' => Numeric::class,
-            'unit_id' => $percentage->id,
-        ]);
+        foreach ($numericTypes as $name => $details) {
+            Type::create([
+                'name' => $name,
+                'title' => $details['title'],
+                'category' => Numeric::class,
+                'unit_id' => $details['unit'],
+            ]);
+        }
     }
 
-/**
-* @return void
-*/
- protected function seedGenericTypes(): void
- {
-     $somProperties = [
-         'snow_making' => 'Snow Making',
-         'has_helicopter_skiing' => 'Snow Making',
-         'has_cross_country_skiing' => 'Has Helicopter Skiing',
-         'night_skiing' => 'Has Night Skiing',
-     ];
+    /**
+     * @return void
+     */
+    protected function seedGenericTypes(): void
+    {
+        $genericProperties = [
+            'snow_making' => 'Snow Making',
+            'has_helicopter_skiing' => 'Has Helicopter Skiing',
+            'has_cross_country_skiing' => 'Has Cross Country Skiing',
+            'night_skiing' => 'Has Night Skiing',
+        ];
 
-     $options = ['yes' => 'Yes', 'no' => 'No', 'maybe' => 'Maybe'];
+        $options = ['yes' => 'Yes', 'no' => 'No', 'maybe' => 'Maybe'];
 
-     foreach ($somProperties as $name => $title) {
+        foreach ($genericProperties as $name => $title) {
+            $property = Type::create([
+                'name' => $name,
+                'title' => $title,
+                'category' => Generic::class,
+            ]);
 
-         $property = Type::create([
-             'name' => $name,
-             'title' => $title,
-             'category' => Generic::class,
-         ]);
-
-         $this->populateEnum($property, $options);
-     }
- }
+            $this->populateEnum($property, $options);
+        }
+    }
 }

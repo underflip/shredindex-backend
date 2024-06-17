@@ -49,7 +49,7 @@
         // - validate columns on the server
         // - display a popup asking to enter the migration text
         // - generate the migration on the server and execute it
-        // - drop the form pluginsmodified flag
+        // - drop the form modified flag
 
         if (!this.validateTable($target)) {
             return

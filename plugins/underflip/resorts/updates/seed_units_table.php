@@ -41,6 +41,7 @@ class SeedUnitsTable extends Seeder
             'title' => 'Score',
             'singular_title' => 'Score',
             'plural_title' => 'Scores',
+            'format' => '%s/100',
         ]);
     }
 }

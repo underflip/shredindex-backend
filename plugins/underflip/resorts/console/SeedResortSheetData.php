@@ -3,38 +3,42 @@
 namespace Underflip\Resorts\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Model;
 use ReflectionClass;
+use Seeder;
 use Symfony\Component\Console\Input\InputOption;
 use Underflip\Resorts\Database\Seeders\Downable;
-use Underflip\Resorts\Database\Seeders\ResortsSeeder;
+use Underflip\Resorts\Database\Seeders\ResortsSeederFromSheets;
+use Underflip\Resorts\Database\Seeders\TypesSeeder;
+use Underflip\Resorts\Database\Seeders\RatingsNumericsGenericsSeeder;
 use Underflip\Resorts\Database\Seeders\SupportersSeeder;
 use Underflip\Resorts\Database\Seeders\ContinentsSeeder;
 use Underflip\Resorts\Database\Seeders\TeamMembersSeeder;
 
 /**
- * A command that seeds test data only (to be run outside of our plugin's
+ * A command that seeds data from google sheets data only (to be run outside of our plugin's
  * version.yaml roster)
  *
  * @codeCoverageIgnore
  */
-class SeedTestData extends Command
+class SeedResortSheetData extends Command
 {
-    protected $name = 'resorts:seed_test_data';
+    protected $name = 'resorts:seed_resort_sheet_data';
 
-    protected $description = 'Seed a range of test data';
+    protected $description = 'Seed a range of resort sheet data';
 
     /**
-     * The test data seeders. Must be in topological order (dependencies first)
+     * The sheet data seeders. Must be in topological order (dependencies first)
      *
-     * @var array
+     * @var Seeder[]
      */
     protected $seeders = [
         ContinentsSeeder::class,
         TeamMembersSeeder::class,
         SupportersSeeder::class,
-        ResortsSeeder::class,
+        TypesSeeder::class,
+        ResortsSeederFromSheets::class,
+        RatingsNumericsGenericsSeeder::class,
     ];
 
     protected function down()

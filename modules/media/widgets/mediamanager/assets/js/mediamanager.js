@@ -479,7 +479,7 @@
             previewContainer.innerHTML = template
                 .replace('{src}', item.getAttribute('data-public-url'))
                 .replace('{path}', item.getAttribute('data-path'))
-                .replace('{last-modified}', item.getAttribute('data-last-pluginsmodified-ts'))
+                .replace('{last-modified}', item.getAttribute('data-last-modified-ts'))
 
             if (documentType == 'image')
                 this.loadSidebarThumbnail()
@@ -517,18 +517,18 @@
             this.sidebarPreviewElement.querySelector('[data-control="sidebar-labels"]').setAttribute('class', 'panel')
 
             var item = items[0],
-                lastModified = item.getAttribute('data-last-pluginsmodified')
+                lastModified = item.getAttribute('data-last-modified')
 
             previewPanel.querySelector('[data-label="size"]').textContent = item.getAttribute('data-size')
             previewPanel.querySelector('[data-label="title"]').textContent = item.getAttribute('data-title')
-            previewPanel.querySelector('[data-label="last-pluginsmodified"]').textContent = lastModified
+            previewPanel.querySelector('[data-label="last-modified"]').textContent = lastModified
             previewPanel.querySelector('[data-label="public-url"]').setAttribute('href', item.getAttribute('data-public-url'))
 
             if (lastModified) {
-                previewPanel.querySelector('[data-control="last-pluginsmodified"]').setAttribute('class', '')
+                previewPanel.querySelector('[data-control="last-modified"]').setAttribute('class', '')
             }
             else {
-                previewPanel.querySelector('[data-control="last-pluginsmodified"]').setAttribute('class', 'oc-hide')
+                previewPanel.querySelector('[data-control="last-modified"]').setAttribute('class', 'oc-hide')
             }
 
             if (this.isSearchMode()) {
@@ -564,7 +564,7 @@
 
         var data = {
             path: sidebarThumbnail.getAttribute('data-path'),
-            lastModified: sidebarThumbnail.getAttribute('data-last-pluginsmodified')
+            lastModified: sidebarThumbnail.getAttribute('data-last-modified')
         }
 
         this.sidebarThumbnailAjax = this.$form.request(this.options.alias+'::onGetSidebarThumbnail', {
@@ -607,7 +607,7 @@
                 width: placeholders[i].getAttribute('data-width'),
                 height: placeholders[i].getAttribute('data-height'),
                 path: placeholders[i].getAttribute('data-path'),
-                lastModified: placeholders[i].getAttribute('data-last-pluginsmodified')
+                lastModified: placeholders[i].getAttribute('data-last-modified')
             })
 
         this.handleThumbnailQueue()

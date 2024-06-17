@@ -745,7 +745,7 @@
     }
 
     FormBuilder.prototype.onControlLiveChange = function(ev) {
-        $(this.findForm(ev.currentTarget)).trigger('change')  // Set pluginsmodified state for the form
+        $(this.findForm(ev.currentTarget)).trigger('change')  // Set modified state for the form
 
         var li = ev.currentTarget,
             propertiesParsed = this.getControlProperties(li)

@@ -24,6 +24,7 @@ use Nuwave\Lighthouse\Support\Contracts\FieldResolver;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\Type;
+use Underflip\Resorts\Models\Unit;
 use Underflip\Resorts\Plugin;
 use Underflip\Resorts\Traits\Filterable;
 
@@ -38,6 +39,7 @@ class FilterResortsDirective extends BaseDirective implements FieldResolver, Fie
 
     /** @var array<string, mixed> */
     protected array $lighthouseConfig = [];
+
     /**
      * @throws \Exception
      */
@@ -134,10 +136,10 @@ SDL;
 
     public function resolveField(FieldValue $fieldValue): callable
     {
-        return function (mixed $root, array $args,GraphQLContext $context, ResolveInfo $resolveInfo) {
+        return function (mixed $root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) {
             Log::info('$args', $args);
             // Setup builder
-            $query = Resort::with(['ratings', 'numerics', 'generics']);
+            $query = Resort::with(['ratings.type.unit', 'numerics.type.unit', 'generics']);
 
             try {
                 if (array_key_exists('filter', $args)) {
@@ -146,7 +148,7 @@ SDL;
                 }
 
                 if (!array_key_exists('orderBy', $args)) {
-                    $this->orderByType($query, ['type_name' => 'total_score', 'direction' => 'desc']); // Assuming 'total_score' is the type_name
+                    $this->orderByType($query, ['type_name' => 'total_score', 'direction' => 'desc']);
                 } else {
                     $this->orderByType($query, $args['orderBy']);
                 }
@@ -158,14 +160,18 @@ SDL;
                 $args,
                 $resolveInfo,
                 $this->paginationType(),
-                $this->paginateMaxCount() //this line 153
+                $this->paginateMaxCount()
             );
             $first = $pageArg->first;
             $page = $pageArg->page;
 
-            return $query->paginate($first, ['*'], 'page', $page);
+            // Ensure the unit is properly resolved
+            $resorts = $query->paginate($first, ['*'], 'page', $page);
+
+            return $resorts;
         };
     }
+
 
     /**
      * @param Builder $query
@@ -174,32 +180,31 @@ SDL;
      */
     public function augmentForFilters(Builder &$query, array $filters): void
     {
-
         if (isset($filters['locationType'])) {
             $locationFilter = $filters['locationType'];
 
             if (isset($locationFilter['countryId'])) {
                 $query->whereHas('location.country', function (Builder $query) use ($locationFilter) {
-                    $query->whereIn('id', $locationFilter['countryId']);  // used whereIn instead of where
+                    $query->whereIn('id', $locationFilter['countryId']);
                 });
             }
 
             if (isset($locationFilter['continentId'])) {
                 $continentIds = (array) $locationFilter['continentId'];
                 $query->whereHas('location.continent', function (Builder $query) use ($continentIds) {
-                    $query->whereIn('id', $continentIds); // Use code for matching
+                    $query->whereIn('id', $continentIds);
                 });
             }
 
             if (isset($locationFilter['city'])) {
                 $query->whereHas('location', function (Builder $query) use ($locationFilter) {
-                    $query->where('city', 'like', '%'.$locationFilter['city'].'%');
+                    $query->where('city', 'like', '%' . $locationFilter['city'] . '%');
                 });
             }
 
             if (isset($locationFilter['zip'])) {
                 $query->whereHas('location', function (Builder $query) use ($locationFilter) {
-                    $query->where('zip', 'like', '%'.$locationFilter['zip'].'%');
+                    $query->where('zip', 'like', '%' . $locationFilter['zip'] . '%');
                 });
             }
         }
@@ -252,7 +257,7 @@ SDL;
      */
     protected function orderByType(Builder &$query, array $orderBy): void
     {
-        $typeName = $orderBy['type_name']; // Assumes GraphQL input validation assures type_name exists
+        $typeName = $orderBy['type_name'];
         $direction = $orderBy['direction'] ?: 'asc';
 
         // Determine which metric is being ordered
@@ -292,17 +297,15 @@ SDL;
 
         // Order by values of that metric
         $query
-        // Explicate the select to avoid fields being overridden by the join table
         ->select('underflip_resorts_resorts.*')
-        // Join with a subquery that aggregates comparison values
-        ->joinSub(function ($subquery) use ($type, $column) {$subquery
-        ->from(app($type->category)
-        ->getTable() . ' as comparisons')
-        ->select('resort_id', \DB::raw("AVG($column) as avg_value"))
-        ->where('type_id', '=', $type->id)
-        ->groupBy('resort_id');    }, 'comparisons', 'comparisons.resort_id', '=', 'underflip_resorts_resorts.id')
-        // Order by the aggregated value
-        ->orderBy('comparisons.avg_value', $orderBy['direction'] ?: 'asc');
+        ->joinSub(function ($subquery) use ($type, $column) {
+            $subquery
+                ->from(app($type->category)->getTable() . ' as comparisons')
+                ->select('resort_id', \DB::raw("AVG($column) as avg_value"))
+                ->where('type_id', '=', $type->id)
+                ->groupBy('resort_id');
+        }, 'comparisons', 'comparisons.resort_id', '=', 'underflip_resorts_resorts.id')
+        ->orderBy('comparisons.avg_value', $direction);
     }
 
     /**

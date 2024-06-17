@@ -204,7 +204,7 @@
     MenuBulder.prototype.onItemLiveChange = function(ev) {
         this.updateItemVisualProperties(ev.currentTarget)
 
-        $(this.findForm(ev.currentTarget)).trigger('change')  // Set pluginsmodified state for the form
+        $(this.findForm(ev.currentTarget)).trigger('change')  // Set modified state for the form
 
         ev.stopPropagation()
         return false

@@ -19,3 +19,11 @@ columns:
         label: Category
         type: shortname
         sortable: true
+    icon:
+        label: Icon
+        type: text
+        sortable: false
+    max_value:
+        label: Max value
+        type: text
+        sortable: true
