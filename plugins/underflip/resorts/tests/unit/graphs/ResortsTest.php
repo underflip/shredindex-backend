@@ -49,13 +49,11 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 10,
             'type_id' => $avgAnnualSnowfallId,
-            'max_value' => 100,
             'resort_id' => $fooResort->id,
         ]);
         Numeric::create([
             'value' => 500,
             'type_id' => $verticalDropId,
-            'max_value' => 1000,
             'resort_id' => $fooResort->id,
         ]);
         Generic::create([
@@ -79,13 +77,11 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 5,
             'type_id' => $avgAnnualSnowfallId,
-            'max_value' => 100,
             'resort_id' => $barResort->id,
         ]);
         Numeric::create([
             'value' => 250,
             'type_id' => $verticalDropId,
-            'max_value' => 1000,
             'resort_id' => $barResort->id,
         ]);
 
@@ -104,13 +100,11 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 2.5,
             'type_id' => $avgAnnualSnowfallId,
-            'max_value' => 100,
             'resort_id' => $binResort->id,
         ]);
         Numeric::create([
             'value' => 150,
             'type_id' => $verticalDropId,
-            'max_value' => 1000,
             'resort_id' => $binResort->id,
         ]);
 
@@ -129,13 +123,11 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 7.5,
             'type_id' => $avgAnnualSnowfallId,
-            'max_value' => 100,
             'resort_id' => $bazResort->id,
         ]);
         Numeric::create([
             'value' => 300,
             'type_id' => $verticalDropId,
-            'max_value' => 1000,
             'resort_id' => $bazResort->id,
         ]);
 
@@ -166,7 +158,6 @@ class ResortsTest extends BaseTestCase
                         name
                         title
                         value
-                        max_value
                     }
                     generics {
                         id
