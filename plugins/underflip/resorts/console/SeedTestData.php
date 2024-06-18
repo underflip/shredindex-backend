@@ -1,5 +1,7 @@
 <?php
 
+// @codeCoverageIgnore
+
 namespace Underflip\Resorts\Console;
 
 use Illuminate\Console\Command;
