@@ -14,6 +14,11 @@ use Underflip\Resorts\Models\Type;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
+/**
+ *
+ * @codeCoverageIgnore
+ */
+
 class RatingsNumericsGenericsSeeder extends Seeder implements Downable
 {
     protected $spreadsheetId = '1l_KlxfKpzzD6zq8A2ZnX4jzzzvlARXhYCIazSUMtdrc';
