@@ -12,6 +12,7 @@ use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
+use Mockery;
 
 /**
  * {@see \Underflip\Resorts\GraphQL\Directives\FilterResortsDirective}
@@ -690,5 +691,25 @@ class ResortsTest extends BaseTestCase
             $response->json('errors.*.extensions.debugMessage')[0],
             'Error message should contain the expected message'
         );
+    }
+
+    /**
+     * @return void
+     */
+    public function testCreateResort(): void
+    {
+        $resort = Resort::create([
+            'title' => 'Test Resort',
+            'url_segment' => 'test-resort',
+            'affiliate_url' => 'test-resort-affiliate',
+            'description' => 'Test Description',
+        ]);
+
+        $this->assertDatabaseHas('underflip_resorts_resorts', [
+            'title' => 'Test Resort',
+            'url_segment' => 'test-resort',
+            'affiliate_url' => 'test-resort-affiliate',
+            'description' => 'Test Description',
+        ]);
     }
 }
