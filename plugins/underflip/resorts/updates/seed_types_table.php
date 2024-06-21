@@ -11,6 +11,9 @@ use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Models\TypeValue;
 use Underflip\Resorts\Models\Unit;
 
+/**
+ * @codeCoverageIgnore
+ */
 class SeedTypesTable extends Seeder
 {
     /**
