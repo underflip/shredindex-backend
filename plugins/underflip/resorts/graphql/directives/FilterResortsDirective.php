@@ -184,8 +184,9 @@ SDL;
             $locationFilter = $filters['locationType'];
 
             if (isset($locationFilter['countryId'])) {
-                $query->whereHas('location.country', function (Builder $query) use ($locationFilter) {
-                    $query->whereIn('id', $locationFilter['countryId']);
+                $countryIds = (array) $locationFilter['countryId'];
+                $query->whereHas('location.country', function (Builder $query) use ($countryIds) {
+                    $query->whereIn('id', $countryIds);
                 });
             }
 
@@ -193,18 +194,6 @@ SDL;
                 $continentIds = (array) $locationFilter['continentId'];
                 $query->whereHas('location.continent', function (Builder $query) use ($continentIds) {
                     $query->whereIn('id', $continentIds);
-                });
-            }
-
-            if (isset($locationFilter['city'])) {
-                $query->whereHas('location', function (Builder $query) use ($locationFilter) {
-                    $query->where('city', 'like', '%' . $locationFilter['city'] . '%');
-                });
-            }
-
-            if (isset($locationFilter['zip'])) {
-                $query->whereHas('location', function (Builder $query) use ($locationFilter) {
-                    $query->where('zip', 'like', '%' . $locationFilter['zip'] . '%');
                 });
             }
         }

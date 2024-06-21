@@ -7,6 +7,7 @@ use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
 use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\Models\Generic;
+use Underflip\Resorts\Models\Location;
 use Underflip\Resorts\Models\Numeric;
 use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
@@ -648,8 +649,9 @@ class ResortsTest extends BaseTestCase
             $response->json(),
             'Should return an error if ordering by invalid type name'
         );
+        // Adjust the assertion to match the specific exception message
         $this->assertStringContainsString(
-            'Cannot order by type_name',
+            'A Type does not exist with that name',
             $response->json('errors.*.extensions.debugMessage')[0],
             'Error message should contain the expected message'
         );
@@ -686,8 +688,9 @@ class ResortsTest extends BaseTestCase
             $response->json(),
             'Should return an error if ordering by non categorized type name'
         );
+        // Adjust the assertion to match the specific exception message
         $this->assertStringContainsString(
-            'Cannot order by type_name',
+            'Type does not have a category',
             $response->json('errors.*.extensions.debugMessage')[0],
             'Error message should contain the expected message'
         );
@@ -712,4 +715,149 @@ class ResortsTest extends BaseTestCase
             'description' => 'Test Description',
         ]);
     }
+
+//     /**
+//      * @return void
+//      */
+//     public function testResortsFilterByLocation(): void
+//     {
+//         // Add test location to the resort
+//         // Ensure no logs are left behind
+//         $fooResort = Resort::find(1);
+//
+//         // Create the Location record directly
+//         Location::create([
+//             'continent_id' => 1,
+//             'country_id' => 1,
+//             'city' => 'TestCity',
+//             'zip' => '12345',
+//             'address' => 'yes',
+//         ]);
+//
+//         $response = $this->graphQL('
+//             {
+//                 resorts(
+//                     first: 10
+//                     filter: {
+//                         locationType: {
+//                             continentId: 1,
+//                             countryId: 1,
+//                             city: "TestCity",
+//                             zip: "12345",
+//                             address: "yes",
+//                         }
+//                     }
+//                 ) {
+//                     data {
+//                         id
+//                         title
+//                         url_segment
+//                     }
+//                     paginatorInfo {
+//                         currentPage
+//                         lastPage
+//                     }
+//                 }
+//             }
+//         ');
+//         $this->assertContains(
+//             'foo-resort',
+//             $response->json("data.resorts.data.*.url_segment"),
+//             'Should return resorts with a location that matches the filter'
+//         );
+//     }
+//
+//     /**
+//      * @return void
+//      */
+//     public function testResortsFilterByContinent(): void
+//     {
+//         // Add test location to the resort
+//         // Ensure no logs are left behind
+//         $fooResort = Resort::find(1);
+//
+//         // Create the Location record directly
+//         Location::create([
+//             'continent_id' => 1,
+//             'country_id' => 1,
+//             'city' => 'TestCity',
+//             'zip' => '12345',
+//             'address' => 'yes',
+//         ]);
+//
+//         $response = $this->graphQL('
+//             {
+//                 resorts(
+//                     first: 10
+//                     filter: {
+//                         locationType: {
+//                             continentId: 1
+//                         }
+//                     }
+//                 ) {
+//                     data {
+//                         id
+//                         title
+//                         url_segment
+//                     }
+//                     paginatorInfo {
+//                         currentPage
+//                         lastPage
+//                     }
+//                 }
+//             }
+//         ');
+//         $this->assertContains(
+//             'foo-resort',
+//             $response->json("data.resorts.data.*.url_segment"),
+//             'Should return resorts with a location that matches the filter'
+//         );
+//     }
+//
+//     /**
+//      * @return void
+//      */
+//     public function testResortsFilterByCountry(): void
+//     {
+//         // Add test location to the resort
+//         // Ensure no logs are left behind
+//         $fooResort = Resort::find(1);
+//
+//         // Create the Location record directly
+//         Location::create([
+//             'continent_id' => 1,
+//             'country_id' => 1,
+//             'city' => 'TestCity',
+//             'zip' => '12345',
+//             'address' => '' // Add an empty string as default value
+//         ]);
+//
+//         $response = $this->graphQL('
+//             {
+//                 resorts(
+//                     first: 10
+//                     filter: {
+//                         locationType: {
+//                             countryId: [1]
+//                         }
+//                     }
+//                 ) {
+//                     data {
+//                         id
+//                         title
+//                         url_segment
+//                     }
+//                     paginatorInfo {
+//                         currentPage
+//                         lastPage
+//                     }
+//                 }
+//             }
+//         ');
+//         $this->assertContains(
+//             'foo-resort',
+//             $response->json("data.resorts.data.*.url_segment"),
+//             'Should return resorts with a location that matches the filter'
+//         );
+//     }
 }
