@@ -18,9 +18,6 @@ class CreateNumericsTable extends Migration
         });
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function down()
     {
         Schema::dropIfExists(app(Numeric::class)->getTable());
