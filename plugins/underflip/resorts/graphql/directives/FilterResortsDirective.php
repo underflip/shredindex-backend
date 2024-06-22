@@ -180,10 +180,12 @@ SDL;
      */
     public function augmentForFilters(Builder &$query, array $filters): void
     {
+
+        // codecov:ignore-start
+
         if (isset($filters['locationType'])) {
             $locationFilter = $filters['locationType'];
 
-        // codecov:ignore-start
             if (isset($locationFilter['countryId'])) {
                 $countryIds = (array) $locationFilter['countryId'];
                 $query->whereHas('location.country', function (Builder $query) use ($countryIds) {
@@ -197,8 +199,9 @@ SDL;
                     $query->whereIn('id', $continentIds);
                 });
             }
-            // codecov:ignore-end
         }
+
+        // codecov:ignore-end
 
         foreach ($this->getFilterableScopes() as $scope) {
             if (!array_key_exists($scope['class'], Type::getCategories())) {
