@@ -181,7 +181,7 @@ SDL;
     public function augmentForFilters(Builder &$query, array $filters): void
     {
 
-        // codecov:ignore-start
+        /** @codeCoverageIgnoreStart */
 
         if (isset($filters['locationType'])) {
             $locationFilter = $filters['locationType'];
@@ -201,7 +201,7 @@ SDL;
             }
         }
 
-        // codecov:ignore-end
+        /** @codeCoverageIgnoreEnd */
 
         foreach ($this->getFilterableScopes() as $scope) {
             if (!array_key_exists($scope['class'], Type::getCategories())) {
