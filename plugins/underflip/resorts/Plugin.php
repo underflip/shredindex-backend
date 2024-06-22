@@ -7,6 +7,10 @@ use Backend\Classes\NavigationManager;
 use Event;
 use System\Classes\PluginBase;
 use Underflip\Resorts\Console\RefreshTotalScore;
+use Underflip\Resorts\Console\SeedResortSheetData;
+use Underflip\Resorts\Console\SeedResortImageSheetData;
+use Underflip\Resorts\Console\SeedRatingsNumericsGenericsSheetData;
+use Underflip\Resorts\Console\SeedResortTypes;
 use Underflip\Resorts\Console\SeedTestData;
 use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\models\Settings;
@@ -60,6 +64,10 @@ class Plugin extends PluginBase
      */
     public function register()
     {
+        $this->registerConsoleCommand('resorts:seed_resort_sheet_data', SeedResortSheetData::class);
+        $this->registerConsoleCommand('resorts:seed_resort_types', SeedResortTypes::class);
+        $this->registerConsoleCommand('resorts:seed_ratings_numerics_generics_sheet_data', SeedRatingsNumericsGenericsSheetData::class);
+        $this->registerConsoleCommand('resorts:seed_resort_image_sheet_data', SeedResortImageSheetData::class);
         $this->registerConsoleCommand('resorts:seed_test_data', SeedTestData::class);
         $this->registerConsoleCommand('resorts:refresh_total_score', RefreshTotalScore::class);
     }

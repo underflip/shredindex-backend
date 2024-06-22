@@ -62,6 +62,7 @@ type Rating {
     name: String!
     title: String
     value: Int
+    type: Type
 }
 
 type Numeric {
@@ -69,8 +70,7 @@ type Numeric {
     name: String!
     title: String
     value: Int
-    unit: String!
-    max_value: String!
+    type: Type
 }
 
 type Generic {
@@ -78,6 +78,25 @@ type Generic {
     name: String!
     title: String
     value: String
+}
+
+type Type {
+    id: ID!
+    name: String
+    title: String
+    unit: Unit
+    icon: String
+    max_value: Int
+}
+
+type Unit {
+    id: ID!
+    name: String
+    title: String
+    singular_title: String
+    plural_title: String
+    format: String
+    plural_format: String
 }
 
 type Location {

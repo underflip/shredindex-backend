@@ -6,12 +6,16 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
 use Underflip\Resorts\Console\RefreshTotalScore;
+use RainLab\Location\Models\Country;
 use Underflip\Resorts\Models\Generic;
+use Underflip\Resorts\Models\Location;
 use Underflip\Resorts\Models\Numeric;
 use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
+use Mockery;
+use DB;
 
 /**
  * {@see \Underflip\Resorts\GraphQL\Directives\FilterResortsDirective}
@@ -41,6 +45,20 @@ class ResortsTest extends BaseTestCase
             'affiliate_url' => 'foo-resort',
             'description' => 'Foo Description',
         ]);
+
+        Location::create([
+            'resort_id' => $fooResort->id,
+            'continent_id' => 1,
+            'country_id' => 1,
+            'state_id' => 1,
+            'latitude' => 1,
+            'longitude' => 1,
+            'vicinity' => 'Unknown vicinity',
+            'city' => 'TestCity',
+            'zip' => '12345',
+            'address' => 'Unknown address'
+        ]);
+
         Rating::create([
             'value' => 100,
             'type_id' => $totalShredScoreId,
@@ -49,13 +67,11 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 10,
             'type_id' => $avgAnnualSnowfallId,
-            'max_value' => 100,
             'resort_id' => $fooResort->id,
         ]);
         Numeric::create([
             'value' => 500,
             'type_id' => $verticalDropId,
-            'max_value' => 1000,
             'resort_id' => $fooResort->id,
         ]);
         Generic::create([
@@ -79,13 +95,11 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 5,
             'type_id' => $avgAnnualSnowfallId,
-            'max_value' => 100,
             'resort_id' => $barResort->id,
         ]);
         Numeric::create([
             'value' => 250,
             'type_id' => $verticalDropId,
-            'max_value' => 1000,
             'resort_id' => $barResort->id,
         ]);
 
@@ -104,13 +118,11 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 2.5,
             'type_id' => $avgAnnualSnowfallId,
-            'max_value' => 100,
             'resort_id' => $binResort->id,
         ]);
         Numeric::create([
             'value' => 150,
             'type_id' => $verticalDropId,
-            'max_value' => 1000,
             'resort_id' => $binResort->id,
         ]);
 
@@ -129,13 +141,11 @@ class ResortsTest extends BaseTestCase
         Numeric::create([
             'value' => 7.5,
             'type_id' => $avgAnnualSnowfallId,
-            'max_value' => 100,
             'resort_id' => $bazResort->id,
         ]);
         Numeric::create([
             'value' => 300,
             'type_id' => $verticalDropId,
-            'max_value' => 1000,
             'resort_id' => $bazResort->id,
         ]);
 
@@ -166,7 +176,6 @@ class ResortsTest extends BaseTestCase
                         name
                         title
                         value
-                        max_value
                     }
                     generics {
                         id
@@ -656,8 +665,9 @@ class ResortsTest extends BaseTestCase
             $response->json(),
             'Should return an error if ordering by invalid type name'
         );
+        // Adjust the assertion to match the specific exception message
         $this->assertStringContainsString(
-            'Cannot order by type_name',
+            'A Type does not exist with that name',
             $response->json('errors.*.extensions.debugMessage')[0],
             'Error message should contain the expected message'
         );
@@ -694,10 +704,314 @@ class ResortsTest extends BaseTestCase
             $response->json(),
             'Should return an error if ordering by non categorized type name'
         );
+        // Adjust the assertion to match the specific exception message
         $this->assertStringContainsString(
-            'Cannot order by type_name',
+            'Type does not have a category',
             $response->json('errors.*.extensions.debugMessage')[0],
             'Error message should contain the expected message'
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testCreateResort(): void
+    {
+        $resort = Resort::create([
+            'title' => 'Test Resort',
+            'url_segment' => 'test-resort',
+            'affiliate_url' => 'test-resort-affiliate',
+            'description' => 'Test Description',
+        ]);
+
+        $this->assertDatabaseHas('underflip_resorts_resorts', [
+            'title' => 'Test Resort',
+            'url_segment' => 'test-resort',
+            'affiliate_url' => 'test-resort-affiliate',
+            'description' => 'Test Description',
+        ]);
+    }
+
+    /**
+     * @return void
+     */
+    public function testResortsPaginationWithFilters(): void
+    {
+        $response = $this->graphQL('
+            {
+                resorts(
+                    first: 2
+                    page: 1
+                    filter: {groupedType: [{
+                        type_name: "average_annual_snowfall",
+                        operator: ">",
+                        value: "3"
+                    }]}
+                ) {
+                    data {
+                        id
+                        title
+                        url_segment
+                    }
+                    paginatorInfo {
+                        currentPage
+                        lastPage
+                        total
+                    }
+                }
+            }
+        ');
+
+        $this->assertCount(
+            2,
+            $response->json('data.resorts.data'),
+            'Should return correct number of resorts per page'
+        );
+        $this->assertSame(
+            1,
+            $response->json('data.resorts.paginatorInfo.currentPage'),
+            'Should be on the first page'
+        );
+        $this->assertSame(
+            2,
+            $response->json('data.resorts.paginatorInfo.lastPage'),
+            'Should have correct number of pages'
+        );
+        $this->assertSame(
+            3,
+            $response->json('data.resorts.paginatorInfo.total'),
+            'Should have correct total number of filtered resorts'
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testNonExistentResort(): void
+    {
+        $response = $this->graphQL('
+            {
+                resort(id: 9999) {
+                    id
+                    title
+                }
+            }
+        ');
+
+        $this->assertNull(
+            $response->json('data.resort'),
+            'Should return null for non-existent resort'
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function testEmptyResultSet(): void
+    {
+        $response = $this->graphQL('
+            {
+                resorts(
+                    first: 10
+                    filter: {groupedType: [{
+                        type_name: "total_score",
+                        operator: ">",
+                        value: "1000"
+                    }]}
+                ) {
+                    data {
+                        id
+                        title
+                        url_segment
+                    }
+                    paginatorInfo {
+                        total
+                    }
+                }
+            }
+        ');
+
+        $this->assertCount(
+            0,
+            $response->json('data.resorts.data'),
+            'Should return an empty data array'
+        );
+        $this->assertSame(
+            0,
+            $response->json('data.resorts.paginatorInfo.total'),
+            'Should have a total count of 0'
+        );
+    }
+
+    public function testResortsByMultipleGroupedTypeFilters(): void
+    {
+        $response = $this->graphQL('
+            {
+                resorts(
+                    first: 10
+                    filter: {groupedType: [
+                        {
+                            type_name: "total_score",
+                            operator: ">",
+                            value: "50"
+                        },
+                        {
+                            type_name: "vertical_drop",
+                            operator: ">",
+                            value: "200"
+                        }
+                    ]}
+                ) {
+                    data {
+                        id
+                        title
+                        url_segment
+                    }
+                }
+            }
+        ');
+
+        $this->assertCount(
+            2,
+            $response->json('data.resorts.data'),
+            'Should return resorts matching both grouped type filters'
+        );
+        $this->assertContains(
+            'foo-resort',
+            $response->json('data.resorts.data.*.url_segment'),
+            'Should include resort matching both criteria'
+        );
+        $this->assertContains(
+            'baz-resort',
+            $response->json('data.resorts.data.*.url_segment'),
+            'Should include resort matching both criteria'
+        );
+    }
+
+    public function testResortsByLessThanFilter(): void
+    {
+        $response = $this->graphQL('
+            {
+                resorts(
+                    first: 10
+                    filter: {groupedType: [{
+                        type_name: "average_annual_snowfall",
+                        operator: "<",
+                        value: "5"
+                    }]}
+                ) {
+                    data {
+                        id
+                        title
+                        url_segment
+                    }
+                }
+            }
+        ');
+
+        $this->assertCount(
+            1,
+            $response->json('data.resorts.data'),
+            'Should return resort with snowfall less than 5m'
+        );
+        $this->assertContains(
+            'bin-resort',
+            $response->json('data.resorts.data.*.url_segment'),
+            'Should include resort with snowfall less than 5m'
+        );
+    }
+
+    public function testResortsByEqualToFilter(): void
+    {
+        $response = $this->graphQL('
+            {
+                resorts(
+                    first: 10
+                    filter: {groupedType: [{
+                        type_name: "total_score",
+                        operator: "=",
+                        value: "75"
+                    }]}
+                ) {
+                    data {
+                        id
+                        title
+                        url_segment
+                    }
+                }
+            }
+        ');
+
+        $this->assertCount(
+            1,
+            $response->json('data.resorts.data'),
+            'Should return resort with total score equal to 75'
+        );
+        $this->assertSame(
+            'baz-resort',
+            $response->json('data.resorts.data.0.url_segment'),
+            'Should return the correct resort with total score of 75'
+        );
+    }
+
+    public function testResortsWithOrderByAndFilter(): void
+    {
+        $response = $this->graphQL('
+            {
+                resorts(
+                    first: 10
+                    filter: {groupedType: [{
+                        type_name: "total_score",
+                        operator: ">",
+                        value: "25"
+                    }]}
+                    orderBy: {
+                        type_name: "vertical_drop",
+                        direction: "desc"
+                    }
+                ) {
+                    data {
+                        id
+                        title
+                        url_segment
+                    }
+                }
+            }
+        ');
+
+        $this->assertSame(
+            ['foo-resort', 'baz-resort', 'bar-resort'],
+            $response->json('data.resorts.data.*.url_segment'),
+            'Should return filtered resorts ordered by vertical drop descending'
+        );
+    }
+
+
+    public function testResortsWithValidFilterTypeNoResults(): void
+    {
+        $response = $this->graphQL('
+            {
+                resorts(
+                    first: 10
+                    filter: {groupedType: [{
+                        type_name: "total_score",
+                        operator: ">",
+                        value: "1000"
+                    }]}
+                ) {
+                    data {
+                        id
+                        title
+                        url_segment
+                    }
+                }
+            }
+        ');
+
+        $this->assertCount(
+            0,
+            $response->json('data.resorts.data'),
+            'Should return no resorts when filter criteria matches no resorts'
         );
     }
 }

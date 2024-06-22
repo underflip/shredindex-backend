@@ -1449,16 +1449,16 @@ emmet.define('abbreviationParser', function(require, _) {
 //				var elemName = fn.toLowerCase();
 //				fn = function(item) {return item.name().toLowerCase() == elemName;};
 //			}
-//
+//			
 //			var result = null;
 //			_.find(this.children, function(child) {
 //				if (fn(child)) {
 //					return result = child;
 //				}
-//
+//				
 //				return result = child.find(fn);
 //			});
-//
+//			
 //			return result;
         },
 
@@ -1969,8 +1969,8 @@ emmet.define('abbreviationParser', function(require, _) {
      * @param attrs
      */
     function optimizeAttributes(attrs) {
-        // clone all attributes to make sure that original objects are
-        // not pluginsmodified
+        // clone all attributes to make sure that original objects are 
+        // not modified
         attrs  = _.map(attrs, function(attr) {
             return _.clone(attr);
         });
@@ -2111,7 +2111,7 @@ emmet.define('abbreviationParser', function(require, _) {
 
             if (options.contextNode) {
                 // add info about context node –
-                // a parent XHTML node in editor inside which abbreviation is
+                // a parent XHTML node in editor inside which abbreviation is 
                 // expanded
                 tree._name = options.contextNode.name;
                 var attrLookup = {};
@@ -2237,7 +2237,7 @@ emmet.exec(function(require, _) {
         var elements = require('elements');
         var parser = require('abbreviationParser');
 
-        // do a shallow copy because the children list can be pluginsmodified during
+        // do a shallow copy because the children list can be modified during
         // resource matching
         _.each(_.clone(node.children), /** @param {AbbreviationNode} child */ function(child) {
             var r = resources.getMatchedResource(child, syntax);
@@ -2251,7 +2251,7 @@ emmet.exec(function(require, _) {
                     syntax: syntax
                 });
 
-                // if context element should be repeated, check if we need to
+                // if context element should be repeated, check if we need to 
                 // transfer repeated element to specific child node
                 if (child.repeatCount > 1) {
                     var repeatedChildren = subtree.findAll(function(node) {
@@ -3248,7 +3248,7 @@ emmet.define('xmlParser', function(require, _) {
     };
 });
 /*!
- * string_score.js: String Scoring Algorithm 0.1.10
+ * string_score.js: String Scoring Algorithm 0.1.10 
  *
  * http://joshaven.com/string_score
  * https://github.com/joshaven/string_score
@@ -3481,7 +3481,7 @@ emmet.define('utils', function(require, _) {
          * @return {Array}
          */
         splitByLines: function(text, removeEmpty) {
-            // IE fails to split string by regexp,
+            // IE fails to split string by regexp, 
             // need to normalize newlines first
             // Also, Mozilla's Rhiho JS engine has a weird newline bug
             var nl = this.getNewline();
@@ -3700,7 +3700,7 @@ emmet.define('utils', function(require, _) {
                     return false;
                 }
 
-                // replace sequense of $ symbols with padded number
+                // replace sequense of $ symbols with padded number  
                 var j = pos + 1;
                 while(str.charAt(j) == '$' && str.charAt(j + 1) != '{') j++;
                 var pad = j - pos;
@@ -3966,7 +3966,7 @@ emmet.define('utils', function(require, _) {
                 }
             }
 
-            // Return the pluginsmodified object
+            // Return the modified object
             return target;
         }
     };
@@ -5085,14 +5085,14 @@ emmet.define('profile', function(require, _) {
         // indent tags
         indent: true,
 
-        // how many inline elements should be to force line break
+        // how many inline elements should be to force line break 
         // (set to 0 to disable)
         inline_break: 3,
 
         // use self-closing style for writing empty elements, e.g. <br /> or <br>
         self_closing_tag: 'xhtml',
 
-        // Profile-level output filters, re-defines syntax filters
+        // Profile-level output filters, re-defines syntax filters 
         filters: '',
 
         // Additional filters applied to abbreviation.
@@ -5431,7 +5431,7 @@ emmet.define('actionUtils', function(require, _) {
             }
 
             if (startIndex != -1 && !textCount && !braceCount && !groupCount)
-            // found something, remove some invalid symbols from the
+            // found something, remove some invalid symbols from the 
             // beginning and return abbreviation
                 return str.substring(startIndex).replace(/^[\*\+\>\^]+/, '');
             else
@@ -6686,7 +6686,7 @@ emmet.define('preferences', function(require, _) {
         },
 
         /**
-         * Returns hash of user-pluginsmodified preferences
+         * Returns hash of user-modified preferences
          * @returns {Object}
          */
         exportModified: function() {
@@ -7641,7 +7641,7 @@ emmet.define('cssEditTree', function(require, _) {
 
                 p.styleSeparator = source.substring(p.nameRange().end, p.valuePosition());
 
-                // graceful and naive comments removal
+                // graceful and naive comments removal 
                 p.styleBefore = _.last(p.styleBefore.split('*/'));
                 p.styleSeparator = p.styleSeparator.replace(/\/\*.*?\*\//g, '');
 
@@ -8080,7 +8080,7 @@ emmet.define('xmlEditTree', function(require, _) {
             var len = content.length, i;
             var range = require('range');
 
-            // max extraction length. I don't think there may be tags larger
+            // max extraction length. I don't think there may be tags larger 
             // than 2000 characters length
             var maxLen = Math.min(2000, len);
 
@@ -8502,7 +8502,7 @@ emmet.exec(function(require, _) {
                 }).replace(new RegExp('\\s*' + utils.escapeForRegexp(commentEnd) + '$'), '');
         }
 
-        // first, we need to make sure that this substring is not inside
+        // first, we need to make sure that this substring is not inside 
         // comment
         var commentRange = searchComment(content, caretPos, commentStart, commentEnd);
         if (commentRange && commentRange.overlap(range)) {
@@ -8540,7 +8540,7 @@ emmet.exec(function(require, _) {
     require('actions').add('toggle_comment', function(editor) {
         var info = require('editorUtils').outputInfo(editor);
         if (info.syntax == 'css') {
-            // in case our editor is good enough and can recognize syntax from
+            // in case our editor is good enough and can recognize syntax from 
             // current token, we have to make sure that cursor is not inside
             // 'style' attribute of html element
             var caretPos = editor.getCaretPos();
@@ -9222,7 +9222,7 @@ emmet.exec(function(require, _) {
         var caretPos = editor.getCaretPos();
 
         if (content.charAt(caretPos) == '<')
-        // looks like caret is outside of tag pair
+        // looks like caret is outside of tag pair  
             caretPos++;
 
         var tag = matcher.tag(content, caretPos);
@@ -9515,7 +9515,7 @@ emmet.exec(function(require, _) {
         if (sel && sel.length()) {
             var expr = sel.substring(content);
 
-            // replace integral division: 11\2 => Math.round(11/2)
+            // replace integral division: 11\2 => Math.round(11/2) 
             expr = expr.replace(/([\d\.\-]+)\\([\d\.\-]+)/g, 'Math.round($1/$2)');
 
             try {
@@ -11359,7 +11359,7 @@ emmet.define('cssGradient', function(require, _) {
         var css = findGradientFromPosition(content, caret);
 
         if (css.property) {
-            // make sure that caret is inside property value with gradient
+            // make sure that caret is inside property value with gradient 
             // definition
             var g = findGradient(css.property);
             if (g) {
@@ -11367,9 +11367,9 @@ emmet.define('cssGradient', function(require, _) {
                 var ruleEnd = ruleStart + css.rule.toString().length;
 
                 // Handle special case:
-                // user wrote gradient definition between existing CSS
+                // user wrote gradient definition between existing CSS 
                 // properties and did not finished it with semicolon.
-                // In this case, we have semicolon right after gradient
+                // In this case, we have semicolon right after gradient 
                 // definition and re-parse rule again
                 if (/[\n\r]/.test(css.property.value())) {
                     // insert semicolon at the end of gradient definition
@@ -12190,7 +12190,7 @@ emmet.exec(function(require, _){
      * @param {OutputProfile} profile
      */
     function shouldBreakChild(node, profile) {
-        // we need to test only one child element, because
+        // we need to test only one child element, because 
         // hasBlockChildren() method will do the rest
         return node.children.length && shouldAddLineBreak(node.children[0], profile);
     }
@@ -12560,12 +12560,12 @@ emmet.exec(function(require, _) {
 
         _.each(tree.children, function(item) {
             if (!abbrUtils.isSnippet(item)) {
-                // remove padding from item
+                // remove padding from item 
                 item.start = item.start.replace(rePad, '');
                 item.end = item.end.replace(rePad, '');
             }
 
-            // remove newlines
+            // remove newlines 
             item.start = item.start.replace(reNl, '');
             item.end = item.end.replace(reNl, '');
             item.content = item.content.replace(reNl, '');

@@ -1576,7 +1576,7 @@
     // Conversion Functions
     // --------------------
 
-    // `rgbToHsl`, `rgbToHsv`, `hslToRgb`, `hsvToRgb` pluginsmodified from:
+    // `rgbToHsl`, `rgbToHsv`, `hslToRgb`, `hsvToRgb` modified from:
     // <http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript>
 
     // `rgbToRgb`

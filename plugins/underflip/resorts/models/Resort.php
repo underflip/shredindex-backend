@@ -36,6 +36,17 @@ class Resort extends Model
     public $timestamps = false;
 
     /**
+     * @var array Fillable fields
+     */
+    protected $fillable = [
+        'title',
+        'url_segment',
+        'affiliate_url',
+        'description',
+    ];
+
+
+    /**
      * @var string The database table used by the model.
      */
     public $table = 'underflip_resorts_resorts';
@@ -79,8 +90,6 @@ class Resort extends Model
      */
     public function getUrlAttribute()
     {
-
-
         return sprintf('resorts/%s', $this->url_segment);
     }
 

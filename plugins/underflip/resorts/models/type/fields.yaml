@@ -20,3 +20,10 @@ fields:
         label: Type Values
         type: partial
         path: field_type_values
+    icon:
+        label: icon
+        type: text
+    max_value:
+        label: Max value
+        type: text
+        span: auto

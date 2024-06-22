@@ -21,7 +21,12 @@ A set of Docker platform is included for running the project.
 8. docker-compose up -d
 9. cd ..
 10. rm -rf vendor && docker exec shredindex-backend-php composer install
-11. docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
+## Seeding
+### Dummy data
+docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
+### Google sheet data
+docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_resort_sheet_data --fresh
+docker exec shredindex-backend-php php artisan resorts:seed_resort_image_sheet_data --fresh
 12. docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
 
 
@@ -38,8 +43,14 @@ rm -rf vendor && docker exec shredindex-backend-php composer install
 docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
 docker exec shredindex-backend-php php artisan plugin:test underflip.resorts
 ````
-
 Do not update Headstart Nocio Plugin as it has been customized to handle the latest lighthouse.
+
+
+### CORS issue?
+php artisan config:cache
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
 
 ### Open in browser
 

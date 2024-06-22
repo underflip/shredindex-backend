@@ -136,7 +136,7 @@
             content: {menu: 'content', count: 0},
         }
 
-        $('> div.tab-content > div.tab-pane[data-pluginsmodified]', this.$masterTabs).each(function(){
+        $('> div.tab-content > div.tab-pane[data-modified]', this.$masterTabs).each(function(){
             var inputType = $('> form > input[name=objectType]', this).val()
             counters[inputType].count++
         })
@@ -232,7 +232,7 @@
 
         // Disable fancy layout on nested forms in repeater items
         $('.field-repeater-item .form-tabless-fields', $tabPane).addClass('not-fancy');
-
+        
         var objectType = $('input[name=objectType]', $form).val()
         if (objectType.length > 0 &&
             (context.handler == 'onSave' || context.handler == 'onCommit' || context.handler == 'onReset')
@@ -531,7 +531,7 @@
         this.updateContentEditorMode(data.pane, true)
 
         $form.on('changed.oc.changeMonitor', function() {
-            $panel.trigger('pluginsmodified.oc.tab')
+            $panel.trigger('modified.oc.tab')
             $panel.find('[data-control=commit-button]').addClass('oc-hide hide');
             $panel.find('[data-control=reset-button]').addClass('oc-hide hide');
             self.updateModifiedCounter()

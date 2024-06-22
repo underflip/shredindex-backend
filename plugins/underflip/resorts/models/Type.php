@@ -15,6 +15,8 @@ use ReflectionClass;
  * @property string $category A broad "belongs to" value of the type of class that can be related
  * @property string $default The default value
  * @property int $unit_id
+ * @property string $icon
+ * @property int $max_value
  * @method Unit unit() The unit of measurement or denomination
  * @method Collection values()
  */

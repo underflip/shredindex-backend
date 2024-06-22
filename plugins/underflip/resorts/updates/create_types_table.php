@@ -18,6 +18,8 @@ class CreateTypesTable extends Migration
             $table->string('category');
             $table->string('default')->nullable();
             $table->integer('unit_id')->nullable();
+            $table->string('icon')->nullable();
+            $table->decimal('max_value')->nullable();
         });
     }
 

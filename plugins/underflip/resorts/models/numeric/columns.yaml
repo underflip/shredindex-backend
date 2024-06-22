@@ -8,7 +8,3 @@ columns:
         label: Value
         type: text
         sortable: true
-    max_value:
-        label: Max value
-        type: text
-        sortable: true

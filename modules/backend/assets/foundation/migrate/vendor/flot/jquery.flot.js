@@ -23,7 +23,7 @@ Licensed under the MIT license.
  *   console.log(c.r, c.g, c.b, c.a);
  *   $.color.make(100, 50, 25, 0.4).toString() // returns "rgba(100,50,25,0.4)"
  *
- * Note that .scale() and .add() return the same pluginsmodified object
+ * Note that .scale() and .add() return the same modified object
  * instead of making a new one.
  *
  * V. 1.1: Fix error handling so e.g. parsing an empty string does
@@ -2439,9 +2439,9 @@ Licensed under the MIT license.
                 radius = series.points.radius,
                 symbol = series.points.symbol;
 
-            // If the user sets the line width to 0, we change it to a very
+            // If the user sets the line width to 0, we change it to a very 
             // small value. A line width of 0 seems to force the default of 1.
-            // Doing the conditional here allows the shadow setting to still be
+            // Doing the conditional here allows the shadow setting to still be 
             // optional even with a lineWidth of 0.
 
             if( lw == 0 )

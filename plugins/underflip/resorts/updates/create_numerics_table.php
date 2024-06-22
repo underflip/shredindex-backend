@@ -15,14 +15,9 @@ class CreateNumericsTable extends Migration
             $table->decimal('value');
             $table->integer('resort_id')->nullable();
             $table->integer('type_id')->nullable();
-            $table->string('unit')->nullable();
-            $table->decimal('max_value');
         });
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function down()
     {
         Schema::dropIfExists(app(Numeric::class)->getTable());
