@@ -206,10 +206,12 @@ SDL;
         foreach ($this->getFilterableScopes() as $scope) {
             if (!array_key_exists($scope['class'], Type::getCategories())) {
                 // Throw a helpful message
+                /** @codeCoverageIgnoreStart */
                 throw new \Exception(sprintf(
                     'Can only filter relations that exist as a category of "%s"',
                     Type::class
                 ));
+                /** @codeCoverageIgnoreEnd */
             }
 
             foreach ($filters['groupedType'] as $filter) {
