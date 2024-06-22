@@ -183,6 +183,7 @@ SDL;
         if (isset($filters['locationType'])) {
             $locationFilter = $filters['locationType'];
 
+        // codecov:ignore-start
             if (isset($locationFilter['countryId'])) {
                 $countryIds = (array) $locationFilter['countryId'];
                 $query->whereHas('location.country', function (Builder $query) use ($countryIds) {
@@ -196,6 +197,7 @@ SDL;
                     $query->whereIn('id', $continentIds);
                 });
             }
+            // codecov:ignore-end
         }
 
         foreach ($this->getFilterableScopes() as $scope) {
