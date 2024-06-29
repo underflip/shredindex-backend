@@ -49,14 +49,14 @@ class ResortsSeederFromSheets extends Seeder implements Downable
 
         // Fetch data from each sheet
         $resortsValues = $this->getSheetData($service, $spreadsheetId, 'Resorts!A1:Z10000');
-        $this->locationsValues = $this->getSheetData($service, $spreadsheetId, 'Locations!A1:Z10000');
+        $locationsValues = $this->getSheetData($service, $spreadsheetId, 'Locations!A1:Z10000');
         $commentsValues = $this->getSheetData($service, $spreadsheetId, 'Comments!A1:Z10000');
         $continentsValues = $this->getSheetData($service, $spreadsheetId, 'Continents!A1:Z10000');
 
         // Process data from each sheet
         $this->processContinents($continentsValues);
         $this->processResorts($resortsValues);
-        Log::info("Calling processImages function");
+        $this->processLocation($locationsValues);
         $this->processComments($commentsValues);
     }
 
@@ -102,85 +102,44 @@ class ResortsSeederFromSheets extends Seeder implements Downable
             $resort->description = $row[6] ?? 'No description available.';
             $resort->save();
 
-            // Ensure resort has a location
-            $locationRow = $this->findLocationRow($row[0]);
-            if ($locationRow) {
-                $this->processLocation($resort->id, $locationRow);
-            } else {
-                $this->createDefaultLocation($resort->id);
+            Log::info('Added in', ['Resort' => $resort->title]);
+        }
+    }
+
+    protected function processLocation($values)
+    {
+        foreach ($values as $row) {
+            if ($row[0] == 'id') {
+                // Skip header row
+                continue;
             }
-        }
-    }
 
-    protected function findLocationRow($resortTitle)
-    {
-        foreach ($this->locationsValues as $row) {
-            if ($row[0] == $resortTitle) {
-                return $row;
+            $location = new Location();
+            $location->resort_id = is_numeric($row[1]) ? $row[1] : 0;
+            $location->address = $row[2] ?? 'Unknown address';
+            $location->city = $row[3] ?? 'Unknown city';
+            $location->zip = $row[4] ?? '00000';
+            $location->latitude = is_numeric($row[5]) ? $row[5] : 0;
+            $location->longitude = is_numeric($row[6]) ? $row[6] : 0;
+            $location->country_id = is_numeric($row[7]) ? $row[7] : 1;
+            $location->state_id = is_numeric($row[11]) ? $row[11] : 1;
+            $location->vicinity = $row[4] ?? 'Unknown vicinity';
+            $location->save();
+            Log::info('Added in', ['Location' => $location->id]);
+
+            // Continents
+            $country = Country::where('id', $row[7])->first() ?? Country::inRandomOrder()->first();
+            $continentCode = $this->continentService->getContinentCode($country->code) ?? 'UNKNOWN_CODE';
+            $continent = Continent::where('code', $continentCode)->first();
+
+
+            if ($continent) {
+                $location->continent()->associate($continent);
+                $location->save();
             }
-        }
-        return null;
-    }
+            Log::info('Continent added', ['Location' => $continent]);
 
-    protected function processLocation($resortId, $row)
-    {
-        $country = Country::where('name', $row[8])->first() ?? Country::inRandomOrder()->first();
-        $state = State::where('name', $row[9])->first() ?? State::inRandomOrder()->first();
 
-        if (!$country) {
-            throw new Exception('Country not found: ' . $row[8]);
-        }
-
-        if (!$state) {
-            throw new Exception('State not found: ' . $row[9]);
-        }
-
-        $location = new Location();
-        $location->address = $row[1] ?? 'Unknown address';
-        $location->city = $row[2] ?? 'Unknown city';
-        $location->zip = $row[3] ?? '00000';
-        $location->country_id = $country->id;
-        $location->state_id = $state->id;
-        $location->latitude = is_numeric($row[6]) ? $row[6] : 0.0;
-        $location->longitude = is_numeric($row[7]) ? $row[7] : 0.0;
-        $location->vicinity = $row[8] ?? 'Unknown vicinity';
-        $location->resort_id = $resortId;
-        $location->save();
-
-        // Continents
-        $continentCode = $this->continentService->getContinentCode($country->code) ?? 'UNKNOWN_CODE';
-        $continent = Continent::where('code', $continentCode)->first();
-
-        if ($continent) {
-            $location->continent()->associate($continent);
-            $location->save();
-        }
-    }
-
-    protected function createDefaultLocation($resortId)
-    {
-        $country = Country::inRandomOrder()->first();
-        $state = State::where('country_id', $country->id)->inRandomOrder()->first();
-
-        $location = new Location();
-        $location->address = 'Unknown address';
-        $location->city = 'Unknown city';
-        $location->zip = '00000';
-        $location->country_id = $country->id;
-        $location->state_id = $state->id ?? null;
-        $location->latitude = 0.0;
-        $location->longitude = 0.0;
-        $location->vicinity = 'Unknown vicinity';
-        $location->resort_id = $resortId;
-        $location->save();
-
-        // Continents
-        $continentCode = $this->continentService->getContinentCode($country->code) ?? 'UNKNOWN_CODE';
-        $continent = Continent::where('code', $continentCode)->first();
-
-        if ($continent) {
-            $location->continent()->associate($continent);
-            $location->save();
         }
     }
 

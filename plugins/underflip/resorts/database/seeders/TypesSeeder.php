@@ -123,13 +123,21 @@ class TypesSeeder extends Seeder implements Downable
                 continue; // Skip if type_id is not valid
             }
 
+            // Check if the type name is unique
+            $typeName = $row[2] ?? 'default_name';
+            $existingType = Type::where('name', $typeName)->first();
+            if ($existingType) {
+                Log::info('Skipping type because the name is not unique.', ['name' => $typeName]);
+                continue;
+            }
+
             $categoryClass = $categoryMapping[$row[1]] ?? Rating::class;
             $unitId = isset($row[5]) ? ($unitIdMapping[$row[5]] ?? null) : null;
 
             $type = Type::updateOrCreate(
                 ['id' => $typeId],
                 [
-                    'name' => $row[2] ?? 'default_name',
+                    'name' => $typeName,
                     'title' => $row[3] ?? 'Default Title',
                     'category' => $categoryClass,
                     'unit_id' => $unitId,
