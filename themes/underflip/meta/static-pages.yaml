@@ -1,14 +1,2 @@
 static-pages:
     index: {  }
-    privacy:
-        title: "Privacy policy"
-        url: "/privacy-policy"
-        layout: "privacy"
-    about:
-        title: "About"
-        url: "/about"
-        layout: "about"
-    terms:
-        title: "Terms and Conditions"
-        url: "/terms-and-conditions"
-        layout: "terms"
