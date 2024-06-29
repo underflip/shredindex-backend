@@ -114,8 +114,6 @@ class ResortsSeederFromSheets extends Seeder implements Downable
                 continue;
             }
 
-//             $state_id = rand(0, 9) ? State::inRandomOrder()->pluck('id')->first() : null;
-
             $location = new Location();
             $location->resort_id = is_numeric($row[1]) ? $row[1] : 0;
             $location->address = $row[2] ?? 'Unknown address';
