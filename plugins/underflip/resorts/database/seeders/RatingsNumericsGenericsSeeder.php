@@ -43,19 +43,19 @@ class RatingsNumericsGenericsSeeder extends Seeder implements Downable
 
             $ratingsValues = $this->getSheetData($service, 'Ratings!A1:Z10000000');
             $numericsValues = $this->getSheetData($service, 'Numerics!A1:Z1000000');
-            // $genericsValues = $this->getSheetData($service, 'Generics!A1:Z10000');
+            $genericsValues = $this->getSheetData($service, 'Generics!A1:K1000000');
 
             Log::info('Sheet data retrieved successfully.');
 
-            DB::transaction(function () use ($ratingsValues, $numericsValues) {
+            DB::transaction(function () use ($ratingsValues, $numericsValues, $genericsValues) {
                 $this->processRatings($ratingsValues, 100); // Process ratings in batches of 100
                 Log::info('Ratings processed successfully.');
 
                 $this->processNumerics($numericsValues, 100); // Process numerics in batches of 100
                 Log::info('Numerics processed successfully.');
 
-                // $this->processGenerics($genericsValues);
-                // Log::info('Generics processed successfully.');
+                $this->processGenerics($genericsValues, 100);
+                Log::info('Generics processed successfully.');
 
                 Log::info('Calling updateTotalScores...');
                 $this->updateTotalScores();
@@ -225,8 +225,6 @@ class RatingsNumericsGenericsSeeder extends Seeder implements Downable
                             'resort_id' => $resortId,
                             'value' => $value,
                             'type_id' => $typeId,
-                            'created_at' => now(),
-                            'updated_at' => now(),
                         ];
                     } else {
                         Log::warning('Resort not found for generic', ['resort_id' => $resortId]);
