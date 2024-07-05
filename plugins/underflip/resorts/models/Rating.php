@@ -38,15 +38,6 @@ class Rating extends ResortAttribute
      */
     public $rules = [
         'value' => 'required|numeric|max:100',
-        'resort_id' => 'required|exists:underflip_resorts_resorts,id',
-        'type_id' => 'required|exists:underflip_resorts_types,id',
-        'user_id' => 'required|exists:users,id',
-    ];
-
-    public $belongsTo = [
-        'resort' => Resort::class,
-        'type' => Type::class,
-        'user' => 'RainLab\User\Models\User'
     ];
 
     protected function afterSave()

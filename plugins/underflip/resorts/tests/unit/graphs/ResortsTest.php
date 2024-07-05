@@ -14,7 +14,6 @@ use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
-use RainLab\User\Models\User;
 use Mockery;
 use DB;
 
@@ -33,37 +32,11 @@ class ResortsTest extends BaseTestCase
     {
         parent::setUp();
 
-        $this->loadPlugin('RainLab.User');
-        // Migrate core modules
-        $this->migrateModules();
-
-        // Migrate the blog plugin
-        $this->migratePlugin('RainLab.User');
-
         $totalShredScoreId = Type::where('name', 'total_score')->first()->id;
         $avgAnnualSnowfallId = Type::where('name', 'average_annual_snowfall')->first()->id;
         $snowMakingId = Type::where('name', 'snow_making')->first()->id;
         $verticalDropId = Type::where('name', 'vertical_drop')->first()->id;
         Model::unguard();
-
-        // Create test users
-        $user1 = User::create([
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'email' => 'john@example.com',
-            'password' => bcrypt('password'),
-            'username' => 'johndoe',
-            'activated_at' => now(),
-        ]);
-
-        $user2 = User::create([
-            'first_name' => 'Jane',
-            'last_name' => 'Smith',
-            'email' => 'jane@example.com',
-            'password' => bcrypt('password'),
-            'username' => 'janesmith',
-            'activated_at' => now(),
-        ]);
 
         // Create resort: Foo
         $fooResort = Resort::create([
@@ -87,22 +60,9 @@ class ResortsTest extends BaseTestCase
         ]);
 
         Rating::create([
-            'value' => 90,
-            'type_id' => $avgAnnualSnowfallId,
-            'resort_id' => $fooResort->id,
-            'user_id' => $user1->id,
-        ]);
-        Rating::create([
-            'value' => 100,
-            'type_id' => $avgAnnualSnowfallId,
-            'resort_id' => $fooResort->id,
-            'user_id' => $user2->id,
-        ]);
-        Rating::create([
             'value' => 100,
             'type_id' => $totalShredScoreId,
             'resort_id' => $fooResort->id,
-            'user_id' => $user2->id,
         ]);
         Numeric::create([
             'value' => 10,
@@ -131,7 +91,6 @@ class ResortsTest extends BaseTestCase
             'value' => 50,
             'type_id' => $totalShredScoreId,
             'resort_id' => $barResort->id,
-            'user_id' => $user1->id,
         ]);
         Numeric::create([
             'value' => 5,
@@ -155,7 +114,6 @@ class ResortsTest extends BaseTestCase
             'value' => 25,
             'type_id' => $totalShredScoreId,
             'resort_id' => $binResort->id,
-            'user_id' => $user1->id,
         ]);
         Numeric::create([
             'value' => 2.5,
@@ -179,7 +137,6 @@ class ResortsTest extends BaseTestCase
             'value' => 75,
             'type_id' => $totalShredScoreId,
             'resort_id' => $bazResort->id,
-            'user_id' => $user1->id,
         ]);
         Numeric::create([
             'value' => 7.5,
@@ -191,11 +148,6 @@ class ResortsTest extends BaseTestCase
             'type_id' => $verticalDropId,
             'resort_id' => $bazResort->id,
         ]);
-
-        $fooResort->updateTotalScore();
-        $barResort->updateTotalScore();
-        $binResort->updateTotalScore();
-        $bazResort->updateTotalScore();
 
         Model::reguard();
     }
@@ -213,15 +165,11 @@ class ResortsTest extends BaseTestCase
                     url_segment
                     affiliate_url
                     description
-                    ratingScores {
+                    ratings {
                         id
                         name
                         title
                         value
-                        type {
-                            id
-                            name
-                        }
                     }
                     numerics {
                         id
@@ -238,10 +186,6 @@ class ResortsTest extends BaseTestCase
                 }
             }
         ');
-
-        // Log the response for debugging
-        \Log::info('Resort Response:', $response->json('data.resort'));
-
         $this->assertSame(
             'Foo Resort',
             $response->json('data.resort.title'),
@@ -253,31 +197,17 @@ class ResortsTest extends BaseTestCase
             'Should graph description'
         );
         $this->assertCount(
-            2,
-            $response->json('data.resort.ratingScores'),
-            'Should graph two rating scores'
+            1,
+            $response->json('data.resort.ratings'),
+            'Should graph ratings'
         );
-
-        $ratingScores = $response->json('data.resort.ratingScores');
-        $ratingValues = array_column($ratingScores, 'value');
-        $ratingTypes = array_column(array_column($ratingScores, 'type'), 'name');
-
-        // Check for the presence of average_annual_snowfall rating
-        $snowfallRating = array_values(array_filter($ratingScores, function($score) {
-            return $score['type']['name'] === 'average_annual_snowfall';
-        }))[0] ?? null;
-
-        $this->assertNotNull($snowfallRating, 'Should have a rating for average annual snowfall');
-        $this->assertEquals(95.0, $snowfallRating['value'], 'Average annual snowfall rating should be 95.0');
-
-        // Check for the presence of total_score rating
-        $totalScoreRating = array_values(array_filter($ratingScores, function($score) {
-            return $score['type']['name'] === 'total_score';
-        }))[0] ?? null;
-
-        $this->assertNotNull($totalScoreRating, 'Should have a rating for total score');
-        $this->assertEquals(100.0, $totalScoreRating['value'], 'Total score rating should be 100.0');
-
+        $this->assertSame(
+            [
+                'total_score'
+            ],
+            $response->json('data.resort.ratings.*.name'),
+            'Should graph ratings with expected output'
+        );
         $this->assertCount(
             2,
             $response->json('data.resort.numerics'),
@@ -303,50 +233,6 @@ class ResortsTest extends BaseTestCase
             $response->json('data.resort.generics.*.name'),
             'Should graph generics with expected output'
         );
-    }
-
-    public function testRatingsByUser(): void
-    {
-        $response = $this->graphQL('
-            {
-                resort(id: 1) {
-                    id
-                    title
-                    ratingScores {
-                        id
-                        name
-                        title
-                        value
-                        type {
-                            id
-                            name
-                        }
-                    }
-                }
-            }
-        ');
-
-        // Log the response for debugging
-        \Log::info('RatingsByUser Response:', $response->json('data.resort'));
-
-        $ratingScores = $response->json('data.resort.ratingScores');
-        $this->assertCount(2, $ratingScores, 'Should have two aggregated rating scores');
-
-        // Check for the presence of average_annual_snowfall rating
-        $snowfallRating = array_values(array_filter($ratingScores, function($score) {
-            return $score['type']['name'] === 'average_annual_snowfall';
-        }))[0] ?? null;
-
-        $this->assertNotNull($snowfallRating, 'Should have a rating for average annual snowfall');
-        $this->assertEquals(95.0, $snowfallRating['value'], 'Average annual snowfall rating should be 95.0');
-
-        // Check for the presence of total_score rating
-        $totalScoreRating = array_values(array_filter($ratingScores, function($score) {
-            return $score['type']['name'] === 'total_score';
-        }))[0] ?? null;
-
-        $this->assertNotNull($totalScoreRating, 'Should have a rating for total score');
-        $this->assertEquals(100.0, $totalScoreRating['value'], 'Total score rating should be 100.0');
     }
 
     /**

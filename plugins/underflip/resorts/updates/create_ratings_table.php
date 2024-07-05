@@ -13,7 +13,6 @@ class CreateRatingsTable extends Migration
             $table->smallInteger('value');
             $table->integer('resort_id')->nullable();
             $table->integer('type_id')->nullable();
-            $table->integer('user_id')->nullable();
         });
     }
 

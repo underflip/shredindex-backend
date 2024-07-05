@@ -10,36 +10,25 @@ use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\TotalScore;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
-use RainLab\User\Models\User;
 
+/**
+ * {@see RefreshTotalScore}
+ */
 class RefreshTotalScoreTest extends BaseTestCase
 {
     use RefreshDatabase;
 
-    protected $user;
-
+    /**
+     * {@inheritDoc}
+     */
     public function setUp(): void
     {
         parent::setUp();
 
-        // Load and migrate the RainLab.User plugin
-        $this->loadPlugin('RainLab.User');
-        $this->migratePlugin('RainLab.User');
-
         $digitalNomadScoreId = Type::where('name', 'digital_nomad_score')->first()->id;
-        $seasonalWorkerScoreId = Type::where('name', 'seasonal_worker_score')->first()->id;
+        $sesonalWorkerScoreId = Type::where('name', 'seasonal_worker_score')->first()->id;
 
         Model::unguard();
-
-        // Create a test user
-        $this->user = User::create([
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'email' => 'john@example.com',
-            'password' => bcrypt('password'),
-            'username' => 'johndoe',
-            'activated_at' => now(),
-        ]);
 
         // Create resort: Foo
         $fooResort = Resort::create([
@@ -53,14 +42,12 @@ class RefreshTotalScoreTest extends BaseTestCase
             'value' => 99,
             'type_id' => $digitalNomadScoreId,
             'resort_id' => $fooResort->id,
-            'user_id' => $this->user->id,
         ]);
 
         Rating::create([
             'value' => 22,
-            'type_id' => $seasonalWorkerScoreId,
+            'type_id' => $sesonalWorkerScoreId,
             'resort_id' => $fooResort->id,
-            'user_id' => $this->user->id,
         ]);
 
         // Create resort: Bar
@@ -75,14 +62,12 @@ class RefreshTotalScoreTest extends BaseTestCase
             'value' => 88,
             'type_id' => $digitalNomadScoreId,
             'resort_id' => $barResort->id,
-            'user_id' => $this->user->id,
         ]);
 
         Rating::create([
             'value' => 11,
-            'type_id' => $seasonalWorkerScoreId,
+            'type_id' => $sesonalWorkerScoreId,
             'resort_id' => $barResort->id,
-            'user_id' => $this->user->id,
         ]);
 
         // Create resort: Bin
@@ -96,6 +81,9 @@ class RefreshTotalScoreTest extends BaseTestCase
         Model::reguard();
     }
 
+    /**
+     * @return void
+     */
     public function testRefreshTotalScore()
     {
         app(RefreshTotalScore::class)->refreshAll();
@@ -108,9 +96,9 @@ class RefreshTotalScoreTest extends BaseTestCase
             'No Total score has been created for "Foo Resort"'
         );
 
-        $this->assertInstanceOf(
+        $this->assertSame(
             TotalScore::class,
-            $fooResort->total_score,
+            get_class($fooResort->total_score),
             'Total score resort attribute should have been generated for "Foo Resort"'
         );
 
@@ -122,9 +110,9 @@ class RefreshTotalScoreTest extends BaseTestCase
 
         $barResort = Resort::where('url_segment', 'bar-resort')->first();
 
-        $this->assertInstanceOf(
+        $this->assertSame(
             TotalScore::class,
-            $barResort->total_score,
+            get_class($fooResort->total_score),
             'Total score resort attribute should have been generated for "Bar Resort"'
         );
 

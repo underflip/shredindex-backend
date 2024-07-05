@@ -114,9 +114,8 @@ class RatingsNumericsGenericsSeeder extends Seeder implements Downable
                     Log::info('Processing rating row', ['row' => $row]);
 
                     $resortId = isset($row[2]) && is_numeric($row[2]) ? intval($row[2]) : 0;
-                    $userId = isset($row[4]) && is_numeric($row[4]) ? intval($row[4]) : 0;
                     $value = isset($row[1]) && is_numeric($row[1]) ? min(intval($row[1]), 100) : rand(1, 5);
-                    $typeName = isset($row[5]) ? $row[5] : '';
+                    $typeName = isset($row[4]) ? $row[4] : '';
                     $typeId = isset($types[$typeName]) ? $types[$typeName] : null;
 
                     if (!$typeId) {
@@ -127,7 +126,6 @@ class RatingsNumericsGenericsSeeder extends Seeder implements Downable
                     if (Resort::find($resortId)) {
                         $ratingsBatch[] = [
                             'resort_id' => $resortId,
-                            'user_id' => $userId,
                             'value' => $value,
                             'type_id' => $typeId,
                         ];
@@ -263,26 +261,8 @@ class RatingsNumericsGenericsSeeder extends Seeder implements Downable
 
     public function down()
     {
-        Log::info('Starting teardown of RatingsNumericsGenericsSeeder...');
-
-        try {
-            Log::info('Truncating Rating table...');
-            Rating::query()->delete();
-            Log::info('Rating table truncated successfully.');
-
-            Log::info('Truncating Numeric table...');
-            Numeric::query()->delete();
-            Log::info('Numeric table truncated successfully.');
-
-            Log::info('Truncating Generic table...');
-            Generic::query()->delete();
-            Log::info('Generic table truncated successfully.');
-
-            Log::info('Teardown of RatingsNumericsGenericsSeeder completed successfully.');
-        } catch (Exception $e) {
-            Log::error('Error during teardown of RatingsNumericsGenericsSeeder: ' . $e->getMessage());
-            Log::error($e->getTraceAsString());
-            throw $e;
-        }
+        Rating::query()->truncate();
+        Numeric::query()->truncate();
+        Generic::query()->truncate();
     }
 }

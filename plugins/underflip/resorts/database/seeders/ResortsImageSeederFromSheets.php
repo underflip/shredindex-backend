@@ -78,10 +78,6 @@ class ResortsImageSeederFromSheets extends Seeder implements Downable
             $image->sort_order = is_numeric($row[4]) ? intval($row[4]) : null;
             $image->save();
 
-            Log::info('Processing Image', ['image' => $image->resort_id, $image->name]);
-
-
-
             // Handle file association if applicable
             if (isset($row[2]) && !empty($row[2])) {
                 $imageFilePath = $row[2]; // Assuming image URL is in column 2
