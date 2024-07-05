@@ -41,9 +41,9 @@ type Resort {
     total_score: TotalScore
     description: String!
     location: Location! @hasOne
-    ratings: [Rating!]! @hasMany
-    highlights: [Rating!]!
-    lowlights: [Rating!]!
+    ratingScores: [RatingScore!]! @hasMany
+    highlights: [RatingScore!]!
+    lowlights: [RatingScore!]!
     numerics: [Numeric!]! @hasMany
     generics: [Generic!]! @hasMany
     resort_images: [Images!]! @hasMany
@@ -57,12 +57,12 @@ type TotalScore {
     value: Float
 }
 
-type Rating {
+type RatingScore {
     id: ID
     name: String!
     title: String
-    value: Int
-    type: Type
+    type: Type!
+    value: Float
 }
 
 type Numeric {

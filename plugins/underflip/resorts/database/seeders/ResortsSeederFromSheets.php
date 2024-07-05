@@ -96,13 +96,14 @@ class ResortsSeederFromSheets extends Seeder implements Downable
             }
 
             $resort = new Resort();
+            $resort->id = $row[0];
             $resort->title = $row[1];
             $resort->url_segment = $row[2] ?? $row[0];
             $resort->affiliate_url = $row[2] ?? 'https://example.com';
             $resort->description = $row[6] ?? 'No description available.';
             $resort->save();
 
-            Log::info('Added in', ['Resort' => $resort->title]);
+            Log::info('Added in', ['Resort id' => $row[0], 'Resort name' => $resort->title]);
         }
     }
 
@@ -122,10 +123,9 @@ class ResortsSeederFromSheets extends Seeder implements Downable
             $location->latitude = is_numeric($row[5]) ? $row[5] : 0;
             $location->longitude = is_numeric($row[6]) ? $row[6] : 0;
             $location->country_id = is_numeric($row[7]) ? $row[7] : 1;
-            $location->state_id = is_numeric($row[11]) ? $row[11] : 1;
+            $location->state_id = isset($row[12]) && is_numeric($row[12]) ? $row[12] : 1;
             $location->vicinity = $row[4] ?? 'Unknown vicinity';
             $location->save();
-            Log::info('Added in', ['Location' => $location->id]);
 
             // Continents
             $country = Country::where('id', $row[7])->first() ?? Country::inRandomOrder()->first();
@@ -137,9 +137,11 @@ class ResortsSeederFromSheets extends Seeder implements Downable
                 $location->continent()->associate($continent);
                 $location->save();
             }
-            Log::info('Continent added', ['Location' => $continent]);
-
-
+            Log::info('Added in', [
+                'Location id' => $location->id,
+                'State id' => $location->state_id,
+                'Continent' => $continent
+            ]);
         }
     }
 
