@@ -94,32 +94,6 @@ class Resort extends Model
     }
 
     /**
-     * The best ratings
-     *
-     * @return Collection
-     */
-    public function getHighlightsAttribute()
-    {
-        return $this->ratings()
-            ->orderBy('value', 'desc')
-            ->limit(5)
-            ->get();
-    }
-
-    /**
-     * The best ratings
-     *
-     * @return Collection
-     */
-    public function getLowlightsAttribute()
-    {
-        return $this->ratings()
-            ->orderBy('value', 'asc')
-            ->limit(3)
-            ->get();
-    }
-
-    /**
      * @return int|string
      */
     public function getCmsTotalScoreAttribute()
@@ -130,23 +104,45 @@ class Resort extends Model
     /**
      * The "total score" that represents all ratings of this resort
      */
+   public function ratingScores()
+    {
+        return $this->ratings()
+            ->selectRaw('resort_id, type_id, AVG(value) as value, type_id as id')
+            ->groupBy('resort_id', 'type_id')
+            ->with('type');
+    }
+
+    public function getHighlightsAttribute()
+    {
+        return $this->ratingScores()
+            ->orderBy('value', 'desc')
+            ->limit(5)
+            ->get();
+    }
+
+    public function getLowlightsAttribute()
+    {
+        return $this->ratingScores()
+            ->orderBy('value', 'asc')
+            ->limit(3)
+            ->get();
+    }
+
     public function updateTotalScore()
     {
-        // Get the ratings on which we'll base the total score
-        $values = $this->ratings()->pluck('value');
+        $averageRatings = $this->ratingScores()->get();
 
-        if (!$values->count()) {
+        if ($averageRatings->isEmpty()) {
             // Resort has no ratings
             return null;
         }
 
-        // Calculate the average rating to use as our total score
-        $average = round($values->sum()/$values->count(), 1);
+        // Calculate the average of all average ratings
+        $totalAverage = round($averageRatings->avg('value'), 1);
 
-        // Get the current total score
         $totalScore = $this->total_score;
 
-        if ($totalScore && $totalScore->value == $average) {
+        if ($totalScore && $totalScore->value == $totalAverage) {
             // Nothing to do - This is important to avoid events looping this call stack
             return null;
         }
@@ -159,11 +155,10 @@ class Resort extends Model
         }
 
         // Update the score with the new rating average
-        $totalScore->value = $average;
+        $totalScore->value = $totalAverage;
 
         if (!$totalScore->type) {
             // Make sure the total score has a type (bad things happen if it doesn't)
-            /** @var TotalScore $type */
             $type = app(TotalScore::class)->findOrCreateType();
 
             $totalScore->type_id = $type->id;

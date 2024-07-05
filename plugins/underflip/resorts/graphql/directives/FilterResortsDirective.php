@@ -139,7 +139,7 @@ SDL;
         return function (mixed $root, array $args, GraphQLContext $context, ResolveInfo $resolveInfo) {
             Log::info('$args', $args);
             // Setup builder
-            $query = Resort::with(['ratings.type.unit', 'numerics.type.unit', 'generics']);
+            $query = Resort::with(['numerics.type.unit', 'generics']);
 
             try {
                 if (array_key_exists('filter', $args)) {
@@ -168,8 +168,56 @@ SDL;
             // Ensure the unit is properly resolved
             $resorts = $query->paginate($first, ['*'], 'page', $page);
 
+            $resorts->getCollection()->transform(function ($resort) {
+                $resort->ratingScores = $this->resolveRatingScores($resort);
+                $resort->highlights = $this->resolveHighlights($resort);
+                $resort->lowlights = $this->resolveLowlights($resort);
+                $resort->totalScore = $resort->total_score ? $resort->total_score->value : null;
+                return $resort;
+            });
+
+
             return $resorts;
         };
+    }
+
+    protected function resolveRatingScores($resort)
+    {
+        return $resort->ratingScores()->get()->map(function ($rating) {
+            return [
+                'id' => $rating->type_id,
+                'name' => $rating->type->name,
+                'title' => $rating->type->title,
+                'type' => $rating->type,
+                'value' => $rating->score,
+            ];
+        });
+    }
+
+    protected function resolveHighlights($resort)
+    {
+        return $resort->highlights->map(function ($rating) {
+            return [
+                'id' => $rating->type_id,
+                'name' => $rating->type->name,
+                'title' => $rating->type->title,
+                'type' => $rating->type,
+                'value' => $rating->score,
+            ];
+        });
+    }
+
+    protected function resolveLowlights($resort)
+    {
+        return $resort->lowlights->map(function ($rating) {
+            return [
+                'id' => $rating->type_id,
+                'name' => $rating->type->name,
+                'title' => $rating->type->title,
+                'type' => $rating->type,
+                'value' => $rating->score,
+            ];
+        });
     }
 
 

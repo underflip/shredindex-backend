@@ -11,6 +11,7 @@
         "october/all": "^3.0",
         "rainlab/builder-plugin": "^2.0.6",
         "rainlab/location-plugin": "^1.2",
+        "rainlab/user-plugin": "^3.1",
         "rainlab/pages-plugin": "^2.0",
         "ttskch/google-sheets-api-php-client": "@dev"
     },
