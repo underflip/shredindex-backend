@@ -17,4 +17,28 @@ items:
             isHidden: '0'
             cssClass: ''
             isExternal: '0'
+    -   title: About
+        type: cms-page
+        code: ''
+        reference: about
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -   title: Privacy Policy
+        type: cms-page
+        code: ''
+        reference: privacy
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
+    -   title: Terms and Conditions
+        type: cms-page
+        code: ''
+        reference: terms
+        viewBag:
+            isHidden: '0'
+            cssClass: ''
+            isExternal: '0'
 name: 'Footer menu - Main'

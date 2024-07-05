@@ -136,14 +136,7 @@ class ResortsSeeder extends Seeder implements Downable
                 // Create a new numeric
                 $numeric = new Numeric();
                 $numeric->value = $value;
-                $numeric->max_value = rand($value, 15000); // max_value will always be >= value
                 $numeric->type_id = $type->id;
-                $unit = Unit::where('id', $type->unit_id)->first();
-                if($value <= 1) {
-                    $numeric->unit = $unit ? $unit->name : null;
-                } else {
-                    $numeric->unit = $unit ? $unit->plural_title : null;
-                }
                 $numeric->resort_id = $resort->id;
                 $numeric->save();
             }
