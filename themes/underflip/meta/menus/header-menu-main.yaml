@@ -9,6 +9,15 @@ items:
         cmsPage: null
         replace: null
         viewBag:
+        isHidden: '0'
+        cssClass: ''
+        isExternal: '0'
+    -   title: About
+        nesting: null
+        type: cms-page
+        code: ''
+        reference: about
+        viewBag:
             isHidden: '0'
             cssClass: ''
             isExternal: '0'
