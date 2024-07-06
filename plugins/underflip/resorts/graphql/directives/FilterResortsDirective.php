@@ -185,7 +185,6 @@ SDL;
     {
         return $resort->ratingScores()->get()->map(function ($rating) {
             return [
-                'id' => $rating->type_id,
                 'name' => $rating->type->name,
                 'title' => $rating->type->title,
                 'type' => $rating->type,
@@ -198,7 +197,7 @@ SDL;
     {
         return $resort->highlights->map(function ($rating) {
             return [
-                'id' => $rating->type_id,
+                'id' => $rating->id,
                 'name' => $rating->type->name,
                 'title' => $rating->type->title,
                 'type' => $rating->type,
