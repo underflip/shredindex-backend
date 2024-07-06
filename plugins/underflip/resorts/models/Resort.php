@@ -107,7 +107,7 @@ class Resort extends Model
    public function ratingScores()
     {
         return $this->ratings()
-            ->selectRaw('resort_id, type_id, AVG(value) as value, type_id as id')
+            ->selectRaw('resort_id, type_id, AVG(value) as value, CONCAT(resort_id, 1234567890 , type_id ) as id')
             ->groupBy('resort_id', 'type_id')
             ->with('type');
     }
