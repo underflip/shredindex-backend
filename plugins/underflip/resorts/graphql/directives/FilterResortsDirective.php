@@ -236,7 +236,7 @@ SDL;
             if (isset($locationFilter['countryId'])) {
                 $countryIds = (array) $locationFilter['countryId'];
                 $query->whereHas('location.country', function (Builder $query) use ($countryIds) {
-                    $query->whereIn('id', $countryIds);
+                    $query->whereIn('code', $countryIds);
                 });
             }
 
