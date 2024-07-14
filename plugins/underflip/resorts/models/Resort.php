@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Model;
 use October\Rain\Database\Relations\HasMany;
-use Underflip\Resorts\Classes\ElasticsearchClient;
+use Underflip\Resorts\Classes\ElasticSearchService;
 
 
 /**
@@ -171,7 +171,7 @@ class Resort extends Model
 
     public function afterSave()
    {
-       $esClient = new ElasticsearchClient();
+       $esClient = new ElasticSearchService();
        $client = $esClient->getClient();
 
        $params = [
@@ -185,7 +185,7 @@ class Resort extends Model
 
    public static function searchInElasticsearch($query)
    {
-       $esClient = new ElasticsearchClient();
+       $esClient = new ElasticSearchService();
        $client = $esClient->getClient();
 
        $params = [

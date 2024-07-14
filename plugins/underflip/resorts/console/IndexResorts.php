@@ -16,13 +16,29 @@ class IndexResorts extends Command
         $esClient = new ElasticSearchService();
         $client = $esClient->getClient();
 
-        $resorts = Resort::all();
+        $resorts = Resort::with(['location.continent', 'location.country', 'location.state'])->get();
 
         foreach ($resorts as $resort) {
             $params = [
                 'index' => 'resorts',
                 'id'    => $resort->id,
-                'body'  => $resort->toArray()
+                'body'  => [
+                    'title' => $resort->title,
+                    'description' => $resort->description,
+                    'location' => [
+                        'continent' => [
+                            'name' => $resort->location->continent->name ?? null
+                        ],
+                        'country' => [
+                            'name' => $resort->location->country->name ?? null
+                        ],
+                        'state' => [
+                            'name' => $resort->location->state->name ?? null
+                        ],
+                        'city' => $resort->location->city
+                    ]
+                    // ... other fields ...
+                ]
             ];
 
             $client->index($params);
