@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
     elasticsearch:
         container_name: shredindex-backend-elasticsearch
@@ -53,3 +53,6 @@ services:
             - php
         ports:
             - ${NGINX_PORT}
+volumes:
+    esdata:
+        driver: local
