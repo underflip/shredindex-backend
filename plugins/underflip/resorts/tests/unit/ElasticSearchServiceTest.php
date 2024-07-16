@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Classes;
 
-use Tests\TestCase;
 use Mockery;
 use Underflip\Resorts\Classes\ElasticSearchService;
 use Elastic\Elasticsearch\Client;
+use PHPUnit\Framework\TestCase;
 
 class ElasticSearchServiceTest extends TestCase
 {

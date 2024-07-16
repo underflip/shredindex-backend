@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\GraphQL\Directives;
 
-use Tests\TestCase;
+use PHPUnit\Framework\TestCase;
 use Mockery;
 use Underflip\Resorts\GraphQL\Directives\SearchResorts;
 use Underflip\Resorts\Classes\ElasticSearchService;

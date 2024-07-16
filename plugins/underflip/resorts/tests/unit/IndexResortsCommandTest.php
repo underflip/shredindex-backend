@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Console;
 
-use Tests\TestCase;
+use PHPUnit\Framework\TestCase;
 use Mockery;
 use Underflip\Resorts\Console\IndexResorts;
 use Underflip\Resorts\Classes\ElasticSearchService;
