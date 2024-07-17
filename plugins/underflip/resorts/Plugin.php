@@ -28,7 +28,6 @@ class Plugin extends PluginBase
      */
     public $require = [
         'Nocio.Headstart',
-        'Rainlab.User',
     ];
 
     /**
