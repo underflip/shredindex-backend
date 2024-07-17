@@ -28,7 +28,6 @@ services:
             - ../:/var/www/html
             - ./etc/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf
             - ./etc/php/conf.d/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-            - ../plugins/rainlab/user:/var/www/html/plugins/rainlab/user
         environment:
             MYSQL_USER: ${MYSQL_USER}
             MYSQL_PASSWORD: ${MYSQL_PASSWORD}
