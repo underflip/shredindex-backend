@@ -49,7 +49,7 @@ class ResortsSeederFromSheets extends Seeder implements Downable
 
         // Fetch data from each sheet
         $resortsValues = $this->getSheetData($service, $spreadsheetId, 'Resorts!A1:Z10000');
-        $locationsValues = $this->getSheetData($service, $spreadsheetId, 'Locations!A1:Z10000');
+        $locationsValues = $this->getSheetData($service, $spreadsheetId, 'Locations!A1:Z100000');
         $commentsValues = $this->getSheetData($service, $spreadsheetId, 'Comments!A1:Z10000');
         $continentsValues = $this->getSheetData($service, $spreadsheetId, 'Continents!A1:Z10000');
 

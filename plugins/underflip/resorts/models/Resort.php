@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Model;
 use October\Rain\Database\Relations\HasMany;
+use Underflip\Resorts\Classes\ElasticSearchService;
+
 
 /**
  * Resort model
@@ -166,4 +168,38 @@ class Resort extends Model
 
         $totalScore->save();
     }
+
+    public function afterSave()
+   {
+       $esClient = new ElasticSearchService();
+       $client = $esClient->getClient();
+
+       $params = [
+           'index' => 'resorts',
+           'id'    => $this->id,
+           'body'  => $this->toArray()
+       ];
+
+       $client->index($params);
+   }
+
+   public static function searchInElasticsearch($query)
+   {
+       $esClient = new ElasticSearchService();
+       $client = $esClient->getClient();
+
+       $params = [
+           'index' => 'resorts',
+           'body'  => [
+               'query' => [
+                   'multi_match' => [
+                       'query' => $query,
+                       'fields' => ['title', 'description']
+                   ]
+               ]
+           ]
+       ];
+
+       return $client->search($params);
+   }
 }

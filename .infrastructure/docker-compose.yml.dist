@@ -1,5 +1,21 @@
-version: '3'
+version: '3.8'
 services:
+    elasticsearch:
+        container_name: shredindex-backend-elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+        environment:
+            - discovery.type=single-node
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        volumes:
+            - esdata:/usr/share/elasticsearch/data
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+
     php:
         container_name: shredindex-backend-php
         build:
@@ -16,6 +32,7 @@ services:
             MYSQL_USER: ${MYSQL_USER}
             MYSQL_PASSWORD: ${MYSQL_PASSWORD}
             XDEBUG_MODE: ${XDEBUG_MODE}
+
     mysql:
         container_name: shredindex-backend-mysql
         image: mysql:5.7
@@ -27,6 +44,7 @@ services:
             MYSQL_DATABASE: ${MYSQL_DATABASE}
             MYSQL_USER: ${MYSQL_USER}
             MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
     nginx:
         container_name: shredindex-backend-nginx
         image: nginx:latest
@@ -38,3 +56,7 @@ services:
             - php
         ports:
             - ${NGINX_PORT}
+
+volumes:
+    esdata:
+        driver: local

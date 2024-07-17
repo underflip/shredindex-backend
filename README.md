@@ -21,6 +21,7 @@ A set of Docker platform is included for running the project.
 8. docker-compose up -d
 9. cd ..
 10. rm -rf vendor && docker exec shredindex-backend-php composer install
+
 ## Seeding
 !Seed either the dummy data !OR google sheet data, the google sheet data is more up to date.
 ### Seed Dummy data
@@ -28,8 +29,13 @@ docker exec shredindex-backend-php php artisan october:migrate && docker exec sh
 ### Seed Google sheet data
 docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_resort_sheet_data --fresh
 docker exec shredindex-backend-php php artisan resorts:seed_resort_image_sheet_data --fresh
-12. docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
 
+## Indexing
+### Index Resorts for Elastic Search
+docker exec shredindex-backend-php php artisan resorts:index
+
+## Testing
+docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
 
 ### Preparation Command lines
 ````

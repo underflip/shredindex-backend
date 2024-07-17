@@ -6,6 +6,7 @@ use Backend;
 use Backend\Classes\NavigationManager;
 use Event;
 use System\Classes\PluginBase;
+use Underflip\Resorts\Console\IndexResorts;
 use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\Console\SeedResortSheetData;
 use Underflip\Resorts\Console\SeedResortImageSheetData;
@@ -70,6 +71,7 @@ class Plugin extends PluginBase
         $this->registerConsoleCommand('resorts:seed_resort_image_sheet_data', SeedResortImageSheetData::class);
         $this->registerConsoleCommand('resorts:seed_test_data', SeedTestData::class);
         $this->registerConsoleCommand('resorts:refresh_total_score', RefreshTotalScore::class);
+        $this->registerConsoleCommand('resorts:index', IndexResorts::class);
     }
 
     /**
