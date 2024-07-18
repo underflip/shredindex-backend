@@ -221,6 +221,7 @@ class ResortsTest extends BaseTestCase
                         type {
                             id
                             name
+                            score_category
                         }
                     }
                     numerics {
@@ -320,6 +321,7 @@ class ResortsTest extends BaseTestCase
                         type {
                             id
                             name
+                            score_category
                         }
                     }
                 }
