@@ -27,7 +27,4 @@ columns:
         label: Max value
         type: text
         sortable: true
-    score_category:
-        label: Score Category
-        type: text
-        sortable: true
+

@@ -7,6 +7,7 @@ use Seeder;
 use Google_Client;
 use Google_Service_Sheets;
 use Underflip\Resorts\Models\Type;
+use Underflip\Resorts\Models\TypeGroup;
 use Underflip\Resorts\Models\TypeValue;
 use Underflip\Resorts\Models\Unit;
 use Underflip\Resorts\Models\Rating;
@@ -65,6 +66,9 @@ class TypesSeeder extends Seeder implements Downable
             $service = new Google_Service_Sheets($client);
 
             // Fetch data from the getSheetData
+            $typeGroupValues = $this->getSheetData($service, $this->spreadsheetId, 'TypeGroup!A1:C10000');
+            $this->processTypeGroups($typeGroupValues);
+
             $typesValues = $this->getSheetData($service, $this->spreadsheetId, 'Types!A1:I10000');
             $this->processTypes($typesValues);
             app(TotalScore::class)->findOrCreateType();
@@ -88,6 +92,49 @@ class TypesSeeder extends Seeder implements Downable
 
         Log::info('Data fetched from Google Sheet.', ['range' => $range, 'values' => count($values)]);
         return $values;
+    }
+
+    protected function processTypeGroups($values)
+    {
+        $addedTypeGroups = [];
+
+        foreach ($values as $row) {
+            if ($row[0] == 'name') {
+                // Skip header row
+                continue;
+            }
+
+            $typeGroupId = is_numeric($row[2]) ? intval($row[2]) : 0;
+            if ($typeGroupId === 0) {
+                Log::warning('Skipping invalid type_group_id.', ['row' => $row]);
+                continue; // Skip if type_group_id is not valid
+            }
+
+            $typeGroup = TypeGroup::updateOrCreate(
+                ['id' => $typeGroupId],
+                [
+                    'name' => $row[0] ?? 'default_name',
+                    'title' => $row[1] ?? 'Default Title',
+                ]
+            );
+
+            // Log the added type group
+            Log::info('TypeGroup added or updated.', [
+                'id' => $typeGroup->id,
+                'name' => $typeGroup->name,
+                'title' => $typeGroup->title,
+            ]);
+
+            $addedTypeGroups[] = $typeGroup->id;
+        }
+
+        // Save the log of added type groups
+        $existingLog = Storage::disk('local')->exists($this->logFile)
+            ? json_decode(Storage::disk('local')->get($this->logFile), true)
+            : [];
+        $existingLog['type_groups'] = $addedTypeGroups;
+        Storage::disk('local')->put($this->logFile, json_encode($existingLog));
+        Log::info('TypeGroups processed and logged.', ['type_groups' => $addedTypeGroups]);
     }
 
     protected function processTypes($values)
@@ -143,7 +190,7 @@ class TypesSeeder extends Seeder implements Downable
                     'unit_id' => $unitId,
                     'icon' => $row[4] ?? null,
                     'max_value' => isset($row[7]) && is_numeric($row[7]) ? $row[7] : null,
-                    'score_category' => $row[8] ?? null,
+                    'type_group_id' => isset($row[8]) && is_numeric($row[8]) ? intval($row[8]) : null,
                 ]
             );
 
@@ -156,7 +203,7 @@ class TypesSeeder extends Seeder implements Downable
                 'unit_id' => $type->unit_id,
                 'icon' => $type->icon,
                 'max_value' => $type->max_value,
-                'score_category' => $type->score_category,
+                'type_group_id' => $type->type_group_id,
             ]);
 
             $addedTypes[] = $type->id;
@@ -164,25 +211,35 @@ class TypesSeeder extends Seeder implements Downable
 
         $types = Type::all();
 
-        // Save the log of added types
-        Storage::disk('local')->put($this->logFile, json_encode($addedTypes));
-        Log::info('Types processed and logged.', ['types' => $addedTypes]);
+        // Update the log file with both types and type groups
+        $existingLog = json_decode(Storage::disk('local')->get($this->logFile), true);
+        $existingLog['types'] = $addedTypes;
+        Storage::disk('local')->put($this->logFile, json_encode($existingLog));
+        Log::info('Types and TypeGroups processed and logged.', ['types' => $addedTypes, 'type_groups' => $existingLog['type_groups'] ?? []]);
         Log::info('All Types processed and logged.', ['type' => $types]);
     }
 
     public function down()
     {
-        // Retrieve the log of added types
-        $addedTypes = [];
+        // Retrieve the log of added types and type groups
         if (Storage::disk('local')->exists($this->logFile)) {
-            $addedTypes = json_decode(Storage::disk('local')->get($this->logFile), true);
+            $log = json_decode(Storage::disk('local')->get($this->logFile), true);
 
             // Delete the logged types
-            Type::whereIn('id', $addedTypes)->delete();
+            if (isset($log['types'])) {
+                Type::whereIn('id', $log['types'])->delete();
+                Log::info('Types deleted.', ['types' => $log['types']]);
+            }
+
+            // Delete the logged type groups
+            if (isset($log['type_groups'])) {
+                TypeGroup::whereIn('id', $log['type_groups'])->delete();
+                Log::info('TypeGroups deleted.', ['type_groups' => $log['type_groups']]);
+            }
 
             // Remove the log file itself
             Storage::disk('local')->delete($this->logFile);
-            Log::info('Types deleted and log file removed.', ['types' => $addedTypes]);
+            Log::info('Log file removed.');
         }
     }
 }

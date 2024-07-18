@@ -20,7 +20,7 @@ class CreateTypesTable extends Migration
             $table->integer('unit_id')->nullable();
             $table->string('icon')->nullable();
             $table->decimal('max_value')->nullable();
-            $table->string('score_category')->nullable();
+            $table->integer('type_group_id')->nullable();
         });
     }
 

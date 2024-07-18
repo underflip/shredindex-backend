@@ -1,0 +1,11 @@
+fields:
+    name:
+        label: Name
+        required: 1
+        type: text
+        span: auto
+    title:
+        label: Title
+        required: 1
+        type: text
+        span: auto

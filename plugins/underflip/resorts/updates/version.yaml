@@ -9,6 +9,7 @@
     - create_total_scores_table.php
     - create_type_values_table.php
     - create_types_table.php
+    - create_types_group_table.php
     - create_type_type_value_relation_table.php
     - create_units_table.php
     - create_supporters_table.php
@@ -17,5 +18,4 @@
     - create_comments_table.php
     - seed_settings.php
     - seed_units_table.php
-    - seed_types_table.php
     - seed_pages.php
