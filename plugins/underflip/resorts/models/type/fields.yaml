@@ -27,7 +27,3 @@ fields:
         label: Max value
         type: text
         span: auto
-    score_category:
-        label: Score Category
-        type: text
-        span: auto
