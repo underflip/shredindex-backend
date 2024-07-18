@@ -17,4 +17,5 @@
     - create_comments_table.php
     - seed_settings.php
     - seed_units_table.php
+    - seed_types_table.php
     - seed_pages.php

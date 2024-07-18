@@ -26,8 +26,8 @@ class RefreshTotalScoreTest extends BaseTestCase
         $this->loadPlugin('RainLab.User');
         $this->migratePlugin('RainLab.User');
 
-        $digitalNomadScoreId = Type::where('name', 'co_working')->first()->id;
-        $seasonalWorkerScoreId = Type::where('name', 'seasonal_worker')->first()->id;
+        $digitalNomadScoreId = Type::where('name', 'digital_nomad_score')->first()->id;
+        $seasonalWorkerScoreId = Type::where('name', 'seasonal_worker_score')->first()->id;
 
         Model::unguard();
 

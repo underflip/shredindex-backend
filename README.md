@@ -35,7 +35,8 @@ docker exec shredindex-backend-php php artisan resorts:seed_resort_image_sheet_d
 docker exec shredindex-backend-php php artisan resorts:index
 
 ## Testing
-docker exec shredindex-backend-php php artisan plugin:test underflip.resorts #for testing all function
+docker exec shredindex-backend-php php artisan plugin:test underflip.resorts
+#for testing all function
 
 ### Preparation Command lines
 ````
