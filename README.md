@@ -30,13 +30,19 @@ A set of Docker platform is included for running the project.
     cp .env.dist .env
     ````
 11. Mac users with M-chip will need to change image: mariadb:10.6.15 in docker-compose.yml
-12. docker-compose up -d
-13. cd ..
-14. Running DB migration
+12. Change to .infrastructure and running docker container
+    ````
+    .infrastructure/ && docker compose down && docker compose build --no-cache && docker compose up -d && docker compose ps
+    ````
+15. Install laravel depedencies
+    ````
+    docker exec shredindex-backend-php composer install -n --prefer-dist
+    ````
+17. Running DB migration
     ````
     docker exec shredindex-backend-php php artisan october:migrate
     ````
-15. rm -rf vendor && docker exec shredindex-backend-php composer install
+18. rm -rf vendor && docker exec shredindex-backend-php composer install
 
 ## Seeding
 !Seed either the dummy data !OR google sheet data, the google sheet data is more up to date.
