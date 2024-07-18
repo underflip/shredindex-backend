@@ -17,6 +17,7 @@ use ReflectionClass;
  * @property int $unit_id
  * @property string $icon
  * @property int $max_value
+ * @property string $score_category
  * @method Unit unit() The unit of measurement or denomination
  * @method Collection values()
  */
