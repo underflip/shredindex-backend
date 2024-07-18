@@ -40,25 +40,10 @@ class ResortsTest extends BaseTestCase
         // Migrate the blog plugin
         $this->migratePlugin('RainLab.User');
 
-  $totalShredScoreType = Type::create([
-        'name' => 'total_score',
-        'score_category' => 'Overall'
-    ]);
-
-    $avgAnnualSnowfallType = Type::create([
-        'name' => 'average_annual_snowfall',
-        'score_category' => 'Terrain and Snow'
-    ]);
-
-    $snowMakingType = Type::create([
-        'name' => 'snow_making',
-        'score_category' => 'Facilities'
-    ]);
-
-    $verticalDropType = Type::create([
-        'name' => 'vertical_drop',
-        'score_category' => 'Terrain and Snow'
-    ]);
+        $totalShredScoreId = Type::where('name', 'total_score')->first()->id;
+        $avgAnnualSnowfallId = Type::where('name', 'average_annual_snowfall')->first()->id;
+        $snowMakingId = Type::where('name', 'snow_making')->first()->id;
+        $verticalDropId = Type::where('name', 'vertical_drop')->first()->id;
         Model::unguard();
 
         // Create test users
@@ -103,35 +88,35 @@ class ResortsTest extends BaseTestCase
 
         Rating::create([
             'value' => 90,
-            'type_id' => $avgAnnualSnowfallType->id,
+            'type_id' => $avgAnnualSnowfallId,
             'resort_id' => $fooResort->id,
             'user_id' => $user1->id,
         ]);
         Rating::create([
             'value' => 100,
-            'type_id' => $avgAnnualSnowfallType->id,
+            'type_id' => $avgAnnualSnowfallId,
             'resort_id' => $fooResort->id,
             'user_id' => $user2->id,
         ]);
         Rating::create([
             'value' => 100,
-            'type_id' => $totalShredScoreType->id,
+            'type_id' => $totalShredScoreId,
             'resort_id' => $fooResort->id,
             'user_id' => $user2->id,
         ]);
         Numeric::create([
             'value' => 10,
-            'type_id' => $avgAnnualSnowfallType->id,
+            'type_id' => $avgAnnualSnowfallId,
             'resort_id' => $fooResort->id,
         ]);
         Numeric::create([
             'value' => 500,
-            'type_id' => $verticalDropType->id,
+            'type_id' => $verticalDropId,
             'resort_id' => $fooResort->id,
         ]);
         Generic::create([
             'value' => 'yes',
-            'type_id' => $snowMakingType->id,
+            'type_id' => $snowMakingId,
             'resort_id' => $fooResort->id,
         ]);
 
@@ -144,18 +129,18 @@ class ResortsTest extends BaseTestCase
         ]);
         Rating::create([
             'value' => 50,
-            'type_id' => $totalShredScoreType->id,
+            'type_id' => $totalShredScoreId,
             'resort_id' => $barResort->id,
             'user_id' => $user1->id,
         ]);
         Numeric::create([
             'value' => 5,
-            'type_id' => $avgAnnualSnowfallType->id,
+            'type_id' => $avgAnnualSnowfallId,
             'resort_id' => $barResort->id,
         ]);
         Numeric::create([
             'value' => 250,
-            'type_id' => $verticalDropType->id,
+            'type_id' => $verticalDropId,
             'resort_id' => $barResort->id,
         ]);
 
@@ -168,18 +153,18 @@ class ResortsTest extends BaseTestCase
         ]);
         Rating::create([
             'value' => 25,
-            'type_id' => $totalShredScoreType->id,
+            'type_id' => $totalShredScoreId,
             'resort_id' => $binResort->id,
             'user_id' => $user1->id,
         ]);
         Numeric::create([
             'value' => 2.5,
-            'type_id' => $avgAnnualSnowfallType->id,
+            'type_id' => $avgAnnualSnowfallId,
             'resort_id' => $binResort->id,
         ]);
         Numeric::create([
             'value' => 150,
-            'type_id' => $verticalDropType->id,
+            'type_id' => $verticalDropId,
             'resort_id' => $binResort->id,
         ]);
 
@@ -192,18 +177,18 @@ class ResortsTest extends BaseTestCase
         ]);
         Rating::create([
             'value' => 75,
-            'type_id' => $totalShredScoreType->id,
+            'type_id' => $totalShredScoreId,
             'resort_id' => $bazResort->id,
             'user_id' => $user1->id,
         ]);
         Numeric::create([
             'value' => 7.5,
-            'type_id' => $avgAnnualSnowfallType->id,
+            'type_id' => $avgAnnualSnowfallId,
             'resort_id' => $bazResort->id,
         ]);
         Numeric::create([
             'value' => 300,
-            'type_id' => $verticalDropType->id,
+            'type_id' => $verticalDropId,
             'resort_id' => $bazResort->id,
         ]);
 
@@ -236,7 +221,6 @@ class ResortsTest extends BaseTestCase
                         type {
                             id
                             name
-                            score_category
                         }
                     }
                     numerics {
@@ -336,7 +320,6 @@ class ResortsTest extends BaseTestCase
                         type {
                             id
                             name
-                            score_category
                         }
                     }
                 }
