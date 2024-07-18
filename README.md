@@ -14,13 +14,29 @@ A set of Docker platform is included for running the project.
 1. Install Docker https://docs.docker.com/get-docker/
 2. If not installed with Docker Desktop, Docker Compose install https://docs.docker.com/compose/install/
 3. Copy `.infrastructure/docker-compose.yml.dist` to `.infrastructure/docker-compose.yml`
-4. Copy `.infrastructure/.env.dist` to `.infrastructure/.env`
-5. Copy `.infrastructure/etc/nginx/conf.d/default.conf.dist` to `.infrastructure/etc/nginx/conf.d/default.conf`
-6. Copy `.env.dist` to `.env`
-7. Mac users with M-chip will need to change image: mariadb:10.6.15 in docker-compose.yml
-8. docker-compose up -d
-9. cd ..
-10. rm -rf vendor && docker exec shredindex-backend-php composer install
+   ````
+   cp .infrastructure/docker-compose.yml.dist .infrastructure/docker-compose.yml
+   ````
+5. Copy `.infrastructure/.env.dist` to `.infrastructure/.env`
+   ````
+   cp .infrastructure/.env.dist .infrastructure/.env
+   ````
+7. Copy `.infrastructure/etc/nginx/conf.d/default.conf.dist` to `.infrastructure/etc/nginx/conf.d/default.conf`
+   ````
+    cp .infrastructure/etc/nginx/conf.d/default.conf.dist .infrastructure/etc/nginx/conf.d/default.conf
+   ````
+9. Copy `.env.dist` to `.env`
+    ````
+    cp .env.dist .env
+    ````
+11. Mac users with M-chip will need to change image: mariadb:10.6.15 in docker-compose.yml
+12. docker-compose up -d
+13. cd ..
+14. Running DB migration
+    ````
+    docker exec shredindex-backend-php php artisan october:migrate
+    ````
+15. rm -rf vendor && docker exec shredindex-backend-php composer install
 
 ## Seeding
 !Seed either the dummy data !OR google sheet data, the google sheet data is more up to date.
