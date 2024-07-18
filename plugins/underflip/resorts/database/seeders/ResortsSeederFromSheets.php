@@ -123,7 +123,7 @@ class ResortsSeederFromSheets extends Seeder implements Downable
             $location->latitude = is_numeric($row[5]) ? $row[5] : 0;
             $location->longitude = is_numeric($row[6]) ? $row[6] : 0;
             $location->country_id = is_numeric($row[7]) ? $row[7] : 1;
-            $location->state_id = isset($row[12]) && is_numeric($row[12]) ? $row[12] : 1;
+            $location->state_id = isset($row[12]) && is_numeric($row[12]) ? $row[12] : null;
             $location->vicinity = $row[4] ?? 'Unknown vicinity';
             $location->save();
 

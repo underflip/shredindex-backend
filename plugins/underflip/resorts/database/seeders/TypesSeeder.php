@@ -65,7 +65,7 @@ class TypesSeeder extends Seeder implements Downable
             $service = new Google_Service_Sheets($client);
 
             // Fetch data from the getSheetData
-            $typesValues = $this->getSheetData($service, $this->spreadsheetId, 'Types!A1:H10000');
+            $typesValues = $this->getSheetData($service, $this->spreadsheetId, 'Types!A1:I10000');
             $this->processTypes($typesValues);
             app(TotalScore::class)->findOrCreateType();
 
@@ -142,7 +142,8 @@ class TypesSeeder extends Seeder implements Downable
                     'category' => $categoryClass,
                     'unit_id' => $unitId,
                     'icon' => $row[4] ?? null,
-                    'max_value' => $row[7] ?? null,
+                    'max_value' => isset($row[7]) && is_numeric($row[7]) ? $row[7] : null,
+                    'score_category' => $row[8] ?? null,
                 ]
             );
 
@@ -155,6 +156,7 @@ class TypesSeeder extends Seeder implements Downable
                 'unit_id' => $type->unit_id,
                 'icon' => $type->icon,
                 'max_value' => $type->max_value,
+                'score_category' => $type->score_category,
             ]);
 
             $addedTypes[] = $type->id;
