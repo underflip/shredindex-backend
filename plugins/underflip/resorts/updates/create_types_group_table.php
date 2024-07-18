@@ -25,6 +25,6 @@ class CreateTypesGroupTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists(app(Type::class)->getTable());
+        Schema::dropIfExists(app(TypeGroup::class)->getTable());
     }
 }
