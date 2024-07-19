@@ -45,7 +45,7 @@
             "System\\Console\\ComposerScript::postAutoloadDump"
         ],
         "post-update-cmd": [
-            "php artisan october:version",
+            "php artisan october:about",
             "php artisan package:discover"
         ],
         "pre-package-uninstall": [
