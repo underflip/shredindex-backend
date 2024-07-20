@@ -9,8 +9,3 @@ fields:
         type: text
         span: auto
         required: 1
-    max_value:
-        label: Max value
-        type: text
-        span: auto
-        required: 1
