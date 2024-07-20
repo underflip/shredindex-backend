@@ -17,7 +17,6 @@ use ReflectionClass;
  * @property int $unit_id
  * @property string $icon
  * @property int $max_value
- * @property int $type_group_id
  * @method Unit unit() The unit of measurement or denomination
  * @method Collection values()
  */
@@ -46,7 +45,6 @@ class Type extends Model
      */
     public $belongsTo = [
         'unit' => Unit::class,
-        'type_group' => TypeGroup::class,
     ];
 
     /**

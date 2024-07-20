@@ -27,4 +27,3 @@ columns:
         label: Max value
         type: text
         sortable: true
-
