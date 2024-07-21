@@ -87,6 +87,13 @@ type Type {
     unit: Unit
     icon: String
     max_value: Int
+    type_group: TypeGroup @hasOne
+}
+
+type TypeGroup {
+    id: ID!
+    name: String
+    title: String
 }
 
 type Unit {

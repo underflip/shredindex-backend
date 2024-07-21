@@ -1,0 +1,17 @@
+columns:
+    id:
+        label: ID
+        type: number
+        sortable: true
+        width: 10%
+        align: left
+    name:
+        label: Name
+        type: text
+        sortable: true
+        searchable: true
+    title:
+        label: Title
+        type: text
+        sortable: true
+        searchable: true
