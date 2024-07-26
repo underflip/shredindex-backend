@@ -34,6 +34,11 @@ class Rating extends ResortAttribute
     ];
 
     /**
+     * @var array
+     */
+    protected $fillable = ['value','type_id','resort_id','user_id'];
+
+    /**
      * @var array Validation rules
      */
     public $rules = [

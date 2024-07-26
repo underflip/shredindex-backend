@@ -200,6 +200,12 @@ class ResortsTest extends BaseTestCase
         Model::reguard();
     }
 
+    public function testCmsTotalScoreAttribute(): void
+    {
+        $this->assertNotEmpty( Resort::first()->getCmsTotalScoreAttribute());
+    }
+
+
     /**
      * @return void
      */
@@ -844,6 +850,10 @@ class ResortsTest extends BaseTestCase
             'affiliate_url' => 'test-resort-affiliate',
             'description' => 'Test Description',
         ]);
+
+        $this->assertEquals('resorts/test-resort', Resort::find($resort->id)->getUrlAttribute());
+
+
     }
 
     /**
@@ -1128,4 +1138,5 @@ class ResortsTest extends BaseTestCase
             'Should return no resorts when filter criteria matches no resorts'
         );
     }
+
 }
