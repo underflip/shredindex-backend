@@ -48,6 +48,7 @@ class PluginTest extends BaseTestCase
     public function testRegisterSettings()
     {
         $details = $this->plugin->registerSettings(); 
+        $this->assertEquals('underflip.resorts::lang.settings.label', $details['settings']['label']);
 #        $this->assertEquals('Shredindex Settings', $details['settings']['label']);
 #        $this->assertEquals('Manage global settings', $details['settings']['description']);
     }
