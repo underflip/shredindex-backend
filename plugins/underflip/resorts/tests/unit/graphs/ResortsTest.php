@@ -206,6 +206,11 @@ class ResortsTest extends BaseTestCase
     }
 
 
+    public function testSearchInElasticsearch(): void
+    {
+        $response = Resort::searchInElasticsearch("resort");
+        $this->assertNotEmpty($response->asArray()['took'] );
+    }
     /**
      * @return void
      */
