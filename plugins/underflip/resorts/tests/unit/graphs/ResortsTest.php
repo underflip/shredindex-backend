@@ -2,6 +2,7 @@
 
 namespace Underflip\Resorts\Tests\Graphs;
 
+ini_set('memory_limit', '256M');
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
@@ -200,6 +201,11 @@ class ResortsTest extends BaseTestCase
         Model::reguard();
     }
 
+    public function testContinent(): void
+    {
+        $resort = Resort::first();
+        $this->assertNotEmpty($resort->continent());
+    }
     public function testCmsTotalScoreAttribute(): void
     {
         $this->assertNotEmpty( Resort::first()->getCmsTotalScoreAttribute());

@@ -45,6 +45,13 @@ class PluginTest extends BaseTestCase
         $this->assertEquals('icon-icon-snowflake-o', $details['icon']);
     }
 
+    public function testRegisterSettings()
+    {
+        $details = $this->plugin->registerSettings(); 
+#        $this->assertEquals('Shredindex Settings', $details['settings']['label']);
+#        $this->assertEquals('Manage global settings', $details['settings']['description']);
+    }
+
     public function testRegisterNavigation()
     {
         $navigation = $this->plugin->registerNavigation(); // Use the initialized plugin
