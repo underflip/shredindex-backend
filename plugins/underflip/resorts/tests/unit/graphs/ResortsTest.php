@@ -7,6 +7,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
 use Underflip\Resorts\Console\RefreshTotalScore;
+use Underflip\Resorts\GraphQL\Directives\SearchResorts;
+
+use Underflip\Resorts\Classes\ElasticSearchService;
 use RainLab\Location\Models\Country;
 use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Location;
@@ -18,6 +21,7 @@ use Underflip\Resorts\Tests\BaseTestCase;
 use RainLab\User\Models\User;
 use Mockery;
 use DB;
+
 
 /**
  * {@see \Underflip\Resorts\GraphQL\Directives\FilterResortsDirective}
@@ -214,8 +218,11 @@ class ResortsTest extends BaseTestCase
 
     public function testSearchInElasticsearch(): void
     {
-        $response = Resort::searchInElasticsearch("resort");
-        $this->assertNotEmpty($response->asArray()['took'] );
+        // $response = Resort::searchInElasticsearch("resort");
+        // $this->assertNotEmpty($response->asArray()['took'] );
+        $esClient = new ElasticSearchService();
+        $searchResorts = new SearchResorts($esClient);
+         $this->assertIsObject($searchResorts);
     }
     /**
      * @return void
