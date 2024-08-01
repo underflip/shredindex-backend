@@ -165,4 +165,11 @@ class RefreshTotalScoreTest extends BaseTestCase
             'Total score should not exist for resorts with no ratings'
         );
     }
+
+    public function testGetTypeIdOptions(): void
+    {
+        $resortAttribute = new Rating();
+        $this->assertNotEmpty($resortAttribute->getTypeIdOptions());
+        // $resortAttribute->getTypeIdOptions();
+    }
 }
