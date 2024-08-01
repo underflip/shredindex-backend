@@ -90,4 +90,11 @@ class PluginTest extends BaseTestCase
     {
         $this->assertEquals('Resorts',Lang::get('underflip.resorts::lang.plugin.name'));
     }
+
+    public function testTypeGetCategory()
+    {
+        $type = Type::first();
+        // $this->assertEmpty($type->getCategoryOptions());
+        $this->assertEmpty($type->numeric());
+    }
 }
