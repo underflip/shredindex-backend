@@ -15,7 +15,7 @@ use Underflip\Resorts\Models\Location;
 use Underflip\Resorts\Models\Numeric;
 use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
-use Underflip\Resorts\Controllers\Resort as ResortController; 
+use Underflip\Resorts\Controllers\Resorts as ResortController; 
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
 use RainLab\User\Models\User;
