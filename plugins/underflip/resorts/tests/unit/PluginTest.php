@@ -20,6 +20,7 @@ use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\Settings;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
+use Lang;
 
 class PluginTest extends BaseTestCase
 {
@@ -83,5 +84,10 @@ class PluginTest extends BaseTestCase
     public function testResortModelExists()
     {
         $this->assertTrue(class_exists(\Underflip\Resorts\Models\Resort::class));
+    }
+
+    public function testLang()
+    {
+        $this->assertEquals('Resorts',Lang::get('underflip.resorts::lang.plugin.name'));
     }
 }
