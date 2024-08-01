@@ -7,7 +7,6 @@ use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
 use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\GraphQL\Directives\SearchResorts;
-
 use Underflip\Resorts\Classes\ElasticSearchService;
 use Underflip\Resorts\Console\IndexResorts;
 use RainLab\Location\Models\Country;
@@ -16,6 +15,7 @@ use Underflip\Resorts\Models\Location;
 use Underflip\Resorts\Models\Numeric;
 use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
+use Underflip\Resorts\Controllers\Resort as ResortController; 
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
 use RainLab\User\Models\User;
@@ -203,6 +203,12 @@ class ResortsTest extends BaseTestCase
         $bazResort->updateTotalScore();
 
         Model::reguard();
+    }
+
+    public function testResortController(): void
+    {
+        $resortController = new ResortController();
+        $this->assertIsObject($resortController);
     }
 
     public function testContinent(): void
