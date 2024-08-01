@@ -223,6 +223,10 @@ class ResortsTest extends BaseTestCase
         $esClient = new ElasticSearchService();
         $searchResorts = new SearchResorts($esClient);
          $this->assertIsObject($searchResorts);
+
+        $esResult = $esClient->searchResorts('resorts');
+        $this->assertNotEmpty($esResult->asArray()['took'] );
+
     }
     /**
      * @return void
