@@ -2,7 +2,6 @@
 
 namespace Underflip\Resorts\Tests\Graphs;
 
-ini_set('memory_limit', '256M');
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
@@ -10,6 +9,7 @@ use Underflip\Resorts\Console\RefreshTotalScore;
 use Underflip\Resorts\GraphQL\Directives\SearchResorts;
 
 use Underflip\Resorts\Classes\ElasticSearchService;
+use Underflip\Resorts\Console\IndexResorts;
 use RainLab\Location\Models\Country;
 use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Location;
@@ -222,8 +222,11 @@ class ResortsTest extends BaseTestCase
         // $this->assertNotEmpty($response->asArray()['took'] );
         $esClient = new ElasticSearchService();
         $searchResorts = new SearchResorts($esClient);
-         $this->assertIsObject($searchResorts);
+        $this->assertIsObject($searchResorts);
 
+        $esIndex = new IndexResorts();
+        // $esIndex->handle();
+        $this->assertClassHasAttribute('signature', IndexResorts::class);
         $esResult = $esClient->searchResorts('resorts');
         $this->assertNotEmpty($esResult->asArray()['took'] );
 
