@@ -6,17 +6,22 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Model;
 use Nuwave\Lighthouse\Testing\MakesGraphQLRequests;
 use Underflip\Resorts\Console\RefreshTotalScore;
+use Underflip\Resorts\GraphQL\Directives\SearchResorts;
+use Underflip\Resorts\Classes\ElasticSearchService;
+use Underflip\Resorts\Console\IndexResorts;
 use RainLab\Location\Models\Country;
 use Underflip\Resorts\Models\Generic;
 use Underflip\Resorts\Models\Location;
 use Underflip\Resorts\Models\Numeric;
 use Underflip\Resorts\Models\Rating;
 use Underflip\Resorts\Models\Resort;
+use Underflip\Resorts\Controllers\Resorts as ResortController; 
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
 use RainLab\User\Models\User;
 use Mockery;
 use DB;
+
 
 /**
  * {@see \Underflip\Resorts\GraphQL\Directives\FilterResortsDirective}
@@ -200,6 +205,38 @@ class ResortsTest extends BaseTestCase
         Model::reguard();
     }
 
+    public function testResortController(): void
+    {
+        $resortController = new ResortController();
+        $this->assertIsObject($resortController);
+    }
+
+    public function testContinent(): void
+    {
+        $resort = Resort::first();
+        $this->assertNotEmpty($resort->continent());
+    }
+    public function testCmsTotalScoreAttribute(): void
+    {
+        $this->assertNotEmpty( Resort::first()->getCmsTotalScoreAttribute());
+    }
+
+
+    public function testSearchInElasticsearch(): void
+    {
+        // $response = Resort::searchInElasticsearch("resort");
+        // $this->assertNotEmpty($response->asArray()['took'] );
+        $esClient = new ElasticSearchService();
+        $searchResorts = new SearchResorts($esClient);
+        $this->assertIsObject($searchResorts);
+
+        $esIndex = new IndexResorts();
+        // $esIndex->handle();
+        $this->assertClassHasAttribute('signature', IndexResorts::class);
+        $esResult = $esClient->searchResorts('resorts');
+        $this->assertNotEmpty($esResult->asArray()['took'] );
+
+    }
     /**
      * @return void
      */
@@ -844,6 +881,10 @@ class ResortsTest extends BaseTestCase
             'affiliate_url' => 'test-resort-affiliate',
             'description' => 'Test Description',
         ]);
+
+        $this->assertEquals('resorts/test-resort', Resort::find($resort->id)->getUrlAttribute());
+
+
     }
 
     /**
@@ -1128,4 +1169,5 @@ class ResortsTest extends BaseTestCase
             'Should return no resorts when filter criteria matches no resorts'
         );
     }
+
 }

@@ -1,6 +1,6 @@
 <?php
 
-    namespace Underflip\Resorts\GraphQL\Directives;
+namespace Underflip\Resorts\GraphQL\Directives;
 
 use GraphQL\Type\Definition\ResolveInfo;
 use Nuwave\Lighthouse\Support\Contracts\GraphQLContext;

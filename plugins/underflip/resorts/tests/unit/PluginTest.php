@@ -20,6 +20,7 @@ use Underflip\Resorts\Models\Resort;
 use Underflip\Resorts\Models\Settings;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
+use Lang;
 
 class PluginTest extends BaseTestCase
 {
@@ -43,6 +44,12 @@ class PluginTest extends BaseTestCase
         $this->assertEquals('Provides the Resorts part of Shred Index', $details['description']);
         $this->assertEquals('Underflip', $details['author']);
         $this->assertEquals('icon-icon-snowflake-o', $details['icon']);
+    }
+
+    public function testRegisterSettings()
+    {
+        $details = $this->plugin->registerSettings();
+        $this->assertEquals('underflip.resorts::lang.settings.label', $details['settings']['label']);
     }
 
     public function testRegisterNavigation()
@@ -76,4 +83,10 @@ class PluginTest extends BaseTestCase
     {
         $this->assertTrue(class_exists(\Underflip\Resorts\Models\Resort::class));
     }
+
+    public function testLang()
+    {
+        $this->assertEquals('Resorts',Lang::get('underflip.resorts::lang.plugin.name'));
+    }
+
 }

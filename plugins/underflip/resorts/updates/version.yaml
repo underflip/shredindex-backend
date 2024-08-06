@@ -20,3 +20,4 @@
     - seed_units_table.php
     - seed_types_table.php
     - seed_pages.php
+    - seed_continents_table.php

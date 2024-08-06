@@ -96,6 +96,30 @@ class RefreshTotalScoreTest extends BaseTestCase
         Model::reguard();
     }
 
+    /*testing add and delete rating*/
+    public function testRatingDelete()
+    {
+        $resort = Resort::first();
+        $seasonalWorkerScoreId = Type::where('name', 'seasonal_worker_score')->first()->id;
+        $rating = Rating::create([
+            'value' => 12,
+            'type_id' => $seasonalWorkerScoreId,
+            'resort_id' => $resort->id,
+            'user_id' => $this->user->id,
+        ]);
+
+        $this->assertDatabaseHas('underflip_resorts_ratings', [
+            'id' => $rating->id
+        ]);
+
+        $rating->delete();
+
+        $this->assertDatabaseMissing('underflip_resorts_ratings', [
+            'id' => $rating->id,
+        ]);
+
+    }
+
     public function testRefreshTotalScore()
     {
         app(RefreshTotalScore::class)->refreshAll();
@@ -140,5 +164,12 @@ class RefreshTotalScoreTest extends BaseTestCase
             $binResort->total_score,
             'Total score should not exist for resorts with no ratings'
         );
+    }
+
+    public function testGetTypeIdOptions(): void
+    {
+        $resortAttribute = new Rating();
+        $this->assertNotEmpty($resortAttribute->getTypeIdOptions());
+        // $resortAttribute->getTypeIdOptions();
     }
 }
