@@ -1,0 +1,10 @@
+extend type Query {
+rheostatDirective(typeName: String!): RheostatData @field(resolver: "Underflip\\Resorts\\GraphQL\\Directives\\RheostatDirective")
+}
+
+type RheostatData {
+    min: Float!
+    max: Float!
+    tickers: [Int!]!
+    totalResorts: Int!
+}
