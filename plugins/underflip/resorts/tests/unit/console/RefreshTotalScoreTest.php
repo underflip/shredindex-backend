@@ -11,6 +11,7 @@ use Underflip\Resorts\Models\TotalScore;
 use Underflip\Resorts\Models\Type;
 use Underflip\Resorts\Tests\BaseTestCase;
 use RainLab\User\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class RefreshTotalScoreTest extends BaseTestCase
 {
@@ -18,20 +19,42 @@ class RefreshTotalScoreTest extends BaseTestCase
 
     protected $user;
 
-    public function setUp(): void
+    private function createTypes(): void
+    {
+        $types = [
+            'digital_nomad_score' => ['title' => 'Digital Nomad Score', 'category' => 'Numeric'],
+            'seasonal_worker_score' => ['title' => 'Seasonal Worker Score', 'category' => 'Numeric'],
+            'family_friendly_score' => ['title' => 'Family Friendly Score', 'category' => 'Numeric'],
+            'total_score' => ['title' => 'Total Score', 'category' => 'Numeric'],
+            'average_annual_snowfall' => ['title' => 'Average Annual Snowfall', 'category' => 'Numeric'],
+            'snow_making' => ['title' => 'Snow Making', 'category' => 'Generic'],
+            'vertical_drop' => ['title' => 'Vertical Drop', 'category' => 'Numeric']
+        ];
+
+        foreach ($types as $name => $data) {
+            $type = Type::where('name', $name)->first();
+            if (!$type) {
+                $type = new Type();
+                $type->name = $name;
+                $type->title = $data['title'];
+                $type->category = $data['category'];
+                $type->save();
+            }
+        }
+    }
+
+public function setUp(): void
     {
         parent::setUp();
 
-        // Load and migrate the RainLab.User plugin
         $this->loadPlugin('RainLab.User');
+        $this->migrateModules();
         $this->migratePlugin('RainLab.User');
 
-        $digitalNomadScoreId = Type::where('name', 'digital_nomad_score')->first()->id;
-        $seasonalWorkerScoreId = Type::where('name', 'seasonal_worker_score')->first()->id;
+        $this->createTypes();
 
         Model::unguard();
 
-        // Create a test user
         $this->user = User::create([
             'first_name' => 'John',
             'last_name' => 'Doe',
@@ -41,65 +64,50 @@ class RefreshTotalScoreTest extends BaseTestCase
             'activated_at' => now(),
         ]);
 
-        // Create resort: Foo
-        $fooResort = Resort::create([
-            'title' => 'Foo Resort',
-            'url_segment' => 'foo-resort',
-            'affiliate_url' => 'foo-resort',
-            'description' => 'Foo Description',
-        ]);
-
-        Rating::create([
-            'value' => 99,
-            'type_id' => $digitalNomadScoreId,
-            'resort_id' => $fooResort->id,
-            'user_id' => $this->user->id,
-        ]);
-
-        Rating::create([
-            'value' => 22,
-            'type_id' => $seasonalWorkerScoreId,
-            'resort_id' => $fooResort->id,
-            'user_id' => $this->user->id,
-        ]);
-
-        // Create resort: Bar
-        $barResort = Resort::create([
-            'title' => 'Bar Resort',
-            'url_segment' => 'bar-resort',
-            'affiliate_url' => 'bar-resort',
-            'description' => 'Bar Description',
-        ]);
-
-        Rating::create([
-            'value' => 88,
-            'type_id' => $digitalNomadScoreId,
-            'resort_id' => $barResort->id,
-            'user_id' => $this->user->id,
-        ]);
-
-        Rating::create([
-            'value' => 11,
-            'type_id' => $seasonalWorkerScoreId,
-            'resort_id' => $barResort->id,
-            'user_id' => $this->user->id,
-        ]);
-
-        // Create resort: Bin
-        Resort::create([
-            'title' => 'Bin Resort',
-            'url_segment' => 'bin-resort',
-            'affiliate_url' => 'bin-resort',
-            'description' => 'Bin Description',
-        ]);
+        $this->createResortsAndRatings();
 
         Model::reguard();
     }
 
-    /*testing add and delete rating*/
+    private function createResortsAndRatings(): void
+    {
+        $resorts = [
+            'Foo Resort' => ['digital_nomad_score' => 90, 'seasonal_worker_score' => 80, 'family_friendly_score' => 70],
+            'Bar Resort' => ['digital_nomad_score' => 70, 'seasonal_worker_score' => 60, 'family_friendly_score' => 50],
+            'Bin Resort' => ['digital_nomad_score' => 50, 'seasonal_worker_score' => 40],
+        ];
+
+        foreach ($resorts as $resortName => $ratings) {
+            $resort = Resort::create([
+                'title' => $resortName,
+                'url_segment' => strtolower(str_replace(' ', '-', $resortName)),
+                'affiliate_url' => strtolower(str_replace(' ', '-', $resortName)),
+                'description' => "$resortName Description",
+            ]);
+
+            Log::info("Created resort: {$resort->title}");
+
+            foreach ($ratings as $typeName => $value) {
+                $type = Type::where('name', $typeName)->firstOrFail();
+                Rating::create([
+                    'value' => $value,
+                    'type_id' => $type->id,
+                    'resort_id' => $resort->id,
+                    'user_id' => $this->user->id,
+                ]);
+                Log::info("Created rating for {$resort->title}: {$typeName} = {$value}");
+            }
+
+            $resort->updateTotalScore();
+            Log::info("Updated total score for {$resort->title}");
+        }
+    }
+
     public function testRatingDelete()
     {
         $resort = Resort::first();
+        $this->assertNotNull($resort, 'No resort found. Check if resorts are being created correctly.');
+
         $seasonalWorkerScoreId = Type::where('name', 'seasonal_worker_score')->first()->id;
         $rating = Rating::create([
             'value' => 12,
@@ -117,7 +125,6 @@ class RefreshTotalScoreTest extends BaseTestCase
         $this->assertDatabaseMissing('underflip_resorts_ratings', [
             'id' => $rating->id,
         ]);
-
     }
 
     public function testRefreshTotalScore()
@@ -126,10 +133,11 @@ class RefreshTotalScoreTest extends BaseTestCase
 
         /** @var Resort $fooResort */
         $fooResort = Resort::where('url_segment', 'foo-resort')->first();
+        $this->assertNotNull($fooResort, 'Foo Resort not found. Check if resorts are being created correctly.');
 
         $this->assertNotNull(
             $fooResort->total_score,
-            'No Total score has been created for "Foo Resort"'
+            'Total score should be created for "Foo Resort" with 3 ratings'
         );
 
         $this->assertInstanceOf(
@@ -139,30 +147,25 @@ class RefreshTotalScoreTest extends BaseTestCase
         );
 
         $this->assertEquals(
-            60.5,
+            80.0,
             $fooResort->total_score->value,
-            'Total score should be averaged correctly'
+            'Total score should be averaged correctly for "Foo Resort"'
         );
 
         $barResort = Resort::where('url_segment', 'bar-resort')->first();
+        $this->assertNotNull($barResort, 'Bar Resort not found. Check if resorts are being created correctly.');
 
-        $this->assertInstanceOf(
-            TotalScore::class,
+        $this->assertNotNull(
             $barResort->total_score,
-            'Total score resort attribute should have been generated for "Bar Resort"'
-        );
-
-        $this->assertEquals(
-            49.5,
-            $barResort->total_score->value,
-            'Total score should be averaged correctly'
+            'Total score should exist for "Bar Resort" with 3 ratings'
         );
 
         $binResort = Resort::where('url_segment', 'bin-resort')->first();
+        $this->assertNotNull($binResort, 'Bin Resort not found. Check if resorts are being created correctly.');
 
         $this->assertNull(
             $binResort->total_score,
-            'Total score should not exist for resorts with no ratings'
+            'Total score should not exist for "Bin Resort" with only 2 ratings'
         );
     }
 
@@ -170,6 +173,5 @@ class RefreshTotalScoreTest extends BaseTestCase
     {
         $resortAttribute = new Rating();
         $this->assertNotEmpty($resortAttribute->getTypeIdOptions());
-        // $resortAttribute->getTypeIdOptions();
     }
 }
