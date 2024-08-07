@@ -338,17 +338,18 @@ SDL;
             ));
         }
 
-        // Order by values of that metric
+        // Order by values of that metric, including resorts without scores at the end
         $query
         ->select('underflip_resorts_resorts.*')
-        ->joinSub(function ($subquery) use ($type, $column) {
+        ->leftJoinSub(function ($subquery) use ($type, $column) {
             $subquery
                 ->from(app($type->category)->getTable() . ' as comparisons')
                 ->select('resort_id', \DB::raw("AVG($column) as avg_value"))
                 ->where('type_id', '=', $type->id)
                 ->groupBy('resort_id');
         }, 'comparisons', 'comparisons.resort_id', '=', 'underflip_resorts_resorts.id')
-        ->orderBy('comparisons.avg_value', $direction);
+        ->orderByRaw("CASE WHEN comparisons.avg_value IS NULL THEN 1 ELSE 0 END, comparisons.avg_value " . $direction)
+        ->orderBy('underflip_resorts_resorts.id', 'asc');
     }
 
     /**

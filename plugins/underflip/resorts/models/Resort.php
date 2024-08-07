@@ -131,16 +131,17 @@ class Resort extends Model
     }
 
     public function updateTotalScore()
-    {
-        $averageRatings = $this->ratingScores()->get();
+        {
+        $ratingScores = $this->ratingScores()->get();
 
-        if ($averageRatings->isEmpty()) {
-            // Resort has no ratings
+        if ($ratingScores->count() < 3) {
+            // Not enough rating scores to calculate a total score
+            $this->removeTotalScore();
             return null;
         }
 
-        // Calculate the average of all average ratings
-        $totalAverage = round($averageRatings->avg('value'), 1);
+        // Calculate the average of all rating scores
+        $totalAverage = round($ratingScores->avg('value'), 1);
 
         $totalScore = $this->total_score;
 
@@ -167,6 +168,14 @@ class Resort extends Model
         }
 
         $totalScore->save();
+    }
+
+    private function removeTotalScore()
+    {
+        if ($this->total_score) {
+            $this->total_score->delete();
+            $this->total_score = null;
+        }
     }
 
     public function afterSave()
