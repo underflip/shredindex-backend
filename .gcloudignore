@@ -1,0 +1,36 @@
+# Ignore everything
+*
+
+# Except these files and directories
+!Dockerfile
+!composer.json
+!composer.lock
+!.env
+!app/**
+!bootstrap/**
+!config/**
+!database/**
+!public/**
+!resources/**
+!routes/**
+!storage/**
+!tests/**
+!vendor/**
+!.infrastructure/**
+!cloudbuild.yaml
+
+# Ignore vendor directory contents, we'll install dependencies during the build
+vendor/*
+
+# Ignore any .git directories
+**/.git/**
+
+# Ignore log files and databases
+*.log
+*.sql
+*.sqlite
+
+# Ignore compiled code
+*.class
+*.pyc
+*.pyo
