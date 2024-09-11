@@ -169,20 +169,27 @@ class RatingsNumericsGenericsSeeder extends Seeder implements Downable
                 try {
                     Log::info('Processing numeric row', ['row' => $row]);
 
-                    $resortId = isset($row[1]) && is_numeric($row[1]) ? intval($row[1]) : 1;
-                    $value = isset($row[2]) && is_numeric($row[2]) ? intval($row[2]) : rand(0, 100);
-                    $typeId = isset($row[3]) && is_numeric($row[3]) ? intval($row[3]) : 1;
+                    $resortId = isset($row[1]) && is_numeric($row[1]) ? intval($row[1]) : null;
+                    $value = isset($row[2]) && is_numeric($row[2]) ? intval($row[2]) : null;
                     $typeName = isset($row[4]) ? $row[4] : '';
                     $typeId = isset($types[$typeName]) ? $types[$typeName] : null;
 
-                    if (Resort::find($resortId)) {
+                    if ($resortId && $value !== null && $typeId !== null && Resort::find($resortId)) {
                         $numericsBatch[] = [
                             'resort_id' => $resortId,
                             'value' => $value,
                             'type_id' => $typeId,
                         ];
                     } else {
-                        Log::warning('Resort not found for numeric', ['resort_id' => $resortId]);
+                        $reason = !$resortId ? 'Invalid resort ID' :
+                                  ($value === null ? 'Invalid value' :
+                                  ($typeId === null ? 'Invalid type' : 'Resort not found'));
+                        Log::warning('Skipping numeric row', [
+                            'resort_id' => $resortId,
+                            'value' => $value,
+                            'type_id' => $typeId,
+                            'reason' => $reason
+                        ]);
                     }
                 } catch (Exception $e) {
                     Log::error('Error processing numeric row', ['row' => $row, 'error' => $e->getMessage()]);
@@ -190,7 +197,7 @@ class RatingsNumericsGenericsSeeder extends Seeder implements Downable
             }
 
             if (!empty($numericsBatch)) {
-                Log::info('Inserting numerics batch into database', ['batch_size' => $batchSize]);
+                Log::info('Inserting numerics batch into database', ['batch_size' => count($numericsBatch)]);
                 try {
                     Numeric::insert($numericsBatch);
                 } catch (Exception $e) {
