@@ -23,6 +23,16 @@ class TeamMembersSeeder extends Seeder implements Downable
             ['file_name' => 't-hansen.png', 'content_type' => 'image/png']
         );
 
+        $ps = TeamMember::create([
+            'name' => 'p-trizzle',
+            'url' => 'https://github.com/p-trizzle',
+        ]);
+
+        $ps->image()->createFromFile( base_path() .
+            DIRECTORY_SEPARATOR .
+            'plugins/underflip/resorts/updates/assets/teammembers/p-trizzle.jpeg',
+            ['file_name' => 'jakxnz.png', 'content_type' => 'image/jpeg']
+        );
 
         $jd = TeamMember::create([
             'name' => 'jakxnz',

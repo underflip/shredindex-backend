@@ -99,7 +99,7 @@ class ResortsSeederFromSheets extends Seeder implements Downable
             $resort->id = $row[0];
             $resort->title = $row[1];
             $resort->url_segment = $row[2] ?? $row[0];
-            $resort->affiliate_url = $row[2] ?? 'https://example.com';
+            $resort->affiliate_url = $row[4] ?? 'https://example.com';
             $resort->description = $row[6] ?? 'No description available.';
             $resort->save();
 

@@ -1,0 +1,37 @@
+## Ignore everything by default
+#**
+#
+## Allow necessary files and directories
+#!Dockerfile
+#!.dockerignore
+#!.env*
+#!auth.json
+#!composer.json
+#!composer.lock
+#!phpunit.xml
+#!public/
+#!resources/
+#!routes/
+#!storage/
+#!app/
+#!bootstrap/
+#!config/
+#!database/
+#!Modules/
+#!package.json
+#!server.php
+#
+## Ignore common directories and files not needed in the build context
+#node_modules/
+#vendor/
+#logs/
+#tmp/
+#.env.local
+#.env.test
+#.env.development
+#.env.production
+#.idea/
+#*.log
+#*.cache
+#coverage/
+#tests/

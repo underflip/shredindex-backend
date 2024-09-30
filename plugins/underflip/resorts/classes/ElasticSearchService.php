@@ -90,4 +90,39 @@ class ElasticSearchService
               throw new \Exception('An error occurred while searching for resorts: ' . $e->getMessage());
           }
       }
+
+      public function getAllResortUrlSegments()
+      {
+          $params = [
+              'index' => 'resorts',
+              'body' => [
+                  'size' => 6500, // Increase this if you need more than 6500 resorts
+                  '_source' => ['url_segment'],
+                  'query' => [
+                      'match_all' => new \stdClass()
+                  ]
+              ]
+          ];
+
+          try {
+              $results = $this->client->search($params);
+              \Log::info('Elasticsearch response', [
+                  'total_hits' => $results['hits']['total']['value'],
+                  'returned_hits' => count($results['hits']['hits'])
+              ]);
+
+              $segments = collect($results['hits']['hits'])
+                  ->pluck('_source.url_segment')
+                  ->filter()
+                  ->values()
+                  ->toArray();
+
+              \Log::info('Processed URL segments', ['count' => count($segments)]);
+
+              return empty($segments) ? [] : $segments;
+          } catch (\Exception $e) {
+              \Log::error('Elasticsearch error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+              return []; // Return an empty array instead of throwing
+          }
+      }
 }

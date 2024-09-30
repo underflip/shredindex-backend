@@ -1,0 +1,167 @@
+steps:
+    # Step 1: Access the secret and create auth.json
+    - id: 'create-auth-json'
+      name: 'gcr.io/cloud-builders/gcloud'
+      entrypoint: 'bash'
+      args:
+          - '-c'
+          - |
+              gcloud secrets versions access latest --secret=october-cms-auth > auth.json
+              echo "Content of auth.json (for debugging, remove in production):"
+              cat auth.json
+
+    # Step 2: Copy configuration files
+    - id: 'copy-config-files'
+      name: 'ubuntu'
+      entrypoint: 'bash'
+      args:
+          - '-c'
+          - |
+              echo "Copying configuration files..."
+              cp .infrastructure/docker-compose.yml.dist .infrastructure/docker-compose.yml
+              cp .infrastructure/.env.dist .infrastructure/.env
+              cp .infrastructure/etc/nginx/conf.d/default.conf.dist .infrastructure/etc/nginx/conf.d/default.conf
+              cp .env.dist .env
+              echo "Configuration files copied successfully."
+
+    # Step 3: Build Docker image
+    - id: 'build-docker-image'
+      name: 'gcr.io/cloud-builders/docker'
+      entrypoint: 'bash'
+      args:
+          - '-c'
+          - |
+              echo "Building Docker image..."
+              docker build -t us-central1-docker.pkg.dev/shred-index-social-login/shredindex-repo/backend:$BUILD_ID \
+              --build-arg OCTOBER_CMS_AUTH="$$(cat auth.json)" \
+              --progress=plain \
+              .
+
+    # Step 4: Push Docker image to Container Registry
+    - id: 'push-docker-image'
+      name: 'gcr.io/cloud-builders/docker'
+      args: ['push', 'us-central1-docker.pkg.dev/shred-index-social-login/shredindex-repo/backend:$BUILD_ID']
+
+    # Step 5: Deploy container image to Cloud Run
+    - id: 'deploy-to-cloud-run'
+      name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      entrypoint: gcloud
+      args:
+          - 'run'
+          - 'deploy'
+          - 'backend'
+          - '--image'
+          - 'us-central1-docker.pkg.dev/shred-index-social-login/shredindex-repo/backend:$BUILD_ID'
+          - '--region'
+          - 'us-central1'
+          - '--platform'
+          - 'managed'
+          - '--allow-unauthenticated'
+          - '--set-env-vars'
+          - 'DATABASE_URL=${_DATABASE_URL}'
+
+    # Step 6: Install Laravel dependencies
+    - id: 'install-laravel-dependencies'
+      name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      entrypoint: gcloud
+      args:
+          - 'run'
+          - 'exec'
+          - 'backend'
+          - '--region'
+          - 'us-central1'
+          - '--'
+          - 'bash'
+          - '-c'
+          - |
+              echo "Installing Laravel dependencies..."
+              php artisan config:cache
+              php artisan cache:clear
+              php artisan config:clear
+              php artisan view:clear
+              composer install -n --prefer-dist -vvv
+              echo "Laravel dependencies installed."
+
+    # Step 7: Run Laravel migrations
+    - id: 'run-laravel-migrations'
+      name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      entrypoint: gcloud
+      args:
+          - 'run'
+          - 'exec'
+          - 'backend'
+          - '--region'
+          - 'us-central1'
+          - '--'
+          - 'php'
+          - 'artisan'
+          - 'october:migrate'
+
+    # Step 8: Seed database with Google Sheet data
+    - id: 'seed-resort-data'
+      name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      entrypoint: gcloud
+      args:
+          - 'run'
+          - 'exec'
+          - 'backend'
+          - '--region'
+          - 'us-central1'
+          - '--'
+          - 'php'
+          - 'artisan'
+          - 'resorts:seed_resort_sheet_data'
+          - '--fresh'
+
+    - id: 'seed-resort-image-data'
+      name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      entrypoint: gcloud
+      args:
+          - 'run'
+          - 'exec'
+          - 'backend'
+          - '--region'
+          - 'us-central1'
+          - '--'
+          - 'php'
+          - 'artisan'
+          - 'resorts:seed_resort_image_sheet_data'
+          - '--fresh'
+
+    # Step 9: Index Resorts for Elasticsearch
+    - id: 'index-resorts'
+      name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      entrypoint: gcloud
+      args:
+          - 'run'
+          - 'exec'
+          - 'backend'
+          - '--region'
+          - 'us-central1'
+          - '--'
+          - 'php'
+          - 'artisan'
+          - 'resorts:index'
+
+    # Step 10: Run Tests
+    - id: 'run-tests'
+      name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+      entrypoint: gcloud
+      args:
+          - 'run'
+          - 'exec'
+          - 'backend'
+          - '--region'
+          - 'us-central1'
+          - '--'
+          - 'php'
+          - 'artisan'
+          - 'plugin:test'
+          - 'underflip.resorts'
+
+substitutions:
+    _DATABASE_URL: 'mysql://user:pass@shredindex-backend-mysql:3306/shredindex'
+
+options:
+    env:
+        - 'START_STEP=copy-config-files'  # Set this to the ID of the step you want to start from
