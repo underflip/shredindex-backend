@@ -18,6 +18,8 @@ nginx-ssl.access.log
 nginx-ssl.error.log
 sftp-config.json
 .ftpconfig
+test-url-access.php
+auth.json
 
 # Editor ignores
 nbproject

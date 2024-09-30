@@ -45,7 +45,7 @@ A set of Docker platform is included for running the project.
 18. rm -rf vendor && docker exec shredindex-backend-php composer install
 
 ## Seeding
-!Seed either the dummy data !OR google sheet data, the google sheet data is more up to date.
+!IMPORTANT Seed either the dummy data !OR google sheet data. The google sheet data is more up to date and maintained.
 ### Seed Dummy data
 docker exec shredindex-backend-php php artisan october:migrate && docker exec shredindex-backend-php php artisan resorts:seed_test_data --fresh
 ### Seed Google sheet data
@@ -122,6 +122,11 @@ There's also a handy composer script to run this from your host machine:
 ```
 composer resorts-refresh-total-shred-score
 ```
+
+
+## Deployment
+
+gcloud builds submit --config cloudbuild.yaml .
 
 # Contributors
 

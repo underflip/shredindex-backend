@@ -1,6 +1,7 @@
 title = "ResortsSearch"
 ==
 extend type Query {
+    getAllResortUrlSegments: [String!] @field(resolver: "Underflip\\Resorts\\Classes\\GetAllResortUrlSegments")
     searchResorts(
         query: String
         page: Int = 1

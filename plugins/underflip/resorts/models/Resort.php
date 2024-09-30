@@ -203,7 +203,7 @@ class Resort extends Model
                'query' => [
                    'multi_match' => [
                        'query' => $query,
-                       'fields' => ['title', 'description']
+                       'fields' => ['title', 'description', 'country']
                    ]
                ]
            ]
