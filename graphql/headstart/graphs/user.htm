@@ -1,0 +1,56 @@
+title = "User"
+==
+
+
+type User {
+    id: ID
+    is_guest: Int
+    is_mail_blocked: Int
+    first_name: String
+    last_name: String
+    username: String
+    email: String
+    notes: String
+    password: String
+    activation_code: String
+    remember_token: String
+    banned_reason: Sting
+    last_seen: String
+    is_activated: Boolean
+    activated_at: String
+    last_login: String
+    groups: [UserGroup] @belongsToMany
+    # avatar: SystemFile
+}
+
+type UserGroup {
+    id: ID
+    name: String
+    code: String
+    description: String
+    users: [User] @belongsToMany
+    users_count: Int
+}
+
+type ShredProfile {
+    user: User @belongsTo
+    member_tier: String
+    preferred_sport: String
+    skill_level: String
+    years_experience: String
+    favorite_resort: String
+    current_resort_location: String
+    visited_resorts: String
+    preferred_terrain: String
+    preferred_resort_type: String
+    equipment_brand: String
+    owns_equipment: String
+    season_pass_type: String
+    emergency_contact_name: String
+    emergency_contact_phone: String
+    bio: String
+    profile_picture: String
+    preferred_lessons: String
+    interested_in_competitions: String
+    achievements: String
+}

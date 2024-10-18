@@ -1,0 +1,212 @@
+title = "Auth"
+[session]
+checkToken = 1
+==
+<?php
+
+use Laravel\Socialite\Facades\Socialite;
+use RainLab\User\Components\Authentication\ActionLogin;
+use RainLab\User\Components\Authentication;
+
+use RainLab\User\Models\UserLog;
+use Illuminate\Support\Facades\DB;
+use Auth as AuthGlobal;
+use RainLab\User\Helpers\User as UserHelper;
+use RainLab\User\Models\User as RainLabUser;
+use Underflip\Resorts\Models\User as UserUnderflip;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Headstart\Services\JWTUserService;
+use Headstart\Services\BearerAPI;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Cookie; 
+
+
+function resolveOAuthRedirect($root, array $args)
+{
+    $provider = $args['provider'];
+
+    // Get the OAuth redirect URL from Laravel Socialite
+    $redirectUrl = Socialite::driver($provider)->stateless()->redirect()->getTargetUrl();
+    return [
+        'url' => $redirectUrl
+    ];
+}
+
+    // Handle the OAuth callback and authenticate the user
+function resolveOAuthCallback($root, array $args)
+{
+    $provider = $args['provider'];
+    $code = $args['code'];
+
+    try {
+            // Retrieve user details from the OAuth provider
+        $userSocial = Socialite::driver($provider)->stateless()->user();
+
+            // Find or create the user in the OctoberCMS database
+        $findUser = UserUnderflip::where('provider_id', $userSocial->id)->first();
+
+        if ($findUser) {
+                // Log in the existing user
+            AuthGlobal::login($findUser);
+            $user = $findUser;
+        } else {
+                // Register a new user
+                $user = new UserUnderflip();
+                $user->name = $userSocial->name;
+                $user->email = $userSocial->email;
+                $user->provider = $provider;
+                $user->provider_id = $userSocial->id;
+                $user->save();
+
+                AuthGlobal::login($user);
+            }
+
+            // Generate a token (JWT or custom token)
+             // $token = $user->createToken();
+            $token = AuthGlobal::getBearerToken($this->user);
+            BearerAPI::sendToken($token);
+            return [
+                'user' => $user,
+                'token' => $token,
+                'message' => 'Login successful'
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'message' => 'Authentication failed'
+            ];
+        }
+}
+
+function resolveAuthenticatedUser($root, $args) {
+	$data = BearerAPI::getUserAuth();
+
+    if (!$data['user']) {
+        throw new \Exception('User is not authenticated');
+    }
+
+    return (object) ['user' => $data['user'], 'token'=> $data['token']];
+}
+
+function resolveUserProfile($root, $args) {
+	$data = BearerAPI::getUserAuth();
+
+    if (!$data['user']) {
+        throw new \Exception('User is not authenticated');
+    }
+/*
+    $user = DB::table('users')
+            ->join('shred_profiles', 'users.id', '=', 'shred_profiles.user_id')
+            ->select('users.*', 'shred_profiles.*')
+            ->where('user_id',$data['user'])
+            ->get(); */
+    $user = UserUnderflip::find($data['user']->id);
+    
+    return (object) ['shred_profile' => $user->shred_profile, 'token'=> $data['token']];
+}
+
+function resolveLogout($root, $args) {
+	$data = BearerAPI::logout();
+
+    if (!$data['user']) {
+        throw new \Exception('User is not authenticated');
+    }
+
+    return (object) ['user' => $data['user'], 'token'=> $data['token']];
+}
+
+function resolveRefreshToken($root, $args) {
+	$bearerAPI = new BearerAPI();
+	$data = $bearerAPI->refreshToken();
+
+    if (!$data['user']) {
+        throw new \Exception('User is not authenticated');
+    }
+
+    return (object) ['user' => $data['user'], 'token'=> $data['token']];
+}
+
+function resolveLogin($root, $args) {
+    $this->ensureLoginIsNotThrottled();
+    
+    $data = $args['data'];
+    $bearerAPI = new BearerAPI();
+    $data = $bearerAPI->loginProcess($data['email'], $data['password']);
+   
+	if($data['user'])
+    	return (object)  ['user' => $data['user'], 'token'=> $data['token']];
+    else{
+    	throw new \Exception('Invalid credentials');
+	}
+}
+
+function makeLoginRateLimiter()
+    {
+        return new \System\Classes\RateLimiter('login:'.post(UserHelper::username()));
+    }
+
+function ensureLoginIsNotThrottled()
+    {
+        $limiter = $this->makeLoginRateLimiter();
+
+        if (!$limiter->tooManyAttempts()) {
+            return;
+        }
+
+        $seconds = $limiter->availableIn();
+
+        $message = __("Too many login attempts. Please try again in :seconds seconds.", [
+            'seconds' => $seconds,
+            'minutes' => ceil($seconds / 60),
+        ]);
+
+        throw new ValidationException([UserHelper::username() => $message]);
+    }
+
+
+?>
+
+==
+
+input LoginInput {
+    email: String!
+    password: String!
+}
+
+input AuthCheck {
+    email: String!
+}
+
+input AuthUsername {
+    username: String!
+}
+
+type AuthPayload {
+    user: User @find(model: "RainLab\\User\\Models\\User")
+    token: String!
+    shredProfile: ShredProfile @find(model: "Underflip\\Resorts\\Models\\ShredProfiles")
+}
+
+type OAuthRedirectResponse {
+    url: String!
+}
+
+type OAuthCallbackResponse {
+    token: String
+    message: String
+}
+
+extend type Query  {
+    auth: User
+}
+
+extend type Mutation {
+    login(data: LoginInput): AuthPayload!
+    authenticatedUser(data: AuthCheck): AuthPayload!
+    logout(data: AuthCheck): AuthPayload!
+    refreshToken(data: AuthCheck): AuthPayload!
+    userProfile(data: AuthUsername): AuthPayload!
+    oauthRedirect(provider: String!): OAuthRedirectResponse!
+    oauthCallback(provider: String!, code: String!): OAuthCallbackResponse!
+}

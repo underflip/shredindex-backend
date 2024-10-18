@@ -1,0 +1,30 @@
+columns:
+    id:
+        label: ID
+        type: number
+        sortable: true
+        width: 10%
+        align: left
+    title:
+        label: Title
+        type: text
+        sortable: true
+        searchable: true
+    unit_title:
+        label: Unit
+        relation: unit
+        select: title
+        type: unit
+    category:
+        label: Category
+        type: shortname
+        sortable: true
+    icon:
+        label: Icon
+        type: text
+        sortable: false
+    max_value:
+        label: Max value
+        type: text
+        sortable: true
+

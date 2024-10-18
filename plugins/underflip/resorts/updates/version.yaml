@@ -3,6 +3,7 @@
     - create_resorts_table.php
     - create_location_table.php
     - create_continents_table.php
+    - create_user_tokens_table.php
     - create_ratings_table.php
     - create_numerics_table.php
     - create_generics_table.php
@@ -16,6 +17,8 @@
     - create_team_members_table.php
     - create_resort_images_table.php
     - create_comments_table.php
+    - create_shred_profiles_table.php
+    - alter_user_table.php
     - seed_settings.php
     - seed_units_table.php
     - seed_types_table.php
