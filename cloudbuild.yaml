@@ -10,21 +10,7 @@ steps:
               echo "Content of auth.json (for debugging, remove in production):"
               cat auth.json
 
-    # Step 2: Copy configuration files
-    - id: 'copy-config-files'
-      name: 'ubuntu'
-      entrypoint: 'bash'
-      args:
-          - '-c'
-          - |
-              echo "Copying configuration files..."
-              cp .infrastructure/docker-compose.yml.dist .infrastructure/docker-compose.yml
-              cp .infrastructure/.env.dist .infrastructure/.env
-              cp .infrastructure/etc/nginx/conf.d/default.conf.dist .infrastructure/etc/nginx/conf.d/default.conf
-              cp .env.dist .env
-              echo "Configuration files copied successfully."
-
-    # Step 3: Build Docker image
+    # Step 2: Build Docker image
     - id: 'build-docker-image'
       name: 'gcr.io/cloud-builders/docker'
       entrypoint: 'bash'
@@ -37,12 +23,12 @@ steps:
               --progress=plain \
               .
 
-    # Step 4: Push Docker image to Container Registry
+    # Step 3: Push Docker image to Container Registry
     - id: 'push-docker-image'
       name: 'gcr.io/cloud-builders/docker'
       args: ['push', 'us-central1-docker.pkg.dev/shred-index-social-login/shredindex-repo/backend:$BUILD_ID']
 
-    # Step 5: Deploy container image to Cloud Run
+    # Step 4: Deploy container image to Cloud Run
     - id: 'deploy-to-cloud-run'
       name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
       entrypoint: gcloud
@@ -57,12 +43,27 @@ steps:
           - '--platform'
           - 'managed'
           - '--allow-unauthenticated'
-          - '--set-env-vars'
-          - 'DATABASE_URL=${_DATABASE_URL}'
-  
-substitutions:
-    _DATABASE_URL: 'mysql://user:pass@shredindex-backend-mysql:3306/shredindex'
-
+          - '--add-cloudsql-instances'
+          - 'shred-index-social-login:us-central1:shredindex'
+    # Step 5: Run artisan commands in CI/CD
+    - id: 'ci-run-artisan'
+      name: 'gcr.io/cloud-builders/docker'
+      args:
+          - 'run'
+          - '--rm'
+          - '-e'
+          - 'APP_ENV=production'
+          - 'us-central1-docker.pkg.dev/shred-index-social-login/shredindex-repo/backend:$BUILD_ID'
+          - '/bin/sh'
+          - '-c'
+          - |
+            echo "Running Laravel setup and migrations..."
+            php artisan config:cache
+            php artisan cache:clear
+            php artisan config:clear
+            php artisan view:clear
+            php artisan october:migrate
+            echo "Setup complete."
 options:
     env:
-        - 'START_STEP=copy-config-files'  # Set this to the ID of the step you want to start from
+        - 'START_STEP=create-auth-json'  # Set this to the ID of the step you want to start from
