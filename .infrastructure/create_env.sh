@@ -2,7 +2,7 @@
 
 # Create backend .env file
 cat <<EOT > .env
-APP_NAME=${APP_NAME}
+APP_NAME="${APP_NAME}"
 APP_ENV=${APP_ENV}
 APP_KEY=${APP_KEY}
 APP_DEBUG=${APP_DEBUG}
