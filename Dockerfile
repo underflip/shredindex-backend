@@ -4,11 +4,13 @@ FROM composer:2 AS build
 # Use build argument to pass the secret
 ARG OCTOBER_CMS_AUTH
 
-ENV OCTOBER_CMS_AUTH=${OCTOBER_CMS_AUTH}
+ARG OCTOBER_CMS_USERNAME
+
+ARG OCTOBER_CMS_PASSWORD
 
 # Create the .composer directory and then create auth.json from the secret
 RUN mkdir -p /root/.composer && \
-    echo "${OCTOBER_CMS_AUTH}" > /root/.composer/auth.json
+    echo $OCTOBER_CMS_AUTH > /root/.composer/auth.json
 
 # Debug: Print out the contents of auth.json (remove this before production)
 RUN echo "Contents of auth.json:" && cat /root/.composer/auth.json
@@ -19,8 +21,11 @@ RUN ls -la /root/.composer/auth.json
 # Copy only composer files to install dependencies
 COPY composer.json composer.lock ./
 
+RUN composer config -g http-basic.gateway.octobercms.com username $OCTOBER_CMS_AUTH
+RUN composer config -g http-basic.gateway.octobercms.com password $OCTOBER_CMS_PASSWORD
+
 # Install dependencies with verbose output
-RUN COMPOSER_AUTH=$(cat /root/.composer/auth.json) composer install --prefer-dist --no-dev --no-scripts --optimize-autoloader -vvv
+RUN composer install --prefer-dist --no-dev --no-scripts --optimize-autoloader -vvv
 
 # Copy only necessary application source files to the build context
 COPY . .

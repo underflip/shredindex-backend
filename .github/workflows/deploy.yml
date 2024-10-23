@@ -46,6 +46,8 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/shredindex-backend:latest
         build-args: |
           OCTOBER_CMS_AUTH=${{ secrets.OCTOBER_CMS_AUTH }}
+          OCTOBER_CMS_USERNAME=${{ secrets.OCTOBER_CMS_USERNAME }}
+          OCTOBER_CMS_PASSWORD=${{ secrets.OCTOBER_CMS_PASSWORD }}
   deploy:
     runs-on: ubuntu-latest
     needs: [build-backend]
