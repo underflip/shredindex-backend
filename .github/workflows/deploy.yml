@@ -82,7 +82,7 @@ jobs:
               docker rm shredindex-backend
             fi
 
-            docker run -d --name shredindex-backend -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/shredindex-backend:latest
+            docker run -d --name shredindex-backend -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/shredindex-backend:latest
             
             # Clean up unused images
             docker image prune -f
