@@ -50,6 +50,7 @@ jobs:
           OCTOBER_CMS_PASSWORD=${{ secrets.OCTOBER_CMS_PASSWORD }}
   deploy:
     runs-on: ubuntu-latest
+    environment: develop  # Specify the environment
     needs: [build-backend]
 
     steps:
