@@ -79,7 +79,7 @@ RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
     && ([ -d /var/www/html/bootstrap/cache ] && chmod -R 775 /var/www/html/bootstrap/cache || true)
 
 # Copy the Cloud Run specific Nginx configuration
-COPY .infrastructure/etc/nginx/conf.d/default.conf.dist /etc/nginx/sites-available/default
+COPY .infrastructure/etc/nginx/conf.d/deploy.conf.dist /etc/nginx/sites-available/default
 
 # Expose the port for Cloud Run
 EXPOSE 8080
