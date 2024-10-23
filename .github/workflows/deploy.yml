@@ -3,7 +3,7 @@ name: Combined CI/CD Pipeline on GCP VM
 on:
   push:
     branches:
-      - develop
+      - pulls/gcp-cloud-run-fix
 jobs:
   build-backend:
     runs-on: ubuntu-latest
