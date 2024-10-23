@@ -33,8 +33,6 @@ COPY . .
 # Run necessary build scripts and optimizations
 RUN composer dump-autoload --optimize
 
-RUN composer require elasticsearch/elasticsearch
-
 # Production stage
 FROM php:8.2-fpm
 
