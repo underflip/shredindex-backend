@@ -90,7 +90,7 @@ jobs:
               docker rm elasticsearch
             fi
             
-            docker run -d --name elasticsearch --env "discovery.type=single-node" --env "ES_JAVA_OPTS=-Xms512m -Xmx512m" -v /path/to/elasticsearch/data:/usr/share/elasticsearch/data -p 9200:9200 -p 9300:9300 docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+            docker run -d --name elasticsearch --env "discovery.type=single-node" --env "ES_JAVA_OPTS=-Xms512m -Xmx512m" -p 9200:9200 -p 9300:9300 docker.elastic.co/elasticsearch/elasticsearch:7.17.0
 
             # Ensure Nginx is installed and running
             if ! command -v nginx &> /dev/null; then
