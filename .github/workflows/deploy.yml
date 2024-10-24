@@ -23,7 +23,7 @@ jobs:
     - name: Wait for ElasticSearch
       run: |
         echo "Waiting for Elasticsearch to be ready..."
-        until curl -s http://elasticsearch:9200 -o /dev/null; do
+        until curl -s http://localhost:9200 -o /dev/null; do
           echo "Elasticsearch is not ready yet. Retrying..."
           sleep 5
         done
