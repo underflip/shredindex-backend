@@ -139,3 +139,15 @@ jobs:
 
             # Restart Nginx to apply the SSL configuration
             sudo systemctl restart nginx
+
+            # Ensure Elasticsearch container is pulled and run
+            echo "Setting up Elasticsearch..."
+            docker pull docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+            if [ "$(docker ps -q -f name=elasticsearch)" ]; then
+              docker stop elasticsearch
+              docker rm elasticsearch
+            fi
+            
+            docker run -d --name elasticsearch --env "discovery.type=single-node" --env "ES_JAVA_OPTS=-Xms512m -Xmx512m" -p 9200:9200 -p 9300:9300 docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+            
+            echo "Deployment completed successfully!"
