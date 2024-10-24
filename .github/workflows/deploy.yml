@@ -82,16 +82,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            # Ensure Elasticsearch container is pulled and run
-            echo "Setting up Elasticsearch..."
-            docker pull docker.elastic.co/elasticsearch/elasticsearch:7.17.0
-            if [ "$(docker ps -q -f name=elasticsearch)" ]; then
-              docker stop elasticsearch
-              docker rm elasticsearch
-            fi
-            
-            docker run -d --name elasticsearch --env "discovery.type=single-node" --env "ES_JAVA_OPTS=-Xms512m -Xmx512m" -p 9200:9200 -p 9300:9300 docker.elastic.co/elasticsearch/elasticsearch:7.17.0
-
             # Ensure Nginx is installed and running
             if ! command -v nginx &> /dev/null; then
               sudo apt update
@@ -148,5 +138,16 @@ jobs:
             sudo certbot --nginx -d backend.shredindex.com --non-interactive --agree-tos -m thomas.andrew.hansen@gmail.com
 
             # Restart Nginx to apply the SSL configuration
-            sudo systemctl restart nginx                
+            sudo systemctl restart nginx
+
+            # Ensure Elasticsearch container is pulled and run
+            echo "Setting up Elasticsearch..."
+            docker pull docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+            if [ "$(docker ps -q -f name=elasticsearch)" ]; then
+              docker stop elasticsearch
+              docker rm elasticsearch
+            fi
+            
+            docker run -d --name elasticsearch --env "discovery.type=single-node" --env "ES_JAVA_OPTS=-Xms512m -Xmx512m" -v /var/www/html:/usr/share/elasticsearch/data -p 9200:9200 -p 9300:9300 docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+            
             echo "Deployment completed successfully!"
