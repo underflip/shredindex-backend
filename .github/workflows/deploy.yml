@@ -12,13 +12,22 @@ jobs:
     services:
       elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
-        options: --name shredindex-backend-elasticsearch --env discovery.type=single-node --env "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        options: --env discovery.type=single-node --env "ES_JAVA_OPTS=-Xms512m -Xmx512m"
         ports:
           - 9200:9200
           - 9300:9300
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Wait for ElasticSearch
+      run: |
+        echo "Waiting for Elasticsearch to be ready..."
+        until curl -s http://elasticsearch:9200 -o /dev/null; do
+          echo "Elasticsearch is not ready yet. Retrying..."
+          sleep 5
+        done
+        echo "Elasticsearch is ready!"
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
