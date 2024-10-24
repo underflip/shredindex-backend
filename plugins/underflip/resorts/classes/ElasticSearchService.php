@@ -11,7 +11,7 @@ class ElasticSearchService
    public function __construct()
    {
        $this->client = ClientBuilder::create()
-           ->setHosts(['elasticsearch:9200', 'localhost:9200'])
+           ->setHosts(['localhost:9200'])
            ->build();
    }
 
